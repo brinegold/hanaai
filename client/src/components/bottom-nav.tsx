@@ -4,9 +4,11 @@ import { IoPersonOutline } from "react-icons/io5";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { useLocation } from "wouter";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function BottomNav() {
   const [location] = useLocation();
+  const { t } = useLanguage();
 
   const isActive = (path: string) => location === path;
 
@@ -21,7 +23,7 @@ export default function BottomNav() {
             )}
           >
             <HiOutlineHome className="h-6 w-6" />
-            <span className="text-xs">Home</span>
+            <span className="text-xs">{t('nav.home')}</span>
           </div>
         </Link>
         <Link href="/quantitative">
@@ -32,7 +34,7 @@ export default function BottomNav() {
             )}
           >
             <BsCreditCard2Back className="h-6 w-6" />
-            <span className="text-xs">Quantitative</span>
+            <span className="text-xs">{t('nav.tradeNow')}</span>
           </div>
         </Link>
 
@@ -44,7 +46,7 @@ export default function BottomNav() {
             )}
           >
             <BsCreditCard2Back className="h-6 w-6" />
-            <span className="text-xs">Invite</span>
+            <span className="text-xs">{t('nav.invite')}</span>
           </div>
         </Link>
 
@@ -56,7 +58,7 @@ export default function BottomNav() {
             )}
           >
             <IoPersonOutline className="h-6 w-6" />
-            <span className="text-xs">Profile</span>
+            <span className="text-xs">{t('nav.profile')}</span>
           </div>
         </Link>
       </div>

@@ -5,7 +5,7 @@ import {
   UseMutationResult,
 } from "@tanstack/react-query";
 import { User } from "@shared/schema";
-import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
+import { apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 // Login data types for different authentication methods
@@ -71,7 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
-    refetch: refetchUser,
   } = useQuery<
     (User & { notifications?: any[]; transactions?: any[] }) | null,
     Error
@@ -207,7 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       toast({
         title: "Registration successful",
-        description: `Welcome to TiBank, ${user.username}!`,
+        description: `Welcome to Nebrix, ${user.username}!`,
       });
     },
     onError: (error: Error) => {

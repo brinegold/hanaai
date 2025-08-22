@@ -37,6 +37,7 @@ import { Label } from "@/components/ui/label";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { useLanguage } from "@/hooks/use-language";
 
 // Define the investment plan interface
 interface InvestmentPlan {
@@ -48,48 +49,11 @@ interface InvestmentPlan {
   description: string;
 }
 
-// VIP Status indicator component
-const VipCard: React.FC<{
-  level: number;
-  name: string;
-  minInvestment: number;
-  maxInvestment: number;
-  progress: number;
-}> = ({ level, name, minInvestment, maxInvestment, progress }) => {
-  return (
-    <Card className="bg-gray-50 border-gray-200 mb-4 overflow-hidden">
-      <div className="bg-gradient-to-r from-blue-600 to-blue-500 h-1.5" />
-      <CardContent className="p-4">
-        <div className="flex justify-between items-center mb-2">
-          <Badge className="bg-blue-600 hover:bg-blue-700 text-xs font-semibold">
-            VIP {level}
-          </Badge>
-          <span className="text-gray-400 text-xs">
-            {minInvestment}$ - {maxInvestment}$
-          </span>
-        </div>
-        <h3 className="text-black font-medium text-lg mb-1">{name}</h3>
-        <div className="space-y-1">
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-gray-400">Progress</span>
-            <span className="text-[#4F9CF9]">{progress}%</span>
-          </div>
-          <Progress
-            value={progress}
-            className="h-1.5 bg-[#333333]"
-            style={
-              { "--progress-foreground": "#4F9CF9" } as React.CSSProperties
-            }
-          />
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
 
 const QuantitativePage: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [showTibankInfo, setShowTibankInfo] = useState<boolean>(false);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   // Local UI state for the top trading card
@@ -200,15 +164,12 @@ const QuantitativePage: React.FC = () => {
       // Get the instant profit from the response
       const instantProfit = data.instantProfit;
 
-      // Get the VIP level and profit percentage for the toast message
-      const profitPercentage = data.plan === "vip2" ? "1%" : "3%";
-
       // Show success toast with profit information
       toast({
         title: "Investment Created",
         description: instantProfit
-          ? `Successfully invested $${data.amount} in ${data.plan}. You earned ${profitPercentage} ($${instantProfit.toFixed(2)}) instant profit!`
-          : `Successfully invested $${data.amount} in ${data.plan}`,
+          ? `Successfully invested $${data.amount}. You earned 1.5% ($${instantProfit.toFixed(2)}) instant profit!`
+          : `Successfully invested $${data.amount}`,
       });
     },
     onError: (error) => {
@@ -257,7 +218,7 @@ const QuantitativePage: React.FC = () => {
     setSimulationSteps([]);
 
     const steps = [
-      "Initializing quantitative trading system...",
+      "Initializing Artificial Intelligence trading system...",
       "Analyzing market conditions...",
       "Checking BTC/USDT spread across exchanges...",
       `Found arbitrage opportunity: Binance (${btcPrice.toLocaleString()}) → Huobi (${(btcPrice + 18).toLocaleString()})`,
@@ -317,7 +278,7 @@ const QuantitativePage: React.FC = () => {
             {/* Balance and Today Profit */}
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs text-gray-400">Total balance</p>
+                <p className="text-xs text-gray-400">{t('quantitative.availableBalance')}</p>
                 <div className="flex items-center space-x-2 mt-1">
                   <div className="w-6 h-6 rounded-md bg-[#4F9CF9]/10 flex items-center justify-center">
                     <svg className="w-3.5 h-3.5 text-[#4F9CF9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -332,7 +293,7 @@ const QuantitativePage: React.FC = () => {
                 <p className="text-[10px] text-gray-400 mt-1">~ 0.00 BTC</p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-gray-400">Today’s profit</p>
+                <p className="text-xs text-gray-400">{t('dashboard.todayEarnings')}</p>
                 <p className="text-green-600 font-semibold mt-1">
                   +${user?.todayEarnings ? parseFloat(user.todayEarnings.toString()).toFixed(2) : '0.00'}
                 </p>
@@ -366,7 +327,7 @@ const QuantitativePage: React.FC = () => {
                   onChange={(e) => setStrategy(e.target.value)}
                   className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-[#4F9CF9]"
                 >
-                  <option value="Hermatic">Hermatic</option>
+                  <option value="Hermatic">Nerbix</option>
                 </select>
               </div>
             </div>
@@ -409,7 +370,7 @@ const QuantitativePage: React.FC = () => {
             </AlertTitle>
             <AlertDescription className="ml-2 text-blue-200">
               You can start a new investment in {timeRemaining} hour
-              {timeRemaining === 1 ? "" : "s"}. Only one quantitative trade is
+              {timeRemaining === 1 ? "" : "s"}. Only one Ai trade is
               allowed every 24 hours.
             </AlertDescription>
           </Alert>
@@ -424,7 +385,7 @@ const QuantitativePage: React.FC = () => {
             <div className="flex justify-between items-start">
               <div>
                 <CardTitle className="text-black text-lg">
-                  Quantitative Trading
+                  Artificial Intelligence Trading
                 </CardTitle>
                 <CardDescription className="text-gray-400 text-xs">
                   Automatic algorithmic trading with daily profits
@@ -434,14 +395,14 @@ const QuantitativePage: React.FC = () => {
                 onClick={() => setShowTibankInfo(true)}
                 className="text-[#4F9CF9] text-sm hover:text-blue-400 transition-colors"
               >
-                Welcome To Nebrix Quantitative Trading
+                Welcome To Nebrix Ai Trading
               </button>
             </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-4 gap-2 text-center mb-4 bg-gray-50 rounded-lg p-2">
               <div className="space-y-1">
-                <p className="text-xs text-gray-400">Investment</p>
+                <p className="text-xs text-gray-400">{t('quantitative.investmentAmount')}</p>
                 <p className="font-medium text-black">
                   {user?.totalAssets
                     ? parseFloat(user.totalAssets.toString()).toFixed(2)
@@ -459,7 +420,7 @@ const QuantitativePage: React.FC = () => {
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-gray-400">Today's Earnings</p>
+                <p className="text-xs text-gray-400">{t('dashboard.todayEarnings')}</p>
                 <p className="font-medium text-black">
                   {user?.todayEarnings
                     ? parseFloat(user.todayEarnings.toString()).toFixed(2)
@@ -497,7 +458,7 @@ const QuantitativePage: React.FC = () => {
                     </svg>
                   </div>
                   <span className="text-gray-200 text-sm">
-                    Quantitative Trend (24 Day)
+                    Ai Trend (24 Day)
                   </span>
                 </div>
                 <div>
@@ -570,42 +531,51 @@ const QuantitativePage: React.FC = () => {
           Investment Status
         </h2>
         <div className="space-y-4">
-          {user?.totalAssets &&
-          parseFloat(user.totalAssets.toString()) >= 50 ? (
-            <VipCard
-              level={1}
-              name="VIP 1 Quantitative Trading"
-              minInvestment={50}
-              maxInvestment={500000}
-              progress={
-                user?.totalAssets && user?.rechargeAmount
-                  ? Math.min(
-                      100,
-                      (parseFloat(user.totalAssets.toString()) /
-                        (parseFloat(user.rechargeAmount.toString()) * 2)) *
-                        100,
-                    )
-                  : 0
-              }
-            />
-          ) : (
-            <VipCard
-              level={2}
-              name="VIP 2 Quantitative Trading"
-              minInvestment={10}
-              maxInvestment={49}
-              progress={
-                user?.totalAssets && user?.rechargeAmount
-                  ? Math.min(
-                      100,
-                      (parseFloat(user.totalAssets.toString()) /
-                        (parseFloat(user.rechargeAmount.toString()) * 2)) *
-                        100,
-                    )
-                  : 0
-              }
-            />
-          )}
+          <Card className="bg-gray-50 border-gray-200 mb-4 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-500 h-1.5" />
+            <CardContent className="p-4">
+              <div className="flex justify-between items-center mb-2">
+                <Badge className="bg-blue-600 hover:bg-blue-700 text-xs font-semibold">
+                  AI Trading
+                </Badge>
+                <span className="text-gray-400 text-xs">
+                  $1 - $500,000
+                </span>
+              </div>
+              <h3 className="text-black font-medium text-lg mb-1">AI Trading System</h3>
+              <div className="space-y-1">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400">Progress</span>
+                  <span className="text-[#4F9CF9]">
+                    {user?.totalAssets && user?.rechargeAmount
+                      ? Math.min(
+                          100,
+                          (parseFloat(user.totalAssets.toString()) /
+                            (parseFloat(user.rechargeAmount.toString()) * 2)) *
+                            100,
+                        )
+                      : 0}%
+                  </span>
+                </div>
+                <Progress
+                  value={
+                    user?.totalAssets && user?.rechargeAmount
+                      ? Math.min(
+                          100,
+                          (parseFloat(user.totalAssets.toString()) /
+                            (parseFloat(user.rechargeAmount.toString()) * 2)) *
+                            100,
+                        )
+                      : 0
+                  }
+                  className="h-1.5 bg-[#333333]"
+                  style={
+                    { "--progress-foreground": "#4F9CF9" } as React.CSSProperties
+                  }
+                />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -631,22 +601,22 @@ const QuantitativePage: React.FC = () => {
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between">
                     <span className="text-gray-400 text-sm">
-                      Min Investment
+                      {t('quantitative.minimumInvestment')}
                     </span>
                     <span className="text-black font-medium">
-                      ${plan.id === "vip1" ? "50" : "10"}
+                      $1
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400 text-sm">
-                      Max Investment
+                      {t('quantitative.maximumInvestment')}
                     </span>
                     <span className="text-black font-medium">
-                      ${plan.maxAmount === 100000 ? "10,000+" : plan.maxAmount}
+                      $500,000
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">Daily Profit</span>
+                    <span className="text-gray-400 text-sm">{t('quantitative.dailyReturn')}</span>
                     <span className="text-[#4CAF50] font-medium">
                       {plan.dailyRate}%
                     </span>
@@ -664,7 +634,7 @@ const QuantitativePage: React.FC = () => {
                   variant="default"
                   onClick={() => handleStartInvestment(plan)}
                 >
-                  Start Trading <ArrowRight className="ml-2 h-4 w-4" />
+                  {t('quantitative.investNow')} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>
@@ -679,7 +649,7 @@ const QuantitativePage: React.FC = () => {
       >
         <DialogContent className="bg-white border-gray-200 text-gray-900">
           <DialogHeader>
-            <DialogTitle>Quantitative Trading Process</DialogTitle>
+            <DialogTitle>Ai Trading Process</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 py-4">
             {simulationSteps.map((step, index) => (
@@ -729,20 +699,20 @@ const QuantitativePage: React.FC = () => {
         <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-center text-black mb-4">
-              Welcome To Nebrix Quantitative Trading
+              Welcome To Nebrix Ai Trading
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 text-sm">
             <p>
-              Nebrix is a global quantitative trading platform focused on helping
+              Nebrix is a global Ai trading platform focused on helping
               bank that helps people in Taiwan and around the world trade
               currencies. The bank was established in 2011 and is making inroads
               into the African market.
             </p>
 
             <h3 className="text-[#4F9CF9] font-medium mt-4">
-              Nebrix automatic quantitative money-making function
+              Nebrix automatic Ai money-making function
             </h3>
             <p>
               Nebrix can buy Bitcoin at a low price from Exchange A within 1

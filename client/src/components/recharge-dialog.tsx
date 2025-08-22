@@ -26,7 +26,7 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [network, setNetwork] = useState<"tron" | "bsc">("tron");
+  const [network, setNetwork] = useState<"bsc">("bsc");
   const [amount, setAmount] = useState("");
   const [step, setStep] = useState<"amount" | "address">("amount");
   const [address, setAddress] = useState("");
@@ -112,86 +112,31 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({
 
         {step === "amount" ? (
           <>
-            <Tabs
-              defaultValue="tron"
-              className="w-full"
-              onValueChange={(value) => setNetwork(value as "tron" | "bsc")}
-            >
-              <TabsList className="grid w-full grid-cols-2 bg-blue">
-                <TabsTrigger
-                  value="tron"
-                  className="data-[state=active]:bg-[#4F9CF9] data-[state=active]:text-black"
-                >
-                  USDT-TRC20 (TRON)
-                </TabsTrigger>
-                <TabsTrigger
-                  value="bsc"
-                  className="data-[state=active]:bg-[#4F9CF9] data-[state=active]:text-black"
-                >
-                  USDT-BEP20 (BSC)
-                </TabsTrigger>
-              </TabsList>
+            <div className="w-full">
+              <div className="bg-[#4F9CF9] text-black text-center py-2 px-4 rounded-lg font-medium">
+                USDT-BEP20 (BSC)
+              </div>
 
-              <TabsContent value="tron" className="mt-4">
+              <div className="mt-4">
                 <div className="space-y-4">
                   <div className="bg-white border border-gray-200 p-3 rounded-lg">
-                    <p className="text-sm text-gray-300 mb-2">
+                    <p className="text-sm text-black mb-2 font-medium">
                       Network Information
                     </p>
-                    <p className="text-xs font-bold text-gray-100">
-                      Address: {addresses.tron}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      USDT on Tron Network (TRC20)
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      Min deposit: 10 USDT
-                    </p>
-
-                    <p className="text-xs text-gray-400">
-                      10% welcome bonus on first deposit
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      Processing time: 1-5 minutes
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="tron-amount">Enter Amount (USDT)</Label>
-                    <Input
-                      id="tron-amount"
-                      type="number"
-                      min="50"
-                      step="1"
-                      placeholder="Minimum 10 USDT"
-                      className="bg-white border-gray-200 text-gray-100"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="bsc" className="mt-4">
-                <div className="space-y-4">
-                  <div className="bg-white border border-gray-200 p-3 rounded-lg">
-                    <p className="text-sm text-gray-300 mb-2">
-                      Network Information
-                    </p>
-                    <p className="text-xs font-bold text-gray-100">
+                    <p className="text-xs font-bold text-black">
                       Address: {addresses.bsc}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-black">
                       USDT on Binance Smart Chain (BEP20)
                     </p>
-                    <p className="text-xs text-gray-400">
-                      Min deposit: 10 USDT
+                    <p className="text-xs text-black">
+                      Min deposit: 5 USDT
                     </p>
-                    <p className="text-xs text-gray-400">
-                      10% welcome bonus on first deposit
+                    <p className="text-xs text-black">
+                      Platform fee: 5% (95% will reflect in your dashboard)
                     </p>
-                    <p className="text-xs text-gray-400">
-                      Processing time: 3-10 minutes
+                    <p className="text-xs text-black">
+                      Processing time: Immediate via smart contract
                     </p>
                   </div>
 
@@ -202,15 +147,15 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({
                       type="number"
                       min="50"
                       step="1"
-                      placeholder="Minimum 10 USDT"
+                      placeholder="Minimum 5USDT"
                       className="bg-white border-gray-200 text-gray-900"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                     />
                   </div>
                 </div>
-              </TabsContent>
-            </Tabs>
+              </div>
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="wallet-address">
@@ -268,7 +213,7 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({
                 {amount} USDT
               </p>
               <p className="text-xs text-gray-400">
-                on {network === "tron" ? "TRON (TRC20)" : "BSC (BEP20)"} network
+                on BSC (BEP20) network
               </p>
             </div>
 
@@ -276,16 +221,14 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({
               <Label className="text-sm">To this address:</Label>
               <div className="flex items-center bg-white p-3 rounded-lg">
                 <p className="text-xs text-gray-300 flex-1 font-mono break-all">
-                  {network === "tron" ? addresses.tron : addresses.bsc}
+                  {addresses.bsc}
                 </p>
                 <Button
                   size="sm"
                   variant="ghost"
                   className="text-[#4F9CF9] hover:text-[#E0B83C] hover:bg-transparent ml-2"
                   onClick={() =>
-                    copyAddress(
-                      network === "tron" ? addresses.tron : addresses.bsc,
-                    )
+                    copyAddress(addresses.bsc)
                   }
                 >
                   <Copy size={16} />
@@ -297,8 +240,7 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({
               <p className="text-sm text-amber-300">Important:</p>
               <ul className="list-disc list-inside text-xs text-amber-200 space-y-1">
                 <li>
-                  Only send USDT on the{" "}
-                  {network === "tron" ? "TRON (TRC20)" : "BSC (BEP20)"} network
+                  Only send USDT on the BSC (BEP20) network
                 </li>
                 <li>Sending any other token may result in permanent loss</li>
                 <li>

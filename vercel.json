@@ -1,0 +1,68 @@
+{
+  "version": 2,
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "client/dist",
+  "installCommand": "npm install",
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/auth/(.*)",
+      "dest": "/api/auth.js"
+    },
+    {
+      "src": "/api/users/(.*)",
+      "dest": "/api/users.js"
+    },
+    {
+      "src": "/api/transactions(.*)",
+      "dest": "/api/transactions.js"
+    },
+    {
+      "src": "/api/investments(.*)",
+      "dest": "/api/investments.js"
+    },
+    {
+      "src": "/api/crypto/prices",
+      "dest": "/api/crypto/prices.js"
+    },
+    {
+      "src": "/api/referrals(.*)",
+      "dest": "/api/referrals.js"
+    },
+    {
+      "src": "/api/notifications(.*)",
+      "dest": "/api/notifications.js"
+    },
+    {
+      "src": "/api/invite-codes(.*)",
+      "dest": "/api/invite-codes.js"
+    },
+    {
+      "src": "/api/password-reset/(.*)",
+      "dest": "/api/password-reset.js"
+    },
+    {
+      "src": "/api/ranks(.*)",
+      "dest": "/api/ranks.js"
+    },
+    {
+      "src": "/api/admin/(.*)",
+      "dest": "/api/admin.js"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

@@ -197,7 +197,7 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
         console.log("Login successful");
         toast({
           title: "Login successful",
-          description: "Welcome back to TiBank!",
+          description: "Welcome back to Nebrix!",
         });
         setLocation("/");
       },
@@ -217,7 +217,7 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
       onSuccess: (_) => {
         toast({
           title: "Registration successful",
-          description: "Welcome to TiBank!",
+          description: "Welcome to Nebrix!",
           variant: "default",
         });
         setLocation("/");

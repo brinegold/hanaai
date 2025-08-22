@@ -14,6 +14,7 @@ import { AuthProvider } from "./hooks/use-auth";
 import ResetPasswordPage from "./pages/reset-password-page";
 import AdminPage from "./pages/admin-page";
 import { GoogleTranslate } from "@/components/GoogleTranslate";
+import { LanguageProvider } from "./hooks/use-language";
 
 function Router() {
   return (
@@ -39,11 +40,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <div className="min-h-screen bg-white text-gray-800">
-          <Router />
-          <Toaster />
-          <GoogleTranslate />
-        </div>
+        <LanguageProvider>
+          <div className="min-h-screen bg-white text-gray-800">
+            <Router />
+            <Toaster />
+            <GoogleTranslate />
+          </div>
+        </LanguageProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

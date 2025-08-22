@@ -11,7 +11,7 @@ const Logo: React.FC<LogoProps> = ({ size = "medium" }) => {
   const sizes = {
     small: {
       container: "p-2",
-      image: "w-8 h-10",
+      image: "w-22 h-20",
       text: "text-sm",
     },
     medium: {
@@ -21,7 +21,7 @@ const Logo: React.FC<LogoProps> = ({ size = "medium" }) => {
     },
     large: {
       container: "p-4",
-      image: "w-12 h-12",
+      image: "w-30 h-30",
       text: "text-2xl",
     },
   };

@@ -21,6 +21,9 @@ import RechargeDialog from "@/components/recharge-dialog";
 import WithdrawDialog from "@/components/withdraw-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/use-language";
+import { useQuery } from "@tanstack/react-query";
+import { Crown, Star, Award } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -30,10 +33,115 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RandomUserDisplay } from "@/components/random-user-display"; // Assuming this is the correct import path
 
+// Rank Display Component
+const RankDisplay: React.FC = () => {
+  const { user } = useAuth();
+  const { t } = useLanguage();
+
+  const { data: ranks } = useQuery({
+    queryKey: ["/api/ranks"],
+  });
+
+  // Automatically check and update user rank when component loads
+  useQuery({
+    queryKey: ["/api/check-rank", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const response = await fetch(`/api/check-rank/${user.id}`);
+      return response.json();
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const currentRank = user?.currentRank || "none";
+  const totalVolume = parseFloat(user?.totalVolumeGenerated?.toString() || "0");
+
+  // Find next rank
+  const nextRank = ranks?.find((rank: any) => 
+    parseFloat(rank.requiredVolume) > totalVolume
+  ) || (ranks && ranks.length > 0 ? ranks[0] : null);
+
+  const getRankIcon = (rank: string) => {
+    if (rank === "none") return null;
+    if (["President", "Chairman", "Vice Chairman"].includes(rank)) {
+      return <Crown className="h-5 w-5 text-yellow-500" />;
+    }
+    if (["Executive", "Director"].includes(rank)) {
+      return <Award className="h-5 w-5 text-purple-500" />;
+    }
+    return <Star className="h-5 w-5 text-blue-500" />;
+  };
+
+  const getRankColor = (rank: string) => {
+    if (rank === "none") return "text-gray-500";
+    if (["President", "Chairman", "Vice Chairman"].includes(rank)) {
+      return "text-yellow-600";
+    }
+    if (["Executive", "Director"].includes(rank)) {
+      return "text-purple-600";
+    }
+    return "text-blue-600";
+  };
+
+  // Always show rank display, even for users with no rank
+  // if (currentRank === "none" && !nextRank) return null;
+
+  return (
+    <div className="mx-4 mb-6">
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            {getRankIcon(currentRank)}
+            <div>
+              <h3 className={`font-semibold ${getRankColor(currentRank)}`}>
+                {currentRank === "none" ? t('rank.noRank') : currentRank}
+              </h3>
+              <p className="text-xs text-gray-500">
+                {t('rank.totalVolume')}: ${totalVolume.toLocaleString()}
+              </p>
+            </div>
+          </div>
+          
+          {nextRank && (
+            <div className="text-right">
+              <p className="text-xs text-gray-500">{t('rank.nextRank')}</p>
+              <p className="font-medium text-sm text-gray-700">
+                {nextRank.name}
+              </p>
+              <p className="text-xs text-blue-600">
+                ${(parseFloat(nextRank.requiredVolume) - totalVolume).toLocaleString()} {t('rank.remaining')}
+              </p>
+            </div>
+          )}
+        </div>
+        
+        {nextRank && (
+          <div className="mt-3">
+            <div className="flex justify-between text-xs text-gray-600 mb-1">
+              <span>${totalVolume.toLocaleString()}</span>
+              <span>${parseFloat(nextRank.requiredVolume).toLocaleString()}</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                style={{ 
+                  width: `${Math.min((totalVolume / parseFloat(nextRank.requiredVolume)) * 100, 100)}%` 
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const bubbleStyle = (bottom: string, backgroundColor: string): React.CSSProperties => ({
     position: 'fixed',
@@ -70,12 +178,6 @@ const DashboardPage: React.FC = () => {
     setWithdrawDialogOpen(true);
   };
 
-  const handleVipsClick = () => {
-    toast({
-      title: "VIP Feature",
-      description: "VIP plans coming soon. Check back later!",
-    });
-  };
 
   const handleTeamClick = () => {
     navigate("/invite");
@@ -136,10 +238,7 @@ const DashboardPage: React.FC = () => {
             <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
           </svg>
           <span className="animate-marquee whitespace-nowrap">
-            Market trading is in USDT, and the minimum withdrawal amount is 3
-            USDT. The withdrawal fee is 0.5 USDT.Minimum Deposit is $10, Daily
-            Returns is 3% and Withdrawal is allowed only on Fridays. Please note
-            Trading Signals is once Per Day
+            {t('dashboard.marketBanner')}
           </span>
         </div>
       </div>
@@ -148,16 +247,15 @@ const DashboardPage: React.FC = () => {
       <div className="grid grid-cols-4 gap-2 mx-4 mb-6">
         <FeatureButton
           icon={Wallet}
-          label="Deposit"
+          label={t('dashboard.deposit')}
           onClick={handleRechargeClick}
         />
         <FeatureButton
           icon={RefreshCcw}
-          label="Withdraw"
+          label={t('dashboard.withdraw')}
           onClick={handleWithdrawClick}
         />
-        <FeatureButton icon={ChartPie} label="VIPs" onClick={handleVipsClick} />
-        <FeatureButton icon={Users} label="Team" onClick={handleTeamClick} />
+        <FeatureButton icon={Users} label={t('nav.invite')} onClick={handleTeamClick} />
 
         {/* Second Row */}
         <FeatureButton
@@ -177,10 +275,13 @@ const DashboardPage: React.FC = () => {
         />
         <FeatureButton
           icon={TrendingUp}
-          label="Wealth Growth"
+          label={t('dashboard.aiTrading')}
           onClick={handleWealthGrowthClick}
         />
       </div>
+
+      {/* Rank Display */}
+      <RankDisplay />
 
       {/* Asset Summary */}
       <div className="flex space-x-4 mx-4 mb-6">
@@ -243,14 +344,14 @@ const DashboardPage: React.FC = () => {
       <div className="mx-4 mb-6 overflow-hidden">
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg px-4 py-3 flex items-center justify-between">
           <div>
-            <h3 className="text-[#121212] font-medium">Invite Friends</h3>
-            <p className="text-[#121212]/80 text-xs">Earn bonus now!</p>
+            <h3 className="text-[#121212] font-medium">{t('invite.title')}</h3>
+            <p className="text-[#121212]/80 text-xs">Earn Income now!</p>
           </div>
           <button
-            className="px-3 py-1.5 rounded-lg bg-[#121212] text-black text-xs"
+            className="px-3 py-1.5 rounded-lg bg-white text-black text-xs"
             onClick={handleInviteClick}
           >
-            Invite Now
+            {t('nav.invite')}
           </button>
         </div>
       </div>
@@ -288,7 +389,7 @@ const DashboardPage: React.FC = () => {
       <div className="mx-4 mb-6 p-4 bg-white border border-gray-200 rounded-lg text-sm">
         <h3 className="text-gray-900 font-medium mb-2">Additional Information</h3>
         <div className="text-gray-700">
-          The Minimum deposit amount for Tibank quantitative trading is 10USDT,
+          The Minimum deposit amount for Nebrix quantitative trading is 10USDT,
           and the minimum withdrawal amount is 3USDT.<br></br> The withdrawal
           fee is 0.5USDT and the funds will be credited to your account within
           three minutes.<br></br>

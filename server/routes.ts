@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { scrypt } from "@noble/hashes/scrypt";
 import { SalaryScheduler } from "./salary-scheduler";
 import { setupAuth } from "./auth";
 import { z } from "zod";
@@ -8,15 +8,22 @@ import {
   insertInvestmentSchema,
   insertTransactionSchema,
   inviteCodes,
+  ranks,
+  userRankAchievements,
+  insertRankSchema,
+  insertUserRankAchievementSchema,
   type User,
   type Investment,
   type Transaction,
+  type Rank,
+  type UserRankAchievement,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 import { scrypt, timingSafeEqual, randomBytes } from "crypto";
 import { promisify } from "util";
 import nodemailer from "nodemailer";
+import { storage } from "./storage";
 
 const scryptAsync = promisify(scrypt);
 
@@ -32,7 +39,8 @@ async function comparePasswords(
 }
 
 import { registerAdminRoutes } from "./admin-routes";
-import { notifications } from "@shared/schema";
+import { notifications, users, transactions, investments, referrals } from "@shared/schema";
+import { sql, sum, and } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register admin routes
@@ -45,8 +53,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Welcome code endpoint
   app.get("/api/welcome-code", async (req, res) => {
     try {
-      const welcomeCode = await storage.createWelcomeInviteCode();
-      res.json({ code: welcomeCode.code });
+      // Generate a random 6-character code
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      // Create welcome invite code
+      const welcomeCode = await db.insert(inviteCodes).values({
+        code,
+        createdById: 1, // System user
+      }).returning();
+      
+      res.json({ code: welcomeCode[0].code });
     } catch (error) {
       console.error("Error getting welcome code:", error);
       res.status(500).json({ error: "Failed to get welcome code" });
@@ -233,25 +249,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(req.user!.id);
       const userBalance = user ? parseFloat(user.totalAssets.toString()) : 0;
 
-      // Always show both plans
+      // Single investment plan
       const plans = [
         {
-          id: "vip1",
-          name: "VIP 1",
-          minAmount: userBalance >= 50 ? userBalance : 50,
+          id: "ai-trading",
+          name: "AI Trading",
+          minAmount: Math.max(1, userBalance),
           maxAmount: 500000,
           dailyRate: 1.5,
-          vipLevel: 1,
-          description: `Earn 1.5% daily on your investment (Min $50)`,
-        },
-        {
-          id: "vip2",
-          name: "VIP 2",
-          minAmount: userBalance < 50 ? userBalance : 10,
-          maxAmount: 49,
-          dailyRate: 1.5,
-          vipLevel: 2,
-          description: `Earn 1.5% daily on your investment (Min $10)`,
+          description: `Earn 1.5% daily on your investment (Min $1)`,
         },
       ];
 
@@ -276,17 +282,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userBalance = parseFloat(user.totalAssets.toString());
 
-      // Validate VIP 2 plan restrictions
-      if (plan === "vip2" && userBalance >= 50) {
-        return res.status(400).json({
-          error: "Users with balance $50 or more must use VIP 1 plan",
-        });
-      }
-
-      if (typeof amount !== "number" || amount < 10) {
+      if (typeof amount !== "number" || amount < 1) {
         return res
           .status(400)
-          .json({ error: "Investment amount must be at least $10" });
+          .json({ error: "Investment amount must be at least $1" });
+      }
+
+      if (amount > 500000) {
+        return res
+          .status(400)
+          .json({ error: "Investment amount cannot exceed $500,000" });
       }
 
       if (typeof plan !== "string" || !plan) {
@@ -333,16 +338,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const investment = await storage.createInvestment(investmentToCreate);
 
-      // Get the VIP level from the plan ID (e.g., "vip1" -> 1, "vip2" -> 2)
-      const vipLevel = parseInt(plan.replace("vip", "")) || 1;
-
-      // Calculate immediate profit based on VIP level
-      let instantProfitPercentage = 0.03; // Default for VIP 1 (3%)
-
-      if (vipLevel === 2) {
-        instantProfitPercentage = 0.01; // 1% for VIP 2
-      }
-
+      // Calculate immediate profit for AI Trading (1.5% instant profit)
+      const instantProfitPercentage = 0.015; // 1.5% instant profit
       const instantProfit = amount * instantProfitPercentage;
       const currentTotalAssets = parseFloat(user.totalAssets.toString());
 
@@ -546,21 +543,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const code = Math.random().toString(36).substring(2, 8).toUpperCase();
 
       // Create new invite code and update user's codes
-      const [inviteCode, updatedUser] = await Promise.all([
-        storage.createInviteCode({
+      const [inviteCode] = await Promise.all([
+        db.insert(inviteCodes).values({
           code,
           createdById: req.user!.id,
-        }),
-        storage.updateUser(req.user!.id, {
+        }).returning(),
+        db.update(users).set({
           inviteCode: code,
           referralCode: code,
           updatedAt: new Date(),
-        }),
+        }).where(eq(users.id, req.user!.id)),
       ]);
 
       // Return the updated data
       res.json({
-        ...inviteCode,
+        ...inviteCode[0],
         inviteCode: code,
         referralCode: code,
       });
@@ -593,7 +590,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { token, password } = req.body;
 
       // Find user by reset token and check if it's still valid
-      const user = await storage.getUserByResetToken(token);
+      const userResult = await db.select().from(users).where(eq(users.resetToken, token));
+      const user = userResult[0];
 
       if (
         !user ||
@@ -611,12 +609,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newHashedPassword = `${hashedPassword.toString("hex")}.${salt}`;
 
       // Update user's password and clear reset token
-      await storage.updateUser(user.id, {
+      await db.update(users).set({
         password: newHashedPassword,
         resetToken: null,
         resetTokenExpiry: null,
         updatedAt: new Date(),
-      });
+      }).where(eq(users.id, user.id));
 
       res.json({ message: "Password reset successful" });
     } catch (err) {
@@ -631,7 +629,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { email } = req.body;
 
       // Find user by email
-      const user = await storage.getUserByEmail(email);
+      const userResult = await db.select().from(users).where(eq(users.email, email));
+      const user = userResult[0];
 
       if (user) {
         // Generate reset token
@@ -639,11 +638,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const resetExpiry = new Date(Date.now() + 3600000); // 1 hour
 
         // Store reset token and expiry in the database
-        await storage.updateUser(user.id, {
+        await db.update(users).set({
           resetToken: resetToken,
           resetTokenExpiry: resetExpiry,
           updatedAt: new Date(),
-        });
+        }).where(eq(users.id, user.id));
 
         // Create nodemailer transporter with SMTP
         const transporter = nodemailer.createTransport({
@@ -690,13 +689,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
 
     try {
-      const user = await storage.getUser(req.user!.id);
+      const userResult = await db.select().from(users).where(eq(users.id, req.user!.id));
+      const user = userResult[0];
       if (!user) return res.status(404).send("User not found");
 
       // Get investments, transactions, and referrals
-      const investments = await storage.getInvestmentsByUserId(user.id);
-      const transactions = await storage.getTransactionsByUserId(user.id);
-      const referrals = await storage.getReferralsByReferrerId(user.id);
+      const investmentResults = await db.select().from(investments).where(eq(investments.userId, user.id));
+      const transactionResults = await db.select().from(transactions).where(eq(transactions.userId, user.id));
+      const referralResults = await db.select().from(referrals).where(eq(referrals.referrerId, user.id));
       const userNotifications = await db
         .select()
         .from(notifications)
@@ -704,7 +704,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .orderBy(desc(notifications.createdAt));
 
       // Calculate total earnings and other statistics
-      const totalInvested = investments.reduce(
+      const totalInvested = investmentResults.reduce(
         (sum, inv) => sum + parseFloat(inv.amount.toString()),
         0,
       );
@@ -732,10 +732,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalInvested,
           currentBalance,
           totalProfit,
-          activeInvestments: investments.filter(
+          activeInvestments: investmentResults.filter(
             (inv) => inv.status === "Active",
           ).length,
-          referralsCount: referrals.length,
+          referralsCount: referralResults.length,
         },
       });
     } catch (err) {
@@ -756,7 +756,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (phone) userData.phone = phone;
       if (telegram) userData.telegram = telegram;
 
-      const updatedUser = await storage.updateUser(req.user!.id, userData);
+      await db.update(users).set(userData).where(eq(users.id, req.user!.id));
+      const updatedUserResult = await db.select().from(users).where(eq(users.id, req.user!.id));
+      const updatedUser = updatedUserResult[0];
       if (!updatedUser) return res.status(404).send("User not found");
 
       // Return user without sensitive data
@@ -774,14 +776,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
 
     try {
-      const user = await storage.getUser(req.user!.id);
+      const userResult = await db.select().from(users).where(eq(users.id, req.user!.id));
+      const user = userResult[0];
       if (!user) return res.status(404).send("User not found");
 
-      const investments = await storage.getInvestmentsByUserId(user.id);
-      const activeInvestments = investments.filter(
+      const investmentResults = await db.select().from(investments).where(eq(investments.userId, user.id));
+      const activeInvestments = investmentResults.filter(
         (inv) => inv.status === "Active",
       );
-      const referrals = await storage.getReferralsByReferrerId(user.id);
+      const referralResults = await db.select().from(referrals).where(eq(referrals.referrerId, user.id));
 
       res.json({
         totalAssets: user.totalAssets,
@@ -791,7 +794,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         yesterdayEarnings: user.yesterdayEarnings,
         commissionToday: user.commissionToday,
         activeInvestmentsCount: activeInvestments.length,
-        referralsCount: referrals.length,
+        referralsCount: referralResults.length,
       });
     } catch (err) {
       console.error("Error fetching dashboard stats:", err);
@@ -1114,6 +1117,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Change password - protected route
+  app.post("/api/change-password", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+
+    try {
+      const schema = z.object({
+        currentPassword: z.string().min(1),
+        newPassword: z.string().min(6),
+      });
+
+      const { currentPassword, newPassword } = schema.parse(req.body);
+
+      // Get user from database
+      const user = await storage.getUser(req.user!.id);
+      if (!user) return res.status(404).send("User not found");
+
+      // Verify current password
+      const isCurrentPasswordValid = await scrypt.verify(
+        user.password,
+        currentPassword,
+      );
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({
+          message: "Current password is incorrect",
+        });
+      }
+
+      // Hash new password
+      const hashedNewPassword = await scrypt.hash(newPassword);
+
+      // Update password in database
+      await storage.updateUser(req.user!.id, {
+        password: hashedNewPassword,
+      });
+
+      res.json({ success: true, message: "Password changed successfully" });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Create transaction (deposit/withdrawal) - protected route
   app.post("/api/transactions", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
@@ -1132,12 +1177,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transactionData = schema.parse(req.body);
 
       // Handle different transaction types
-      const user = await storage.getUser(req.user!.id);
+      const userResult = await db.select().from(users).where(eq(users.id, req.user!.id));
+      const user = userResult[0];
       if (!user) return res.status(404).send("User not found");
 
-      const existingTransactions = await storage.getTransactionsByUserId(
-        req.user!.id,
-      );
+      const existingTransactions = await db.select().from(transactions).where(eq(transactions.userId, req.user!.id));
       const completedDeposits = existingTransactions.filter(
         (t) => t.type === "Deposit" && t.status === "Completed",
       );
@@ -1149,32 +1193,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
             message: "Minimum deposit amount is $10",
           });
         }
+        
+        // Calculate 95% of deposit amount (5% platform fee)
+        const depositAmount = transactionData.amount;
+        const platformFee = depositAmount * 0.05; // 5% fee
+        const userReceives = depositAmount * 0.95; // 95% goes to user
+        
+        // Update user's balance with 95% of the deposit
+        const currentTotalAssets = parseFloat(user.totalAssets.toString());
+        const newTotalAssets = (currentTotalAssets + userReceives).toString();
+        
+        await db.update(users).set({
+          totalAssets: newTotalAssets,
+          quantitativeAssets: newTotalAssets,
+          withdrawableAmount: (parseFloat(user.withdrawableAmount.toString()) + userReceives).toString(),
+        }).where(eq(users.id, req.user!.id));
       } else if (transactionData.type === "Withdrawal") {
-        // Skip time check for admin users
-        if (!user.isAdmin) {
-          // Check if withdrawal is on Friday in Taiwan timezone
-          const nowInTaiwan = new Date(
-            new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" }),
-          );
-          const dayOfWeek = nowInTaiwan.getDay(); // 0 is Sunday, 5 is Friday
-
-          if (dayOfWeek !== 5) {
-            return res.status(400).json({
-              message:
-                "Withdrawals are only allowed on Fridays (Taiwan Time Zone UTC+8)",
-            });
-          }
-        }
+        // Withdrawals are now available every day
+        // Special rule: 10% of referral bonuses can only be withdrawn on Saturdays
 
         // Check for minimum withdrawal
-        if (transactionData.amount < 3) {
+        if (transactionData.amount < 1) {
           return res.status(400).json({
-            message: "Minimum withdrawal amount is $3",
+            message: "Minimum withdrawal amount is $1",
           });
         }
 
         // Get all user's deposits and commissions
-        const userTransactions = await storage.getTransactionsByUserId(user.id);
+        const userTransactions = await db.select().from(transactions).where(eq(transactions.userId, user.id));
         const deposits = userTransactions.filter(
           (tx) => tx.type === "Deposit" && tx.status === "Completed",
         );
@@ -1189,19 +1235,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
         const maxWithdrawableAmount = maxFromDeposits + totalCommissions;
 
-        // Check if withdrawal amount exceeds limit
-        const totalAmount = transactionData.amount + (transactionData.fee || 0);
+        // Calculate 10% withdrawal fee
+        const withdrawalFee = transactionData.amount * 0.1;
+        const totalAmount = transactionData.amount + withdrawalFee;
+        
         if (totalAmount > maxWithdrawableAmount) {
           return res.status(400).json({
             message: `Maximum withdrawal amount is ${maxWithdrawableAmount.toFixed(2)} USDT (200% of deposits plus commissions)`,
           });
         }
 
-        // Check sufficient funds for withdrawal
+        // Check sufficient funds for withdrawal (including 10% fee)
         if (parseFloat(user.totalAssets.toString()) < totalAmount) {
           return res
             .status(400)
-            .json({ message: "Insufficient funds for withdrawal" });
+            .json({ message: "Insufficient funds for withdrawal (including 10% fee)" });
         }
 
         // For withdrawals, we only check the balance but don't deduct it yet
@@ -1215,7 +1263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "Pending",
         network: transactionData.network,
         address: transactionData.address,
-        fee: transactionData.type === "Withdrawal" ? "0.5" : "0",
+        fee: transactionData.type === "Withdrawal" ? (transactionData.amount * 0.1).toString() : "0",
         processingTime: null,
         completionTime: null,
         reason: null,
@@ -1223,17 +1271,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: req.user!.id,
       };
 
-      // If it's a deposit, set quantitative assets to 0
-      if (transactionData.type === "Deposit") {
-        await storage.updateUser(req.user!.id, {
-          quantitativeAssets: "0",
-        });
-      }
+      // Deposit balance update is handled above in the validation section
 
-      const transaction = await storage.createTransaction(transactionToCreate);
+      const transactionResult = await db.insert(transactions).values(transactionToCreate).returning();
+      const transaction = transactionResult[0];
 
       // Create transaction history entry
-      await storage.createTransactionHistory({
+      await db.insert(transactionHistory).values({
         transactionId: transaction.id,
         status: "Pending",
         timestamp: new Date(),
@@ -1307,6 +1351,220 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error marking notification as read:", error);
       res.status(500).json({ error: "Failed to mark notification as read" });
+    }
+  });
+
+  // Initialize rank system with predefined ranks
+  app.post("/api/admin/initialize-ranks", async (req, res) => {
+    // Temporarily removed auth check for initialization
+
+    try {
+      const predefinedRanks = [
+        { name: "Manager", requiredVolume: "3000", incentiveAmount: "150", incentiveDescription: "$150 bonus", order: 1 },
+        { name: "Leader", requiredVolume: "7000", incentiveAmount: "250", incentiveDescription: "$250 bonus", order: 2 },
+        { name: "Ambassador", requiredVolume: "15000", incentiveAmount: "1000", incentiveDescription: "$1,000 bonus", order: 3 },
+        { name: "Director", requiredVolume: "20000", incentiveAmount: "3000", incentiveDescription: "$3,000 + Apple watch", order: 4 },
+        { name: "Executive", requiredVolume: "50000", incentiveAmount: "5000", incentiveDescription: "$5,000 + Laptop", order: 5 },
+        { name: "Vice Chairman", requiredVolume: "100000", incentiveAmount: "10000", incentiveDescription: "$10,000 Bonus + A car reward", order: 6 },
+        { name: "Chairman", requiredVolume: "500000", incentiveAmount: "20000", incentiveDescription: "$20,000 Bonus + A trip to UK", order: 7 },
+        { name: "President", requiredVolume: "1000000", incentiveAmount: "30000", incentiveDescription: "$30,000 bonus + A House", order: 8 },
+      ];
+
+      // Insert ranks if they don't exist
+      for (const rank of predefinedRanks) {
+        const existing = await db.select().from(ranks).where(eq(ranks.name, rank.name));
+        if (existing.length === 0) {
+          await db.insert(ranks).values(rank);
+        }
+      }
+
+      res.json({ success: true, message: "Ranks initialized successfully" });
+    } catch (error) {
+      console.error("Error initializing ranks:", error);
+      res.status(500).json({ error: "Failed to initialize ranks" });
+    }
+  });
+
+  // Get all ranks
+  app.get("/api/ranks", async (req, res) => {
+    try {
+      const allRanks = await db.select().from(ranks).orderBy(ranks.order);
+      res.json(allRanks);
+    } catch (error) {
+      console.error("Error fetching ranks:", error);
+      res.status(500).json({ error: "Failed to fetch ranks" });
+    }
+  });
+
+  // Calculate and update user volume and rank
+  async function calculateUserVolume(userId: number): Promise<number> {
+    // Get user's own investments
+    const userInvestments = await db
+      .select({ amount: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` })
+      .from(transactions)
+      .where(and(eq(transactions.userId, userId), eq(transactions.type, "Deposit")));
+
+    const ownInvestment = userInvestments[0]?.amount || 0;
+
+    // Get downline investments (recursive referral tree)
+    const downlineInvestments = await getDownlineInvestments(userId);
+
+    return ownInvestment + downlineInvestments;
+  }
+
+  async function getDownlineInvestments(userId: number): Promise<number> {
+    // Get direct referrals
+    const directReferrals = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.referrerId, userId));
+
+    let totalDownlineInvestment = 0;
+
+    for (const referral of directReferrals) {
+      // Get referral's investments
+      const referralInvestments = await db
+        .select({ amount: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` })
+        .from(transactions)
+        .where(and(eq(transactions.userId, referral.id), eq(transactions.type, "Deposit")));
+
+      const referralAmount = referralInvestments[0]?.amount || 0;
+      totalDownlineInvestment += referralAmount;
+
+      // Recursively get their downline
+      totalDownlineInvestment += await getDownlineInvestments(referral.id);
+    }
+
+    return totalDownlineInvestment;
+  }
+
+  // Check and update user rank
+  app.get("/api/check-rank/:userId", async (req, res) => {
+
+
+    try {
+      const userId = parseInt(req.params.userId);
+      const totalVolume = await calculateUserVolume(userId);
+
+      // Update user's total volume
+      await db
+        .update(users)
+        .set({ totalVolumeGenerated: totalVolume.toString() })
+        .where(eq(users.id, userId));
+
+      // Get all ranks ordered by required volume (descending)
+      const allRanks = await db.select().from(ranks).orderBy(desc(sql`CAST(${ranks.requiredVolume} AS DECIMAL)`));
+
+      // Find the highest rank the user qualifies for
+      let newRank = "none";
+      let qualifiedRank: Rank | null = null;
+
+      for (const rank of allRanks) {
+        if (totalVolume >= parseFloat(rank.requiredVolume)) {
+          newRank = rank.name;
+          qualifiedRank = rank;
+          break;
+        }
+      }
+
+      // Get user's current rank
+      const user = await db.select().from(users).where(eq(users.id, userId));
+      const currentRank = user[0]?.currentRank || "none";
+
+      // If user achieved a new rank
+      if (newRank !== currentRank && qualifiedRank) {
+        // Update user's current rank
+        await db
+          .update(users)
+          .set({ currentRank: newRank })
+          .where(eq(users.id, userId));
+
+        // Check if user already received this rank's incentive
+        const existingAchievement = await db
+          .select()
+          .from(userRankAchievements)
+          .where(and(
+            eq(userRankAchievements.userId, userId),
+            eq(userRankAchievements.rankName, newRank)
+          ));
+
+        // If no existing achievement, create one and pay incentive
+        if (existingAchievement.length === 0) {
+          await db.insert(userRankAchievements).values({
+            userId,
+            rankName: newRank,
+            incentivePaid: true,
+            incentiveAmount: qualifiedRank.incentiveAmount,
+            volumeAtAchievement: totalVolume.toString(),
+          });
+
+          // Add incentive to user's withdrawable balance
+          const incentiveAmount = parseFloat(qualifiedRank.incentiveAmount);
+          const currentWithdrawable = parseFloat(user[0]?.withdrawableAmount || "0");
+          
+          await db
+            .update(users)
+            .set({ 
+              withdrawableAmount: (currentWithdrawable + incentiveAmount).toString(),
+              totalAssets: (parseFloat(user[0]?.totalAssets || "0") + incentiveAmount).toString()
+            })
+            .where(eq(users.id, userId));
+
+          // Create transaction record for the incentive
+          await db.insert(transactions).values({
+            userId,
+            type: "Rank Incentive",
+            amount: qualifiedRank.incentiveAmount,
+            status: "Completed",
+            reason: `Rank achievement: ${newRank}`,
+          });
+
+          res.json({ 
+            success: true, 
+            newRank, 
+            incentivePaid: true, 
+            incentiveAmount: qualifiedRank.incentiveAmount,
+            totalVolume 
+          });
+        } else {
+          res.json({ 
+            success: true, 
+            newRank, 
+            incentivePaid: false, 
+            message: "Rank updated but incentive already claimed",
+            totalVolume 
+          });
+        }
+      } else {
+        res.json({ 
+          success: true, 
+          currentRank, 
+          noRankChange: true, 
+          totalVolume 
+        });
+      }
+    } catch (error) {
+      console.error("Error checking user rank:", error);
+      res.status(500).json({ error: "Failed to check user rank" });
+    }
+  });
+
+  // Get user's rank achievements
+  app.get("/api/user/rank-achievements", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+
+    try {
+      const userId = req.user!.id;
+      const achievements = await db
+        .select()
+        .from(userRankAchievements)
+        .where(eq(userRankAchievements.userId, userId))
+        .orderBy(desc(userRankAchievements.achievedAt));
+
+      res.json(achievements);
+    } catch (error) {
+      console.error("Error fetching rank achievements:", error);
+      res.status(500).json({ error: "Failed to fetch rank achievements" });
     }
   });
 

@@ -1,12 +1,10 @@
 # TiBank - Cryptocurrency Investment Platform
 
-A full-stack web application for cryptocurrency investment and trading with referral system, built with React, TypeScript, Express.js, and PostgreSQL.
+A full-stack cryptocurrency investment platform optimized for Vercel deployment.
 
-## 🚀 Features
+## 🚀 Quick Deploy to Vercel
 
-### Core Functionality
-- **User Authentication**: Secure login/registration with password hashing and session management
-- **Investment Plans**: Two VIP tiers with different daily return rates (VIP 1: 3%, VIP 2: 1%)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/tibank)
 - **Real-time Crypto Prices**: Fetches live cryptocurrency prices from multiple exchanges (Binance, OKX, Huobi, Coinbase)
 - **Transaction Management**: Deposit, withdrawal, and profit tracking with transaction history
 - **Referral System**: Multi-level referral program with commission tracking

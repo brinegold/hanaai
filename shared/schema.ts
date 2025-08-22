@@ -21,6 +21,10 @@ export const users = pgTable("users", {
   securityPassword: text("security_password").notNull(),
   inviteCode: text("invite_code"),
   referralCode: text("referral_code").notNull().unique(),
+  currentRank: text("current_rank").default("none").notNull(),
+  totalVolumeGenerated: numeric("total_volume_generated", { precision: 12, scale: 2 })
+    .default("0")
+    .notNull(),
   totalAssets: numeric("total_assets", { precision: 10, scale: 2 })
     .default("0")
     .notNull(),
@@ -222,7 +226,7 @@ export const insertInvestmentSchema = createInsertSchema(investments)
     status: true,
   })
   .extend({
-    amount: z.number().min(50),
+    amount: z.number().min(1).max(500000),
     plan: z.string(),
     dailyRate: z.number(),
   });
@@ -252,6 +256,38 @@ export const transactionHistory = pgTable("transaction_history", {
   details: text("details"),
 });
 
+export const ranks = pgTable("ranks", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  requiredVolume: numeric("required_volume", { precision: 12, scale: 2 }).notNull(),
+  incentiveAmount: numeric("incentive_amount", { precision: 10, scale: 2 }).notNull(),
+  incentiveDescription: text("incentive_description").notNull(),
+  order: integer("order").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const userRankAchievements = pgTable("user_rank_achievements", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  rankName: text("rank_name").notNull(),
+  achievedAt: timestamp("achieved_at").defaultNow().notNull(),
+  incentivePaid: boolean("incentive_paid").default(false).notNull(),
+  incentiveAmount: numeric("incentive_amount", { precision: 10, scale: 2 }).notNull(),
+  volumeAtAchievement: numeric("volume_at_achievement", { precision: 12, scale: 2 }).notNull(),
+});
+
 export type InviteCode = typeof inviteCodes.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type TransactionHistory = typeof transactionHistory.$inferSelect;
+export type Rank = typeof ranks.$inferSelect;
+export type UserRankAchievement = typeof userRankAchievements.$inferSelect;
+
+export const insertRankSchema = createInsertSchema(ranks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserRankAchievementSchema = createInsertSchema(userRankAchievements).omit({
+  id: true,
+  achievedAt: true,
+});

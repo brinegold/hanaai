@@ -26,15 +26,15 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [network, setNetwork] = useState<"tron" | "bsc">("tron");
+  const [network, setNetwork] = useState<"bsc">("bsc");
   const [amount, setAmount] = useState("");
   const [address, setAddress] = useState("");
   const [securityPassword, setSecurityPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Calculate maximum amount that can be withdrawn (total assets - 0.5 USDT fee)
+  // Calculate maximum amount that can be withdrawn (total assets - 10% fee)
   const maxAmount = user
-    ? Math.max(0, parseFloat(user.withdrawableAmount.toString()) - 0.5)
+    ? Math.max(0, parseFloat(user.withdrawableAmount.toString()) * 0.9)
     : 0;
 
   const handleWithdraw = async () => {
@@ -49,27 +49,12 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
       return;
     }
 
-    // Check if today is Friday in UTC+8 timezone (Taiwan time)
-    const now = new Date();
-    const utc8Hours = now.getUTCHours() + 8;
-    const utc8Day = now.getUTCDay();
-    const taiwanDay = 5;
+    // Withdrawals are available every day - no day restriction
 
-    if (taiwanDay !== 5) {
-      // 5 is Friday
-      toast({
-        title: "Withdrawal unavailable",
-        description:
-          "Withdrawals are only available on Fridays (UTC+8 Taiwan time)",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (amountNum < 3) {
+    if (amountNum < 1) {
       toast({
         title: "Amount too small",
-        description: "Minimum withdrawal amount is 3 USDT",
+        description: "Minimum withdrawal amount is 1 USDT",
         variant: "destructive",
       });
       return;
@@ -78,7 +63,7 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
     if (amountNum > maxAmount) {
       toast({
         title: "Insufficient balance",
-        description: `Maximum withdrawal amount is ${maxAmount.toFixed(2)} USDT (including 0.5 USDT fee)`,
+        description: `Maximum withdrawal amount is ${maxAmount.toFixed(2)} USDT (after 10% fee)`,
         variant: "destructive",
       });
       return;
@@ -126,7 +111,7 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
         status: "Pending",
         network: network.toUpperCase(),
         address: address,
-        fee: 0.5, // USDT fee
+        fee: amountNum * 0.1, // 10% fee
       });
 
       if (!response.ok) {
@@ -173,92 +158,12 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs
-          defaultValue="tron"
-          className="w-full"
-          onValueChange={(value) => setNetwork(value as "tron" | "bsc")}
-        >
-          <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200">
-            <TabsTrigger
-              value="tron"
-              className="data-[state=active]:bg-[#4F9CF9] data-[state=active]:text-black"
-            >
-              USDT-TRC20 (TRON)
-            </TabsTrigger>
-            <TabsTrigger
-              value="bsc"
-              className="data-[state=active]:bg-[#4F9CF9] data-[state=active]:text-black"
-            >
-              USDT-BEP20 (BSC)
-            </TabsTrigger>
-          </TabsList>
+        <div className="w-full">
+          <div className="bg-[#4F9CF9] text-black text-center py-2 px-4 rounded-md mb-4">
+            USDT-BEP20 (BSC)
+          </div>
 
-          <TabsContent value="tron" className="mt-4">
-            <div className="space-y-4">
-              <div className="bg-white border border-gray-200 p-3 rounded-lg">
-                <p className="text-sm text-gray-300 mb-2">
-                  Withdrawal Information
-                </p>
-                <p className="text-xs text-gray-400">
-                  USDT on Tron Network (TRC20)
-                </p>
-                <p className="text-xs text-gray-400">Min withdrawal: 3 USDT</p>
-                <p className="text-xs text-gray-400">Fee: 0.5 USDT</p>
-                <p className="text-xs text-gray-400">
-                  Available on Fridays only (UTC+8)
-                </p>
-                <p className="text-xs text-gray-400">
-                  Processing time: 6-24 hours
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="tron-amount">Amount (USDT)</Label>
-                  <button
-                    type="button"
-                    className="text-xs text-[#4F9CF9] hover:text-[#E0B83C]"
-                    onClick={handleSetMaxAmount}
-                  >
-                    MAX
-                  </button>
-                </div>
-                <Input
-                  id="tron-amount"
-                  type="number"
-                  min="3"
-                  step="1"
-                  placeholder="Minimum 3 USDT"
-                  className="bg-white border-gray-200 text-gray-900"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                />
-                <p className="text-xs text-gray-400 flex justify-between">
-                  <span>
-                    Available:{" "}
-                    {parseFloat(user?.withdrawableAmount?.toString() || "0").toFixed(
-                      2,
-                    )}{" "}
-                    USDT
-                  </span>
-                  <span>Fee: 0.5 USDT</span>
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="tron-address">TRON (TRC20) Address</Label>
-                <Input
-                  id="tron-address"
-                  placeholder="Enter your TRON wallet address"
-                  className="bg-white border-gray-200 text-gray-900"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="bsc" className="mt-4">
+          <div className="mt-4">
             <div className="space-y-4">
               <div className="bg-white border border-gray-200 p-3 rounded-lg">
                 <p className="text-sm text-gray-300 mb-2">
@@ -267,10 +172,13 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
                 <p className="text-xs text-gray-400">
                   USDT on Binance Smart Chain (BEP20)
                 </p>
-                <p className="text-xs text-gray-400">Min withdrawal: 3 USDT</p>
-                <p className="text-xs text-gray-400">Fee: 0.5 USDT</p>
+                <p className="text-xs text-gray-400">Min withdrawal: 1 USDT</p>
+                <p className="text-xs text-gray-400">Fee: 10%</p>
                 <p className="text-xs text-gray-400">
-                  Available on Fridays only (UTC+8)
+                  Available every day.
+                </p>
+                <p className="text-xs text-gray-400">
+                  Note: 10% of your Referrals bonus can only be withdraw every Saturdays
                 </p>
                 <p className="text-xs text-gray-400">
                   Processing time: 6-24 hours
@@ -291,9 +199,9 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
                 <Input
                   id="bsc-amount"
                   type="number"
-                  min="3"
+                  min="1"
                   step="1"
-                  placeholder="Minimum 3 USDT"
+                  placeholder="Minimum 1 USDT"
                   className="bg-white border-gray-200 text-gray-900"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
@@ -306,7 +214,7 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
                     )}{" "}
                     USDT
                   </span>
-                  <span>Fee: 0.5 USDT</span>
+                  <span>Fee: 10%</span>
                 </p>
               </div>
 
@@ -321,8 +229,8 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
                 />
               </div>
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
 
         <div className="space-y-4">
           <div className="space-y-2">
@@ -339,12 +247,11 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
 
           <div className="space-y-4">
             <div className="bg-blue-900/20 p-3 rounded-lg border border-blue-600/30 flex items-start space-x-3">
-              <AlertTriangle className="h-5 w-5 text-blue-300 shrink-0 mt-0.5" />
+              <AlertTriangle className="h-5 w-5 text-blue-900 shrink-0 mt-0.5" />
               <div className="space-y-1">
-                <p className="text-sm text-blue-300">Important:</p>
-                <p className="text-xs text-blue-200">
-                  Make sure the address is correct and supports{" "}
-                  {network === "tron" ? "TRON (TRC20)" : "BSC (BEP20)"} network.
+                <p className="text-sm text-blue-900">Important:</p>
+                <p className="text-xs text-blue-700">
+                  Make sure the address is correct and supports BSC (BEP20) network.
                   Sending to the wrong network may result in permanent loss of
                   funds.
                 </p>
@@ -352,7 +259,7 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
             </div>
 
             <div className="bg-red-900/20 p-3 rounded-lg border border-red-600/30">
-              <p className="text-xs text-red-200">
+              <p className="text-xs text-red-900">
                 WARNING: The admin is not liable for any loss of funds due to
                 incorrect wallet addresses. Double check your wallet address
                 before submitting. This action cannot be undone.

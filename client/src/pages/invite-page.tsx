@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { generateQRCode, formatCurrency } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
+import { useLanguage } from "@/hooks/use-language";
 
 // Define types for referrals
 interface ReferredUser {
@@ -40,6 +41,7 @@ interface ProfileResponse {
 const InvitePage: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [referralLink, setReferralLink] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState("");
@@ -284,7 +286,7 @@ const InvitePage: React.FC = () => {
       <div className="px-4 space-y-6">
         <Card className="bg-white border-gray-200">
           <CardHeader>
-            <CardTitle className="text-black">Referral Rewards</CardTitle>
+            <CardTitle className="text-black">{t('invite.totalEarnings')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-5">
@@ -309,7 +311,7 @@ const InvitePage: React.FC = () => {
                 <p className="text-[#4F9CF9] font-semibold mb-2">
                   Multi-Level Referral System
                 </p>
-                <div className="space-y-1 text-sm text-gray-300">
+                <div className="space-y-1 text-sm text-black">
                   <div className="flex justify-between">
                     <span>Level 1 (Direct):</span>
                     <span className="text-[#4F9CF9] font-medium">5%</span>
@@ -357,7 +359,7 @@ const InvitePage: React.FC = () => {
               ) : (
                 <>
                   <Plus className="h-4 w-4 mr-2" />
-                  Generate Code
+                  {t('invite.copyCode')}
                 </>
               )}
             </Button>
@@ -365,9 +367,7 @@ const InvitePage: React.FC = () => {
           <CardContent>
             <div className="space-y-4">
               <p className="text-gray-400 text-sm mb-2">
-                Share your referral link with friends to join Nebrix. Earn{" "}
-                5%
-                commission on their investments!
+                {t('invite.step1')}
               </p>
               <div className="bg-white border border-gray-200 p-4 rounded-lg space-y-4">
                 <div className="flex items-center justify-between bg-white border border-gray-200 p-3 rounded">

@@ -24,8 +24,12 @@ import { useLocation } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useLanguage } from "@/hooks/use-language";
 import RechargeDialog from "@/components/recharge-dialog";
 import WithdrawDialog from "@/components/withdraw-dialog";
+import SecurityCenterDialog from "@/components/security-center-dialog";
+import ComingSoonDialog from "@/components/coming-soon-dialog";
+import LanguageSettingsDialog from "@/components/language-settings-dialog";
 import {
   Dialog,
   DialogContent,
@@ -48,6 +52,7 @@ const ProfilePage: React.FC = () => {
   const { user, logoutMutation } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   // State for dialogs
   const [rechargeDialogOpen, setRechargeDialogOpen] = useState(false);
@@ -59,6 +64,10 @@ const ProfilePage: React.FC = () => {
   const [showMessages, setShowMessages] = useState(false);
   const [notificationsDialogOpen, setNotificationsDialogOpen] = useState(false);
   const [messagesDialogOpen, setMessagesDialogOpen] = useState(false);
+  const [securityCenterOpen, setSecurityCenterOpen] = useState(false);
+  const [comingSoonOpen, setComingSoonOpen] = useState(false);
+  const [comingSoonTitle, setComingSoonTitle] = useState("");
+  const [languageSettingsOpen, setLanguageSettingsOpen] = useState(false);
 
   // Fetch notifications when component mounts or user changes
   useEffect(() => {
@@ -100,12 +109,30 @@ const ProfilePage: React.FC = () => {
   };
 
   const handleAboutClick = () => {
-    setAboutDialogOpen(true);
+    // Redirect to home page for About Us information
+    setLocation("/");
   };
 
   // Handler for Quantization Tutorial click
   const handleTutorialClick = () => {
-    setTutorialDialogOpen(true);
+    // Redirect to quantitative page for tutorial
+    setLocation("/quantitative");
+  };
+
+  // Handler for Security Center click
+  const handleSecurityCenterClick = () => {
+    setSecurityCenterOpen(true);
+  };
+
+  // Handler for Language Settings click
+  const handleLanguageSettingsClick = () => {
+    setLanguageSettingsOpen(true);
+  };
+
+  // Handler for Coming Soon items
+  const handleComingSoonClick = (title: string) => {
+    setComingSoonTitle(title);
+    setComingSoonOpen(true);
   };
   // Mark all notifications as read when opening notifications dialog
   const handleOpenNotifications = () => {
@@ -171,7 +198,7 @@ const ProfilePage: React.FC = () => {
           <div className="flex items-center space-x-2">
             <Logo size="small" />
             <h1 className="text-xl font-semibold text-gray-900">
-              Welcome back to TiBank
+              {t('profile.welcome')}
             </h1>
           </div>
           <div className="flex items-center space-x-3"></div>
@@ -247,33 +274,33 @@ const ProfilePage: React.FC = () => {
         {/* Assets Overview */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <div className="text-gray-400 text-sm">Total Assets (USDT)</div>
+            <div className="text-gray-400 text-sm">{t('profile.totalAssets')}</div>
             <div className="text-gray-900 font-medium">
               {parseFloat(user.totalAssets.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex justify-between items-center">
             <div className="text-gray-400 text-sm">
-              Quantitative Account (USDT)
+              {t('profile.quantitativeAccount')}
             </div>
             <div className="text-gray-900 font-medium">
               {parseFloat(user.totalAssets.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex justify-between items-center">
-            <div className="text-gray-400 text-sm">Profit Assets (USDT)</div>
+            <div className="text-gray-400 text-sm">{t('profile.profitAssets')}</div>
             <div className="text-gray-900 font-medium">
               {parseFloat(user.profitAssets.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex justify-between items-center">
-            <div className="text-gray-400 text-sm">Deposit Amount (USDT)</div>
+            <div className="text-gray-400 text-sm">{t('profile.depositAmount')}</div>
             <div className="text-gray-900 font-medium">
               {parseFloat(user.rechargeAmount.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex justify-between items-center">
-            <div className="text-gray-400 text-sm">Withdrawable (USDT)</div>
+            <div className="text-gray-400 text-sm">{t('profile.withdrawable')}</div>
             <div className="text-gray-900 font-medium">
               {parseFloat(user.withdrawableAmount.toString()).toFixed(2)}
             </div>
@@ -289,7 +316,7 @@ const ProfilePage: React.FC = () => {
             <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-1 text-blue-500">
               <Wallet className="h-5 w-5" />
             </div>
-            <span className="text-xs text-gray-300">Deposit</span>
+            <span className="text-xs text-gray-300">{t('profile.deposit')}</span>
           </button>
           <button
             className="flex flex-col items-center"
@@ -298,7 +325,7 @@ const ProfilePage: React.FC = () => {
             <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-1 text-blue-500">
               <RefreshCcw className="h-5 w-5" />
             </div>
-            <span className="text-xs text-gray-300">Withdraw</span>
+            <span className="text-xs text-gray-300">{t('profile.withdraw')}</span>
           </button>
           <button
             className="flex flex-col items-center"
@@ -307,7 +334,7 @@ const ProfilePage: React.FC = () => {
             <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-1 text-blue-500">
               <History className="h-5 w-5" />
             </div>
-            <span className="text-xs text-gray-300">Detail</span>
+            <span className="text-xs text-gray-300">{t('profile.detail')}</span>
           </button>
 
           {/* History Dialog - Made Responsive */}
@@ -531,18 +558,18 @@ const ProfilePage: React.FC = () => {
 
       {/* Menu Options */}
       <div className="bg-white border border-gray-200 rounded-lg mx-4 mb-6">
-        <a
-          href="#security"
-          className="flex items-center justify-between p-4 border-b border-[#333333]"
+        <button
+          onClick={handleSecurityCenterClick}
+          className="flex items-center justify-between p-4 border-b border-[#333333] w-full text-left"
         >
           <div className="flex items-center">
             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mr-3 text-blue-500">
               <ShieldCheck className="h-4 w-4" />
             </div>
-            <span className="text-gray-900">Security Center</span>
+            <span className="text-gray-900">{t('profile.securityCenter')}</span>
           </div>
           <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
-        </a>
+        </button>
 
         {/* Replace Quantization Tutorial <a> with a button */}
         <button
@@ -553,49 +580,49 @@ const ProfilePage: React.FC = () => {
             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mr-3 text-blue-500">
               <Book className="h-4 w-4" />
             </div>
-            <span className="text-black">Quantization Tutorial</span>
+            <span className="text-black">{t('profile.quantizationTutorial')}</span>
           </div>
           <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
         </button>
 
-        <a
-          href="#news"
-          className="flex items-center justify-between p-4 border-b border-[#333333]"
+        <button
+          onClick={() => handleComingSoonClick("News")}
+          className="flex items-center justify-between p-4 border-b border-[#333333] w-full text-left"
         >
           <div className="flex items-center">
             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mr-3 text-blue-500">
               <Newspaper className="h-4 w-4" />
             </div>
-            <span className="text-black">News</span>
+            <span className="text-black">{t('profile.news')}</span>
           </div>
           <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
-        </a>
+        </button>
 
-        <a
-          href="#language"
-          className="flex items-center justify-between p-4 border-b border-[#333333]"
+        <button
+          onClick={handleLanguageSettingsClick}
+          className="flex items-center justify-between p-4 border-b border-[#333333] w-full text-left"
         >
           <div className="flex items-center">
             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mr-3 text-blue-500">
               <Globe className="h-4 w-4" />
             </div>
-            <span className="text-black">Language Settings</span>
+            <span className="text-black">{t('profile.languageSettings')}</span>
           </div>
           <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
-        </a>
+        </button>
 
-        <a
-          href="#problems"
-          className="flex items-center justify-between p-4 border-b border-[#333333]"
+        <button
+          onClick={() => handleComingSoonClick("Common Problem")}
+          className="flex items-center justify-between p-4 border-b border-[#333333] w-full text-left"
         >
           <div className="flex items-center">
             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mr-3 text-blue-500">
               <HelpCircle className="h-4 w-4" />
             </div>
-            <span className="text-black">Common Problem</span>
+            <span className="text-black">{t('profile.commonProblem')}</span>
           </div>
           <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
-        </a>
+        </button>
 
         <button
           onClick={handleAboutClick}
@@ -605,20 +632,23 @@ const ProfilePage: React.FC = () => {
             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mr-3 text-blue-500">
               <Info className="h-4 w-4" />
             </div>
-            <span className="text-black">About Us</span>
+            <span className="text-black">{t('profile.aboutUs')}</span>
           </div>
           <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
         </button>
 
-        <a href="#download" className="flex items-center justify-between p-4">
+        <button
+          onClick={() => handleComingSoonClick("Download APP")}
+          className="flex items-center justify-between p-4 w-full text-left"
+        >
           <div className="flex items-center">
             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mr-3 text-blue-500">
               <Download className="h-4 w-4" />
             </div>
-            <span className="text-black">Download APP</span>
+            <span className="text-black">{t('profile.downloadApp')}</span>
           </div>
           <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
-        </a>
+        </button>
       </div>
 
       {/* Logout Button */}
@@ -628,7 +658,7 @@ const ProfilePage: React.FC = () => {
           onClick={handleLogout}
           disabled={logoutMutation.isPending}
         >
-          {logoutMutation.isPending ? "Signing out..." : "Sign Out"}
+          {logoutMutation.isPending ? "Signing out..." : t('profile.signOut')}
         </Button>
       </div>
 
@@ -770,6 +800,37 @@ const ProfilePage: React.FC = () => {
           </Tabs>
         </DialogContent>
       </Dialog>
+
+      {/* Security Center Dialog */}
+      <SecurityCenterDialog
+        open={securityCenterOpen}
+        onOpenChange={setSecurityCenterOpen}
+      />
+
+      {/* Coming Soon Dialog */}
+      <ComingSoonDialog
+        open={comingSoonOpen}
+        onOpenChange={setComingSoonOpen}
+        title={comingSoonTitle}
+      />
+
+      {/* Language Settings Dialog */}
+      <LanguageSettingsDialog
+        open={languageSettingsOpen}
+        onOpenChange={setLanguageSettingsOpen}
+      />
+
+      {/* Recharge Dialog */}
+      <RechargeDialog
+        open={rechargeDialogOpen}
+        onOpenChange={setRechargeDialogOpen}
+      />
+
+      {/* Withdraw Dialog */}
+      <WithdrawDialog
+        open={withdrawDialogOpen}
+        onOpenChange={setWithdrawDialogOpen}
+      />
 
       {/* Bottom Navigation */}
       <BottomNav />
