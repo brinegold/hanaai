@@ -675,7 +675,8 @@ Trade Time : Once Per day
 </strong>
 <br></br>
 
- <strong>Withdrawal days : Every day</strong>
+ <strong>Withdrawal days : Every day</strong><br></br>
+
  <strong>Trading Days: Monday to Friday(No Weekends)</strong>
         </div>
       </div>

@@ -28,7 +28,7 @@ const translations: Record<string, Record<string, string>> = {
     'profile.withdraw': 'Withdraw',
     'profile.detail': 'Detail',
     'profile.securityCenter': 'Security Center',
-    'profile.quantizationTutorial': 'Quantization Tutorial',
+    'profile.quantizationTutorial': 'Tutorial',
     'profile.news': 'News',
     'profile.languageSettings': 'Language Settings',
     'profile.commonProblem': 'Common Problem',

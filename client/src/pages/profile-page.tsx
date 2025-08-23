@@ -231,31 +231,7 @@ const ProfilePage: React.FC = () => {
                     <span className="px-1.5 py-0.5 rounded-full bg-green-900/20 text-green-500 text-xs">
                       Verified
                     </span>
-                    {user.countryRepStatus === "none" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-xs"
-                        onClick={async () => {
-                          try {
-                            await apiRequest("POST", "/api/apply-country-rep");
-                            toast({
-                              title: "Application Submitted",
-                              description:
-                                "Your application for Country Representative has been submitted.",
-                            });
-                          } catch (error) {
-                            toast({
-                              title: "Error",
-                              description:
-                                "Failed to submit application. Please try again.",
-                              variant: "destructive",
-                            });
-                          }
-                        }}
-                      >
-                        Apply for C.Rep
-                      </Button>
+                    {user.countryRepStatus === "none" 
                     )}
                     {user.countryRepStatus === "pending" && (
                       <span className="text-xs text-blue-500">
