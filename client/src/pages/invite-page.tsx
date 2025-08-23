@@ -496,25 +496,25 @@ const InvitePage: React.FC = () => {
             <Tabs value={selectedTier} onValueChange={handleTierChange} className="w-full">
               <TabsList className="grid w-full grid-cols-4 mb-4">
                 <TabsTrigger value="1" className="flex flex-col items-center gap-1 py-3">
-                  <span className="font-medium">TIER 1</span>
+                  <span className="font-medium">Level 1</span>
                   <Badge variant="secondary" className="text-xs">
                     {referralSummary.tier1}
                   </Badge>
                 </TabsTrigger>
                 <TabsTrigger value="2" className="flex flex-col items-center gap-1 py-3">
-                  <span className="font-medium">TIER 2</span>
+                  <span className="font-medium">Level 2</span>
                   <Badge variant="secondary" className="text-xs">
                     {referralSummary.tier2}
                   </Badge>
                 </TabsTrigger>
                 <TabsTrigger value="3" className="flex flex-col items-center gap-1 py-3">
-                  <span className="font-medium">TIER 3</span>
+                  <span className="font-medium">Level 3</span>
                   <Badge variant="secondary" className="text-xs">
                     {referralSummary.tier3}
                   </Badge>
                 </TabsTrigger>
                 <TabsTrigger value="4" className="flex flex-col items-center gap-1 py-3">
-                  <span className="font-medium">TIER 4</span>
+                  <span className="font-medium">Level 4</span>
                   <Badge variant="secondary" className="text-xs">
                     {referralSummary.tier4}
                   </Badge>

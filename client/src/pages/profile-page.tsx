@@ -287,14 +287,6 @@ const ProfilePage: React.FC = () => {
             </div>
           </div>
           <div className="flex justify-between items-center">
-            <div className="text-gray-400 text-sm">
-              {t('profile.quantitativeAccount')}
-            </div>
-            <div className="text-gray-900 font-medium">
-              {parseFloat(user.totalAssets.toString()).toFixed(2)}
-            </div>
-          </div>
-          <div className="flex justify-between items-center">
             <div className="text-gray-400 text-sm">{t('profile.profitAssets')}</div>
             <div className="text-gray-900 font-medium">
               {parseFloat(user.profitAssets.toString()).toFixed(2)}

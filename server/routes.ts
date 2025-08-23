@@ -1,6 +1,5 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { scrypt } from "@noble/hashes/scrypt";
 import { SalaryScheduler } from "./salary-scheduler";
 import { setupAuth } from "./auth";
 import { z } from "zod";
@@ -36,6 +35,13 @@ async function comparePasswords(
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
+}
+
+// Helper function to hash passwords
+async function hashPassword(password: string): Promise<string> {
+  const salt = randomBytes(16).toString("hex");
+  const hashedBuf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${hashedBuf.toString("hex")}.${salt}`;
 }
 
 import { registerAdminRoutes } from "./admin-routes";
@@ -247,21 +253,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const user = await storage.getUser(req.user!.id);
-      const userBalance = user ? parseFloat(user.totalAssets.toString()) : 0;
+      const userDepositAmount = user ? parseFloat(user.rechargeAmount.toString()) : 0;
 
-      // Single investment plan
+      // Single investment plan - trading works with deposit amount only
       const plans = [
         {
           id: "ai-trading",
           name: "AI Trading",
-          minAmount: Math.max(5, userBalance),
-          maxAmount: 500000,
+          minAmount: 5, // Always $5 minimum
+          maxAmount: Math.max(userDepositAmount, 5), // User can invest up to their full deposit amount
           dailyRate: 1.5,
-          description: `Earn 1.5% daily on your investment (Min $5)`,
+          description: `Earn 1.5% daily on your deposit amount (Min $5, Max $${userDepositAmount.toLocaleString()})`,
         },
       ];
+      
+      // Filter out plans where user doesn't have enough deposit amount
+      const availablePlans = plans.filter(plan => userDepositAmount >= plan.minAmount);
 
-      res.json(plans);
+      res.json(availablePlans);
     } catch (err) {
       console.error("Error fetching investment plans:", err);
       res.status(500).json({ error: "Failed to fetch investment plans" });
@@ -304,12 +313,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ error: "Daily rate must be a positive number" });
       }
 
+      // Validate investment amount against user's deposit amount
+      const userDepositAmount = parseFloat(user.rechargeAmount.toString());
+      if (amount > userDepositAmount) {
+        return res.status(400).json({
+          error: "Investment amount cannot exceed your deposit amount",
+        });
+      }
+
       // Verify the user has enough funds
 
       if (!user) return res.status(404).send("User not found");
 
-      if (parseFloat(user.totalAssets.toString()) < amount) {
-        return res.status(400).json({ error: "Insufficient funds" });
+      if (userDepositAmount < amount) {
+        return res.status(400).json({ error: "Insufficient deposit amount for this investment" });
       }
 
       // Check if user has made an investment in the last 24 hours
@@ -338,19 +355,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const investment = await storage.createInvestment(investmentToCreate);
 
-      // Calculate immediate profit for AI Trading (1.5% instant profit)
-      const instantProfitPercentage = 0.015; // 1.5% instant profit
-      const instantProfit = amount * instantProfitPercentage;
-      const currentTotalAssets = parseFloat(user.totalAssets.toString());
+      // Check if user has reached 200% profit cap
+      const currentProfitAssets = parseFloat(user.profitAssets.toString());
+      const currentRechargeAmount = parseFloat(user.rechargeAmount.toString());
+      const maxAllowedProfit = currentRechargeAmount * 2; // 200% of deposits
+      
+      if (currentProfitAssets >= maxAllowedProfit) {
+        return res.status(400).json({
+          error: "You have reached the maximum profit limit of 200% of your deposits. Trading is suspended.",
+        });
+      }
 
-      // When trading starts:
-      // Update assets and withdrawable amount with profit
-      const newTotalAssets = (currentTotalAssets + instantProfit).toString();
+      // Calculate immediate profit for AI Trading (1.5% of deposit amount)
+      const instantProfitPercentage = 0.015; // 1.5% instant profit
+      const instantProfit = Math.min(
+        amount * instantProfitPercentage,
+        maxAllowedProfit - currentProfitAssets // Don't exceed 200% cap
+      );
+      
+      // Only update profit-related fields, not total assets
       await storage.updateUser(req.user!.id, {
-        quantitativeAssets: newTotalAssets,
-        totalAssets: newTotalAssets,
         profitAssets: (
-          parseFloat(user.profitAssets.toString()) + instantProfit
+          currentProfitAssets + instantProfit
         ).toString(),
         todayEarnings: (
           parseFloat(user.todayEarnings.toString()) + instantProfit
@@ -508,14 +534,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).send("Insufficient funds for withdrawal");
         }
 
-        // Update user assets for withdrawal
+        // Update user assets for withdrawal - only deduct from withdrawable amount
         await storage.updateUser(req.user!.id, {
-          totalAssets: (
-            parseFloat(user.totalAssets.toString()) -
-            parseFloat(transactionData.amount.toString())
-          ).toString(),
-          quantitativeAssets: (
-            parseFloat(user.quantitativeAssets.toString()) -
+          withdrawableAmount: (
+            parseFloat(user.withdrawableAmount.toString()) -
             parseFloat(transactionData.amount.toString())
           ).toString(),
         });
@@ -525,14 +547,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           parseFloat(transactionData.amount.toString())
         ).toString();
 
-        // Update both total and quantitative assets to be equal
+        // Update deposit amount only - no quantitative assets
         await storage.updateUser(req.user!.id, {
-          totalAssets: newTotalAssets,
           rechargeAmount: (
             parseFloat(user.rechargeAmount.toString()) +
             parseFloat(transactionData.amount.toString())
           ).toString(),
-          quantitativeAssets: newTotalAssets,
         });
       }
 
@@ -798,6 +818,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentBalance = parseFloat(user.totalAssets.toString());
       const totalProfit = parseFloat(user.profitAssets.toString());
 
+      // Calculate proper asset values according to new formula
+      const depositAmount = parseFloat(user.rechargeAmount.toString());
+      const profitAssets = parseFloat(user.profitAssets.toString());
+      const withdrawableAmount = parseFloat(user.withdrawableAmount.toString());
+      const calculatedTotalAssets = depositAmount + profitAssets;
+
       res.json({
         user: {
           id: user.id,
@@ -806,9 +832,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           phone: user.phone,
           telegram: user.telegram,
           referralCode: user.referralCode,
-          totalAssets: user.totalAssets,
-          quantitativeAssets: user.quantitativeAssets,
-          profitAssets: user.profitAssets,
+          totalAssets: calculatedTotalAssets.toString(),
+          rechargeAmount: user.rechargeAmount, // Deposit Amount
+          profitAssets: user.profitAssets, // Total profits generated
+          withdrawableAmount: user.withdrawableAmount, // Referral bonuses + ranking bonus + daily profits
           todayEarnings: user.todayEarnings,
           yesterdayEarnings: user.yesterdayEarnings,
           lastInvestmentDate: user.lastInvestmentDate,
@@ -817,7 +844,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         stats: {
           totalInvested,
-          currentBalance,
+          currentBalance: calculatedTotalAssets,
           totalProfit,
           activeInvestments: investmentResults.filter(
             (inv) => inv.status === "Active",
@@ -919,7 +946,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         totalAssets: user.totalAssets,
-        quantitativeAssets: user.quantitativeAssets,
+        rechargeAmount: user.rechargeAmount, // Deposit amount only
         profitAssets: user.profitAssets,
         todayEarnings: user.todayEarnings,
         yesterdayEarnings: user.yesterdayEarnings,
@@ -937,16 +964,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const salaryScheduler = SalaryScheduler.getInstance();
   salaryScheduler.start();
 
-  // Daily earnings calculation for all users (weekdays only)
-  const calculateDailyEarnings = async () => {
+  // Simulate daily earnings - protected route
+  app.post("/api/simulate-earnings", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+
     try {
       const now = new Date();
       const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
       
       // Only generate earnings on weekdays (Monday to Friday)
       if (dayOfWeek === 0 || dayOfWeek === 6) {
-        console.log('Skipping daily earnings calculation - weekend');
-        return;
+        return res.json({
+          success: true,
+          message: "Skipping daily earnings calculation - weekend",
+        });
       }
       
       const allUsers = await storage.getAllUsers();
@@ -967,125 +998,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalEarnings += dailyEarning;
         }
 
-        if (totalEarnings > 0) {
-          // Update user's earnings
-          await storage.updateUser(user.id, {
-            yesterdayEarnings: user.todayEarnings.toString(),
-            todayEarnings: totalEarnings.toString(),
-            profitAssets: (
-              parseFloat(user.profitAssets.toString()) + totalEarnings
-            ).toString(),
-            totalAssets: (
-              parseFloat(user.totalAssets.toString()) + totalEarnings
-            ).toString(),
-            quantitativeAssets: (
-              parseFloat(user.quantitativeAssets.toString()) + totalEarnings
-            ).toString(),
-          });
+        // Update user's earnings
+        await storage.updateUser(user.id, {
+          yesterdayEarnings: user.todayEarnings.toString(),
+          todayEarnings: totalEarnings.toString(),
+          profitAssets: (
+            parseFloat(user.profitAssets.toString()) + totalEarnings
+          ).toString(),
+          withdrawableAmount: (
+            parseFloat(user.withdrawableAmount.toString()) + totalEarnings
+          ).toString(),
+        });
 
-          // Create profit transaction record
+        // Create profit transaction record
+        if (totalEarnings > 0) {
           const profitTransaction: Omit<Transaction, "id" | "createdAt"> = {
             userId: user.id,
             type: "Profit",
             amount: totalEarnings.toString(),
             status: "Completed",
             txHash: null,
+            address: null,
+            reason: "Daily trading profit",
+            network: null,
+            fee: null,
+            processingTime: null,
+            completionTime: null,
           };
           await storage.createTransaction(profitTransaction);
         }
       }
-    } catch (error) {
-      console.error("Error calculating daily earnings:", error);
-    }
-  };
-
-  // Run daily earnings calculation every 24 hours
-  setInterval(calculateDailyEarnings, 24 * 60 * 60 * 1000);
-
-  // Add manual salary payout endpoint for admin
-  app.post("/api/admin/trigger-salary-payout", async (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
-    
-    const user = await storage.getUser(req.user!.id);
-    if (!user?.isAdmin) return res.status(403).send("Admin access required");
-
-    try {
-      await salaryScheduler.triggerWeeklySalaryPayout();
-      res.json({ success: true, message: "Weekly salary payout triggered" });
-    } catch (error) {
-      console.error("Error triggering salary payout:", error);
-      res.status(500).json({ error: "Failed to trigger salary payout" });
-    }
-  });
-
-  // Simulate daily earnings for active investments - protected route
-  // (In production, this would be a cron job or scheduled task)
-  app.post("/api/simulate-earnings", async (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
-
-    try {
-      const now = new Date();
-      const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-      
-      // Only generate earnings on weekdays (Monday to Friday)
-      if (dayOfWeek === 0 || dayOfWeek === 6) {
-        return res.json({
-          success: false,
-          message: "Earnings are only generated on weekdays (Monday to Friday)",
-          dailyEarnings: 0,
-          isWeekend: true
-        });
-      }
-      
-      const user = await storage.getUser(req.user!.id);
-      if (!user) return res.status(404).send("User not found");
-
-      const investments = await storage.getInvestmentsByUserId(user.id);
-      const activeInvestments = investments.filter(
-        (inv) => inv.status === "Active",
-      );
-
-      let totalEarnings = 0;
-
-      // Calculate earnings for each active investment
-      for (const investment of activeInvestments) {
-        const dailyRate = parseFloat(investment.dailyRate.toString()) / 100;
-        const amount = parseFloat(investment.amount.toString());
-        const dailyEarning = amount * dailyRate;
-        totalEarnings += dailyEarning;
-      }
-
-      // Update user's earnings
-      const updatedUser = await storage.updateUser(user.id, {
-        yesterdayEarnings: user.todayEarnings.toString(),
-        todayEarnings: totalEarnings.toString(),
-        profitAssets: (
-          parseFloat(user.profitAssets.toString()) + totalEarnings
-        ).toString(),
-        totalAssets: (
-          parseFloat(user.totalAssets.toString()) + totalEarnings
-        ).toString(),
-        quantitativeAssets: (
-          parseFloat(user.quantitativeAssets.toString()) + totalEarnings
-        ).toString(),
-      });
-
-      // Create profit transaction record
-      if (totalEarnings > 0) {
-        const profitTransaction: Omit<Transaction, "id" | "createdAt"> = {
-          userId: user.id,
-          type: "Profit",
-          amount: totalEarnings.toString(),
-          status: "Completed",
-          txHash: null,
-        };
-        await storage.createTransaction(profitTransaction);
-      }
 
       res.json({
         success: true,
-        dailyEarnings: totalEarnings,
-        totalProfitAssets: updatedUser?.profitAssets || "0",
+        message: "Daily earnings calculated for all users",
       });
     } catch (err) {
       console.error("Error simulating earnings:", err);
@@ -1273,9 +1219,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) return res.status(404).send("User not found");
 
       // Verify current password
-      const isCurrentPasswordValid = await scrypt.verify(
-        user.password,
+      const isCurrentPasswordValid = await comparePasswords(
         currentPassword,
+        user.password,
       );
       if (!isCurrentPasswordValid) {
         return res.status(400).json({
@@ -1284,7 +1230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash new password
-      const hashedNewPassword = await scrypt.hash(newPassword);
+      const hashedNewPassword = await hashPassword(newPassword);
 
       // Update password in database
       await storage.updateUser(req.user!.id, {
@@ -1327,25 +1273,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (transactionData.type === "Deposit") {
         // Check for minimum deposit
-        if (transactionData.amount < 10) {
+        if (transactionData.amount < 5) {
           return res.status(400).json({
-            message: "Minimum deposit amount is $10",
+            message: "Minimum deposit amount is $5",
           });
         }
         
-        // Calculate 95% of deposit amount (5% platform fee)
+        // Calculate deposit fee (5% platform fee)
         const depositAmount = transactionData.amount;
         const platformFee = depositAmount * 0.05; // 5% fee
-        const userReceives = depositAmount * 0.95; // 95% goes to user
+        const netDepositAmount = depositAmount - platformFee; // Amount after fee deduction
         
-        // Update user's balance with 95% of the deposit
+        // Update user's rechargeAmount (deposit amount) with net amount
+        const currentRechargeAmount = parseFloat(user.rechargeAmount.toString());
+        const newRechargeAmount = (currentRechargeAmount + netDepositAmount).toString();
+        
+        // Update user's total assets with net deposit amount
         const currentTotalAssets = parseFloat(user.totalAssets.toString());
-        const newTotalAssets = (currentTotalAssets + userReceives).toString();
+        const newTotalAssets = (currentTotalAssets + netDepositAmount).toString();
         
         await db.update(users).set({
           totalAssets: newTotalAssets,
-          quantitativeAssets: newTotalAssets,
-          withdrawableAmount: (parseFloat(user.withdrawableAmount.toString()) + userReceives).toString(),
+          rechargeAmount: newRechargeAmount,
         }).where(eq(users.id, req.user!.id));
       } else if (transactionData.type === "Withdrawal") {
         // Withdrawals are available every day

@@ -28,7 +28,7 @@ function Router() {
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/verify" component={VerificationPage} />
       <ProtectedRoute path="/invite" component={InvitePage} />
-      <ProtectedRoute path="/quantitative" component={QuantitativePage} />
+      <ProtectedRoute path="/tradenow" component={QuantitativePage} />
       <ProtectedRoute path="/admin" component={AdminPage} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />

@@ -207,14 +207,8 @@ export function registerAdminRoutes(app: Express) {
         const fee = 0.5; // Standard withdrawal fee
         const totalDeduction = withdrawalAmount + fee;
 
-        // Deduct from both total and quantitative assets
+        // Deduct only from withdrawable amount
         await storage.updateUser(user.id, {
-          totalAssets: (
-            parseFloat(user.totalAssets.toString()) - totalDeduction
-          ).toString(),
-          quantitativeAssets: (
-            parseFloat(user.quantitativeAssets.toString()) - totalDeduction
-          ).toString(),
           withdrawableAmount: (
             parseFloat(user.withdrawableAmount.toString()) - totalDeduction
           ).toString(),
@@ -252,7 +246,7 @@ export function registerAdminRoutes(app: Express) {
                 const commissionAmount = depositAmount * commissionRate;
 
                 if (commissionAmount > 0) {
-                  // Update referrer's assets with commission
+                  // Update referrer's assets with commission - only add to withdrawable amount
                   await storage.updateUser(referrer.id, {
                     commissionAssets: (
                       parseFloat(referrer.commissionAssets.toString()) +
@@ -260,13 +254,6 @@ export function registerAdminRoutes(app: Express) {
                     ).toString(),
                     commissionToday: (
                       parseFloat(referrer.commissionToday.toString()) +
-                      commissionAmount
-                    ).toString(),
-                    totalAssets: (
-                      parseFloat(referrer.totalAssets.toString()) + commissionAmount
-                    ).toString(),
-                    quantitativeAssets: (
-                      parseFloat(referrer.quantitativeAssets.toString()) +
                       commissionAmount
                     ).toString(),
                     withdrawableAmount: (
@@ -406,8 +393,6 @@ export function registerAdminRoutes(app: Express) {
       const updatedUser = await storage.updateUser(userId, {
         isCountryRep: true,
         countryRepStatus: "approved",
-        totalAssets: (parseFloat(user.totalAssets.toString()) + bonusAmount).toString(),
-        quantitativeAssets: (parseFloat(user.quantitativeAssets.toString()) + bonusAmount).toString(),
         withdrawableAmount: (parseFloat(user.withdrawableAmount.toString()) + bonusAmount).toString(),
         updatedAt: new Date(),
       });

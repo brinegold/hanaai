@@ -49,7 +49,7 @@ const translations: Record<string, Record<string, string>> = {
     // Invite Page
     'invite.title': 'Invite Friends',
     'invite.myReferralCode': 'My Referral Code',
-    'invite.copyCode': 'Copy Code',
+    'invite.copyCode': 'Generate New Code',
     'invite.inviteLink': 'Invite Link',
     'invite.copyLink': 'Copy Link',
     'invite.totalEarnings': 'Total Earnings',

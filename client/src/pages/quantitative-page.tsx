@@ -238,7 +238,7 @@ const QuantitativePage: React.FC = () => {
 
     // Create the actual investment after simulation
     investmentMutation.mutate({
-      amount: plan.minAmount,
+      amount: plan.maxAmount,
       plan: plan.id,
       dailyRate: plan.dailyRate,
     });

@@ -210,7 +210,7 @@ const DashboardPage: React.FC = () => {
   };
 
   const handleWealthGrowthClick = () => {
-    navigate("/quantitative");
+    navigate("/tradenow");
   };
 
   const handleInviteClick = () => {
@@ -320,6 +320,68 @@ const DashboardPage: React.FC = () => {
           label={t('dashboard.aiTrading')}
           onClick={handleWealthGrowthClick}
         />
+      </div>
+
+      {/* Ranking System Information */}
+      <div className="mx-4 mb-4">
+        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white shadow-lg">
+          <div className="flex items-center mb-3">
+            <Crown className="h-5 w-5 mr-2" />
+            <h3 className="font-bold text-lg">Ranking System</h3>
+          </div>
+          <div className="grid grid-cols-1 gap-2 text-sm">
+            <div className="grid grid-cols-3 gap-4 font-semibold border-b border-green-400 pb-2 mb-2">
+              <span>Rank</span>
+              <span>Required Volume</span>
+              <span>Incentives</span>
+            </div>
+            <div className="grid grid-cols-3 gap-4 text-xs">
+              <span>Manager</span>
+              <span>$3,000</span>
+              <span>$150 bonus</span>
+            </div>
+            <div className="grid grid-cols-3 gap-4 text-xs">
+              <span>Leader</span>
+              <span>$7,000</span>
+              <span>$250 bonus</span>
+            </div>
+            <div className="grid grid-cols-3 gap-4 text-xs">
+              <span>Ambassador</span>
+              <span>$15,000</span>
+              <span>$1,000 bonus</span>
+            </div>
+            <div className="grid grid-cols-3 gap-4 text-xs">
+              <span>Director</span>
+              <span>$20,000</span>
+              <span>$3,000 + Apple watch</span>
+            </div>
+            <div className="grid grid-cols-3 gap-4 text-xs">
+              <span>Executive</span>
+              <span>$50,000</span>
+              <span>$5,000 + Laptop</span>
+            </div>
+            <div className="grid grid-cols-3 gap-4 text-xs">
+              <span>Vice Chairman</span>
+              <span>$100,000</span>
+              <span>$10,000 + Car reward</span>
+            </div>
+            <div className="grid grid-cols-3 gap-4 text-xs">
+              <span>Chairman</span>
+              <span>$500,000</span>
+              <span>$20,000 + Trip to UK</span>
+            </div>
+            <div className="grid grid-cols-3 gap-4 text-xs">
+              <span>President</span>
+              <span>$1,000,000</span>
+              <span>$30,000 + House</span>
+            </div>
+          </div>
+          <div className="mt-3 pt-2 border-t border-green-400">
+            <p className="text-xs text-green-100">
+              💡 Build your team volume through referrals to unlock amazing rewards!
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Rank Display */}
@@ -614,6 +676,7 @@ Trade Time : Once Per day
 <br></br>
 
  <strong>Withdrawal days : Every day</strong>
+ <strong>Trading Days: Monday to Friday(No Weekends)</strong>
         </div>
       </div>
 

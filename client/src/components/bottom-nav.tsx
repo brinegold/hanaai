@@ -26,7 +26,7 @@ export default function BottomNav() {
             <span className="text-xs">{t('nav.home')}</span>
           </div>
         </Link>
-        <Link href="/quantitative">
+        <Link href="/tradenow">
           <div
             className={cn(
               "flex cursor-pointer flex-col items-center justify-center",
