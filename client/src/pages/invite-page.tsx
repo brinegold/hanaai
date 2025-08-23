@@ -616,7 +616,7 @@ const TierReferralList: React.FC<{
               
               <div className="text-right">
                 <div className="flex items-center gap-2 mb-1">
-                  <DollarSign className="h-4 w-4 text-green-600" />
+                
                   <span className="font-semibold text-green-600">
                     ${commissionAmount.toFixed(2)}
                   </span>

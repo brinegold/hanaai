@@ -12,6 +12,8 @@ import {
   TrendingUp,
   Mail,
   Twitter,
+  Plus,
+  X,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import Logo from "@/components/logo";
@@ -170,6 +172,7 @@ const DashboardPage: React.FC = () => {
 
   // Dialog states
   const [rechargeDialogOpen, setRechargeDialogOpen] = useState(false);
+  const [socialBubbleOpen, setSocialBubbleOpen] = useState(false);
   const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
   const [supportDialogOpen, setSupportDialogOpen] = useState(false);
 
@@ -368,38 +371,117 @@ const DashboardPage: React.FC = () => {
       {/* Market Ticker */}
       <MarketTicker />
 
-      {/* Telegram Bubble */}
-      <a 
-        href="https://t.me/Nebrixdex"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={telegramStyle}
-        className="hover:transform hover:scale-110"
-      >
-        <MessageCircle size={24} />
-      </a>
+      {/* Social Media Bubble */}
+      <div style={{
+        position: 'fixed',
+        bottom: '80px',
+        right: '20px',
+        zIndex: 50,
+      }}>
+        {/* Main Toggle Bubble */}
+        <div
+          onClick={() => setSocialBubbleOpen(!socialBubbleOpen)}
+          style={{
+            backgroundColor: '#4F9CF9',
+            borderRadius: '50%',
+            width: '50px',
+            height: '50px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)',
+            color: 'white',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            transform: socialBubbleOpen ? 'rotate(45deg)' : 'rotate(0deg)',
+          }}
+          className="hover:transform hover:scale-110"
+        >
+          {socialBubbleOpen ? <X size={24} /> : <Plus size={24} />}
+        </div>
 
-      {/* Email Bubble */}
-      <a 
-        href="mailto:support@nebrix.dev"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={emailStyle}
-        className="hover:transform hover:scale-110"
-      >
-        <Mail size={24} />
-      </a>
+        {/* Expandable Social Links */}
+        {socialBubbleOpen && (
+          <div style={{
+            position: 'absolute',
+            bottom: '60px',
+            right: '0px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+            animation: 'fadeIn 0.3s ease-in-out',
+          }}>
+            {/* Telegram */}
+            <a 
+              href="https://t.me/Nebrixdex"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                backgroundColor: '#229ED9',
+                borderRadius: '50%',
+                width: '45px',
+                height: '45px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)',
+                color: 'white',
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+              }}
+              className="hover:transform hover:scale-110"
+            >
+              <MessageCircle size={20} />
+            </a>
 
-      {/* Twitter Bubble */}
-      <a 
-        href="https://x.com/NebrixCoin"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={twitterStyle}
-        className="hover:transform hover:scale-110"
-      >
-        <Twitter size={24} />
-      </a>
+            {/* Email */}
+            <a 
+              href="mailto:support@nebrix.dev"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                backgroundColor: '#4CAF50',
+                borderRadius: '50%',
+                width: '45px',
+                height: '45px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)',
+                color: 'white',
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+              }}
+              className="hover:transform hover:scale-110"
+            >
+              <Mail size={20} />
+            </a>
+
+            {/* Twitter */}
+            <a 
+              href="https://x.com/NebrixCoin"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                backgroundColor: '#1DA1F2',
+                borderRadius: '50%',
+                width: '45px',
+                height: '45px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)',
+                color: 'white',
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+              }}
+              className="hover:transform hover:scale-110"
+            >
+              <Twitter size={20} />
+            </a>
+          </div>
+        )}
+      </div>
 
       {/* Random User Display */}
 
@@ -407,10 +489,8 @@ const DashboardPage: React.FC = () => {
       <div className="mx-4 mb-6 p-4 bg-white border border-gray-200 rounded-lg text-sm">
         <h3 className="text-gray-900 font-medium mb-2">Additional Information</h3>
         <div className="text-gray-700">
-          The Minimum deposit amount for Nebrix quantitative trading is 10USDT,
-          and the minimum withdrawal amount is 3USDT.<br></br> The withdrawal
-          fee is 0.5USDT and the funds will be credited to your account within
-          three minutes.<br></br>
+        The Minimum deposit amount for Nebrix AI Trading is 5USDT , and the minimum withdrawal amount is 1USDT .
+        The funds will be credited to your account within three minutes.<br></br>
           <br></br>
           <br></br> ===========<br></br> ✔How to make money: <br></br>
           1. Deposit Now and Earn 1.5% daily(Withdrawals available each day)<br></br>
