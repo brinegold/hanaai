@@ -336,9 +336,6 @@ const DashboardPage: React.FC = () => {
                   Unlock exclusive benefits and earn $10,000 bonus!
                 </p>
                 <div className="text-xs text-purple-200">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span>✓ 25% commission on Tier 1 referrals</span>
-                  </div>
                   <div className="flex items-center gap-2">
                     <span>✓ Exclusive Country Representative status</span>
                   </div>
@@ -396,7 +393,7 @@ const DashboardPage: React.FC = () => {
               <div className="flex-1">
                 <h3 className="font-bold text-lg">👑 Country Representative</h3>
                 <p className="text-green-100 text-sm">
-                  You are now a Country Rep with exclusive benefits and 25% Tier 1 commissions!
+                  You are now a Country Rep with exclusive benefits!
                 </p>
               </div>
             </div>

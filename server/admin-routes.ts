@@ -248,11 +248,6 @@ export function registerAdminRoutes(app: Express) {
               const referrer = await storage.getUser(referral.referrerId);
               if (referrer) {
                 let commissionRate = tierCommissionRates[referral.level] || 0;
-                
-                // Apply Country Rep bonus for Tier 1 only
-                if (referral.level === "1" && referrer.isCountryRep) {
-                  commissionRate = 0.25; // 25% for Country Rep Tier 1
-                }
 
                 const commissionAmount = depositAmount * commissionRate;
 
