@@ -321,7 +321,7 @@ const InvitePage: React.FC = () => {
 
               <div className="bg-[#4F9CF9]/10 p-3 rounded-lg border border-[#4F9CF9]/30">
                 <p className="text-[#4F9CF9] font-semibold mb-2">
-                  Multi-Level Referral System
+                  Uni-Level Referral System
                 </p>
                 <div className="space-y-1 text-sm text-black">
                   <div className="flex justify-between">
