@@ -322,6 +322,9 @@ const DashboardPage: React.FC = () => {
         />
       </div>
 
+      {/* Rank Display */}
+      <RankDisplay />
+
       {/* Ranking System Information */}
       <div className="mx-4 mb-4">
         <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white shadow-lg">
@@ -383,9 +386,6 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Rank Display */}
-      <RankDisplay />
 
       {/* Country Rep Application */}
       {user && !user.isCountryRep && user.countryRepStatus !== "pending" && (
