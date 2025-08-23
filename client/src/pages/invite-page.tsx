@@ -80,9 +80,9 @@ const InvitePage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 40;
   const [referralSummary, setReferralSummary] = useState<ReferralSummary>({ tier1: 0, tier2: 0, tier3: 0, tier4: 0, total: 0 });
-  const [selectedTier, setSelectedTier] = useState<string>('1');
-  const [tierReferrals, setTierReferrals] = useState<ReferralDetail[]>([]);
-  const [isLoadingTier, setIsLoadingTier] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState<string>('1');
+  const [levelReferrals, setLevelReferrals] = useState<ReferralDetail[]>([]);
+  const [isLoadingLevel, setIsLoadingLevel] = useState(false);
   const [upline, setUpline] = useState<UplineInfo | null>(null);
   const [isLoadingUpline, setIsLoadingUpline] = useState(false);
 
@@ -91,7 +91,7 @@ const InvitePage: React.FC = () => {
     if (user) {
       fetchInviteCodes();
       fetchReferralSummary();
-      fetchTierReferrals('1');
+      fetchLevelReferrals('1');
       fetchUpline();
 
       if (user.referralCode) {
@@ -150,32 +150,32 @@ const InvitePage: React.FC = () => {
     }
   };
 
-  // Fetch referrals for specific tier
-  const fetchTierReferrals = async (tier: string) => {
+  // Fetch referrals for specific level
+  const fetchLevelReferrals = async (level: string) => {
     if (!user) {
-      console.log("No user authenticated, skipping tier referrals fetch");
-      setTierReferrals([]);
+      console.log("No user authenticated, skipping level referrals fetch");
+      setLevelReferrals([]);
       return;
     }
     
     try {
-      setIsLoadingTier(true);
-      const res = await apiRequest("GET", `/api/referrals/tier/${tier}`);
+      setIsLoadingLevel(true);
+      const res = await apiRequest("GET", `/api/referrals/tier/${level}`);
       if (!res.ok) {
         throw new Error(`${res.status}: ${res.statusText}`);
       }
       const data: ReferralDetail[] = await res.json();
-      setTierReferrals(data);
+      setLevelReferrals(data);
     } catch (error) {
-      console.error("Error fetching tier referrals:", error);
-      setTierReferrals([]);
+      console.error("Error fetching level referrals:", error);
+      setLevelReferrals([]);
       toast({
         title: "Error",
-        description: "Failed to load tier referrals. Please try logging in again.",
+        description: "Failed to load level referrals. Please try logging in again.",
         variant: "destructive",
       });
     } finally {
-      setIsLoadingTier(false);
+      setIsLoadingLevel(false);
     }
   };
 
@@ -208,10 +208,10 @@ const InvitePage: React.FC = () => {
     }
   };
 
-  // Handle tier change
-  const handleTierChange = (tier: string) => {
-    setSelectedTier(tier);
-    fetchTierReferrals(tier);
+  // Handle level change
+  const handleLevelChange = (level: string) => {
+    setSelectedLevel(level);
+    fetchLevelReferrals(level);
   };
 
   // Generate a new invite code
@@ -493,7 +493,7 @@ const InvitePage: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs value={selectedTier} onValueChange={handleTierChange} className="w-full">
+            <Tabs value={selectedLevel} onValueChange={handleLevelChange} className="w-full">
               <TabsList className="grid w-full grid-cols-4 mb-4">
                 <TabsTrigger value="1" className="flex flex-col items-center gap-1 py-3">
                   <span className="font-medium">Level 1</span>
@@ -522,16 +522,16 @@ const InvitePage: React.FC = () => {
               </TabsList>
 
               <TabsContent value="1" className="mt-4">
-                <TierReferralList tier="1" referrals={tierReferrals} isLoading={isLoadingTier} />
+                <LevelReferralList level="1" referrals={levelReferrals} isLoading={isLoadingLevel} />
               </TabsContent>
               <TabsContent value="2" className="mt-4">
-                <TierReferralList tier="2" referrals={tierReferrals} isLoading={isLoadingTier} />
+                <LevelReferralList level="2" referrals={levelReferrals} isLoading={isLoadingLevel} />
               </TabsContent>
               <TabsContent value="3" className="mt-4">
-                <TierReferralList tier="3" referrals={tierReferrals} isLoading={isLoadingTier} />
+                <LevelReferralList level="3" referrals={levelReferrals} isLoading={isLoadingLevel} />
               </TabsContent>
               <TabsContent value="4" className="mt-4">
-                <TierReferralList tier="4" referrals={tierReferrals} isLoading={isLoadingTier} />
+                <LevelReferralList level="4" referrals={levelReferrals} isLoading={isLoadingLevel} />
               </TabsContent>
             </Tabs>
           </CardContent>
@@ -544,13 +544,13 @@ const InvitePage: React.FC = () => {
   );
 };
 
-// Component to display referrals for a specific tier
-const TierReferralList: React.FC<{
-  tier: string;
+// Component to display referrals for a specific level
+const LevelReferralList: React.FC<{
+  level: string;
   referrals: ReferralDetail[];
   isLoading: boolean;
-}> = ({ tier, referrals, isLoading }) => {
-  const tierPercentages: { [key: string]: number } = {
+}> = ({ level, referrals, isLoading }) => {
+  const levelPercentages: { [key: string]: number } = {
     "1": 5,
     "2": 3,
     "3": 2,
@@ -569,12 +569,12 @@ const TierReferralList: React.FC<{
     return (
       <div className="text-center py-8 text-gray-500">
         <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-        <p className="text-lg font-medium mb-2">No Tier {tier} Referrals Yet</p>
+        <p className="text-lg font-medium mb-2">No Level {level} Referrals Yet</p>
         <p className="text-sm">
-          When users join through your Tier {parseInt(tier) - 1 || "direct"} referrals, they'll appear here.
+          When users join through your Level {parseInt(level) - 1 || "direct"} referrals, they'll appear here.
         </p>
         <p className="text-xs text-[#4F9CF9] mt-2">
-          Earn {tierPercentages[tier]}% commission on their investments!
+          Earn {levelPercentages[level]}% commission on their investments!
         </p>
       </div>
     );
@@ -584,13 +584,13 @@ const TierReferralList: React.FC<{
     <div className="space-y-3">
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-gray-600">
-          Tier {tier} Referrals ({referrals.length}) - {tierPercentages[tier]}% Commission
+          Level {level} Referrals ({referrals.length}) - {levelPercentages[level]}% Commission
         </p>
       </div>
       
       {referrals.map((referral, index) => {
         const totalDeposits = Number(referral.totalDeposits || 0);
-        const commissionAmount = totalDeposits * (tierPercentages[tier] / 100);
+        const commissionAmount = totalDeposits * (levelPercentages[level] / 100);
         
         return (
           <div key={referral.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
@@ -605,7 +605,7 @@ const TierReferralList: React.FC<{
                       {referral.displayName || referral.username || `User${referral.referredId}`}
                     </p>
                     <Badge variant="outline" className="text-xs">
-                      Tier {tier}
+                      Level {level}
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-600 mt-1">

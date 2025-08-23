@@ -231,8 +231,6 @@ const ProfilePage: React.FC = () => {
                     <span className="px-1.5 py-0.5 rounded-full bg-green-900/20 text-green-500 text-xs">
                       Verified
                     </span>
-                    {user.countryRepStatus === "none" 
-                    )}
                     {user.countryRepStatus === "pending" && (
                       <span className="text-xs text-blue-500">
                         C.Rep Application Pending
