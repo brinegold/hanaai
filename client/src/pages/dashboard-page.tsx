@@ -642,88 +642,98 @@ Trade Time : Once Per day
           <ScrollArea className="h-[60vh]">
             <div className="space-y-4 pr-4">
               <p>
-                The Minimum deposit amount for Nebrix quantitative trading is
-                10USDT, and the minimum withdrawal amount is 3USDT.
+                The Minimum deposit amount for Nebrix AI trading is 5USDT, and the minimum withdrawal amount is 1USDT
               </p>
               <p>
-                The withdrawal fee is 0.5USDT and the funds will be credited to
-                your account within three minutes.
+                The Maximum deposit is 500,000USDT.
               </p>
+              <p>
+                The Deposit Fee is 5%(Fees used for Maintenance of the Nebrix AI Ecosystem)
+              </p>
+              <p>
+                The withdrawal fee is 10% and the funds will be credited to your account within few minutes.
+              </p>
+              <p>
+                Please if you have any enquiries send us an email at: Support@nebrix.dev
+              </p>
+              
               <div className="border-t border-b border-gray-600 py-4 my-4">
                 <p className="font-semibold mb-2">✔How to make money:</p>
-                <ol className="list-decimal pl-4 space-y-2">
-                  <li>
-                    Invest now and earn 3% per day (weekly cash Withdrawals are
-                    available every Fridays)
-                  </li>
-                  <li>
-                    To Generate Daily Returns You Must click on "Quantify", then
-                    click on "Start Trading" wait for few seconds .
-                  </li>
-                  <li>
-                    Invite others to participate and get 5% referral
-                    commission✔
-                  </li>
-                </ol>
-                <div className="mt-4 space-y-2">
+                <div className="space-y-2">
                   <p>
-                    Quantification Trade time: Trading Time at is 11am Taipei
-                    Time Zone(UTC +8)
-                  </p>
-                  <p>Withdrawal days: Fridays Only</p>
-                  <p>
-                    Note: The stored value is used to open the corresponding
-                    level and obtain the current level percentage benefit.
+                    Invest now and earn 1.5% per day (weekly cash Withdrawals are available every day)
                   </p>
                   <p>
-                    For example, if you deposit 100 USDT , the quantitative
-                    profit of a single transaction is 100×3%=3 USDT
+                    To Generate Daily Returns You Must click on "Trade Now", then click on "Start Trading" wait for few seconds .
+                  </p>
+                  <p>
+                    Invite others to participate and get 5%,3%,2% and 1% in Nebrix Uni-Level referral commission Program✔
+                  </p>
+                  <p>
+                    Trading time: Trading Time is once every 24hrs.
+                  </p>
+                  <p>
+                    Withdrawal days: Available Every day
+                  </p>
+                  <p>
+                    For example, if you deposit 100 USDT , the AI profit of a single transaction is 100×1.5%= 1.5USDT
+                  </p>
+                  <p>
+                    The bonus can be withdrawn immediately. The more users you recommend, the more commission rewards you will get.
+                  </p>
+                  <p>
+                    The commissions collected from the recommended users will go directly into your member account and you can withdraw them directly!
                   </p>
                 </div>
               </div>
-              <div className="bg-blue-900/20 p-4 rounded-lg">
-                <p className="font-semibold mb-2">Special reminder:</p>
-                <p>
-                  The first deposit amount of the invitee must be greater than
-                  50 USDT!
-                </p>
-                <p>
-                  The bonus can be withdrawn immediately. The more users you
-                  recommend, the more commission rewards you will get. The
-                  commissions collected from the recommended users will go
-                  directly into your member account and you can withdraw them
-                  directly!
-                </p>
+
+              <div className="border-b border-gray-600 pb-4 mb-4">
+                <p className="font-semibold mb-2">------Invite Team charging reward--------</p>
+                <div className="space-y-3">
+                  <div>
+                    <p className="font-medium">1: Get 5% of the deposit of level-1 team members</p>
+                    <p className="text-sm text-gray-600">
+                      The first-level team can receive commission income every day = 100*5%*10 people = 50 USDT
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Nebrix team daily deposit reward Your team can only deposit the value as a reward within 24 hours
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p className="font-medium">2: Get 3% of the deposit of level-2 team members</p>
+                    <p className="text-sm text-gray-600">
+                      The second-level team can receive commission income every day = 100*3%*10 people = 30 USDT
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Nebrix team daily deposit reward Your team can only deposit the value as a reward within 24 hours
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p className="font-medium">3: Get 2% of the deposit of level-3 team members</p>
+                    <p className="text-sm text-gray-600">
+                      The third-level team can receive commission income every day = 100*2%*10 people = 20 USDT
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Nebrix team daily deposit reward Your team can only deposit the value as a reward within 24 hours
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p className="font-medium">4: Get 1% of the deposit of level-4 team members</p>
+                    <p className="text-sm text-gray-600">
+                      The fourth-level team can receive commission income every day = 100*1%*10 people = 10 USDT
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-4">
-                <p className="font-semibold">
-                  ------Invite team charging reward--------
-                </p>
-                <p>1: Get 5% of the deposit of level 1 team members</p>
-                <p>
-                  The first-level team can receive commission income every day =
-                  100*5%*10 people = 120 USDT
-                </p>
-                <p>
-                  Nebrix team daily deposit reward Your team can only deposit
-                  the value as a reward within 24 hours
-                </p>
-                <p className="text-sm text-gray-400">
-                  Please note: If you meet the requirements, please contact
-                  customer service within 24 hours to claim your reward. Once
-                  the deadline has passed, it will be considered invalid and
-                  your team must recalculate within 24 hours. The final right of
-                  interpretation belongs to this platform.
-                </p>
-                <p className="text-sm text-gray-400">
-                  Nebrix works with bloggers on multiple social platforms (such
-                  as Twitter, YouTube, TikTok, Facebook, Instagram, etc.) to
-                  promote bloggers' tweets, videos and posts and increase
-                  account data (views, clicks, etc.) (Likes, reposts, fans,
-                  etc.) Help accounts achieve traffic growth. The final right of
-                  interpretation belongs to this platform.
-                </p>
-              </div>
+
+              <p className="text-sm text-gray-600">
+                Nebrix works with bloggers on multiple social platforms (such as Twitter, YouTube, TikTok, Facebook, Instagram, etc.)
+                to promote bloggers' tweets, videos and posts and increase account data (views, clicks, etc.) (Likes, reposts, fans, etc.)
+                Help accounts achieve traffic growth. The final right of interpretation belongs to this platform.
+              </p>
             </div>
           </ScrollArea>
         </DialogContent>
