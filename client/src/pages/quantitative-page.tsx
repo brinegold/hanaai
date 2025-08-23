@@ -411,15 +411,6 @@ const QuantitativePage: React.FC = () => {
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-gray-400">Quantitative Assets</p>
-                <p className="font-medium text-black">
-                  {user?.totalAssets
-                    ? parseFloat(user.totalAssets.toString()).toFixed(2)
-                    : "0.00"}
-                  $
-                </p>
-              </div>
-              <div className="space-y-1">
                 <p className="text-xs text-gray-400">{t('dashboard.todayEarnings')}</p>
                 <p className="font-medium text-black">
                   {user?.todayEarnings
