@@ -387,16 +387,58 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  // Verify user endpoint - no commission processing
+  // Approve Country Representative with $10,000 bonus
   app.post("/api/admin/users/:id/approve-country-rep", async (req, res) => {
     try {
       const { id } = req.params;
-      const updatedUser = await storage.updateUser(parseInt(id), {
+      const userId = parseInt(id);
+      
+      // Get user details
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Check if already approved
+      if (user.isCountryRep) {
+        return res.status(400).json({ message: "User is already a Country Representative" });
+      }
+
+      // Country Rep bonus amount
+      const bonusAmount = 10000;
+
+      // Update user status and add bonus
+      const updatedUser = await storage.updateUser(userId, {
         isCountryRep: true,
         countryRepStatus: "approved",
+        totalAssets: (parseFloat(user.totalAssets.toString()) + bonusAmount).toString(),
+        quantitativeAssets: (parseFloat(user.quantitativeAssets.toString()) + bonusAmount).toString(),
+        withdrawableAmount: (parseFloat(user.withdrawableAmount.toString()) + bonusAmount).toString(),
         updatedAt: new Date(),
       });
-      res.json(updatedUser);
+
+      // Create bonus transaction record
+      await storage.createTransaction({
+        userId: userId,
+        type: "Bonus",
+        amount: bonusAmount.toString(),
+        status: "Completed",
+        txHash: null,
+      });
+
+      // Create notification for user
+      await storage.createNotification({
+        userId: userId,
+        type: "system",
+        message: `🎉 Congratulations! You have been approved as a Country Representative and received a $${bonusAmount.toLocaleString()} bonus!`,
+        isRead: false,
+      });
+
+      res.json({
+        ...updatedUser,
+        bonusAwarded: bonusAmount,
+        message: `Country Representative approved with $${bonusAmount.toLocaleString()} bonus`,
+      });
     } catch (err) {
       console.error("Error approving country rep:", err);
       res.status(500).json({ message: "Failed to approve country representative" });

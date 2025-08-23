@@ -1101,22 +1101,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(req.user!.id);
       if (!user) return res.status(404).send("User not found");
 
-      // Check if user meets requirements
-      const referrals = await storage.getReferralsByReferrerId(user.id);
-      let totalDownlineDeposits = 0;
-
-      for (const referral of referrals) {
-        const referredUser = await storage.getUser(referral.referredId);
-        if (referredUser) {
-          totalDownlineDeposits += parseFloat(
-            referredUser.rechargeAmount.toString(),
-          );
-        }
+      // Check if user already applied or is already a Country Rep
+      if (user.countryRepStatus === "pending") {
+        return res.status(400).json({
+          message: "You have already applied for Country Representative status",
+        });
       }
 
-      if (totalDownlineDeposits < 5000) {
+      if (user.isCountryRep) {
         return res.status(400).json({
-          message: "Total downline deposits must be at least $5000 to apply",
+          message: "You are already a Country Representative",
+        });
+      }
+
+      // Check team volume requirement ($1M)
+      const totalTeamVolume = parseFloat(user.totalVolumeGenerated.toString());
+      
+      if (totalTeamVolume < 1000000) {
+        return res.status(400).json({
+          message: `You need to reach $1,000,000 in Team Volume to apply for Country Representative. Current volume: $${totalTeamVolume.toLocaleString()}`,
+          currentVolume: totalTeamVolume,
+          requiredVolume: 1000000,
         });
       }
 
@@ -1124,7 +1129,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         countryRepStatus: "pending",
       });
 
-      res.json({ message: "Application submitted successfully" });
+      res.json({ 
+        message: "Country Representative application submitted successfully! Your application is under review.",
+        teamVolume: totalTeamVolume,
+      });
     } catch (err) {
       console.error("Error applying for Country Rep:", err);
       res.status(500).json({ message: "Failed to submit application" });

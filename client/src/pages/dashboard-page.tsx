@@ -175,6 +175,7 @@ const DashboardPage: React.FC = () => {
   const [socialBubbleOpen, setSocialBubbleOpen] = useState(false);
   const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
   const [supportDialogOpen, setSupportDialogOpen] = useState(false);
+  const [isApplyingCountryRep, setIsApplyingCountryRep] = useState(false);
 
   // Feature button handlers
   const handleRechargeClick = () => {
@@ -214,6 +215,40 @@ const DashboardPage: React.FC = () => {
 
   const handleInviteClick = () => {
     navigate("/invite");
+  };
+
+  // Country Rep application handler
+  const handleCountryRepApplication = async () => {
+    try {
+      setIsApplyingCountryRep(true);
+      const response = await fetch("/api/apply-country-rep", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Application Submitted!",
+          description: data.message,
+        });
+      } else {
+        toast({
+          title: "Application Failed",
+          description: data.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit Country Rep application",
+        variant: "destructive",
+      });
+    } finally {
+      setIsApplyingCountryRep(false);
+    }
   };
 
   return (
@@ -289,6 +324,85 @@ const DashboardPage: React.FC = () => {
 
       {/* Rank Display */}
       <RankDisplay />
+
+      {/* Country Rep Application */}
+      {user && !user.isCountryRep && user.countryRepStatus !== "pending" && (
+        <div className="mx-4 mb-6">
+          <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h3 className="font-bold text-lg mb-1">🏆 Apply for Country Rep</h3>
+                <p className="text-purple-100 text-sm mb-2">
+                  Unlock exclusive benefits and earn $10,000 bonus!
+                </p>
+                <div className="text-xs text-purple-200">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span>✓ 25% commission on Tier 1 referrals</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>✓ Exclusive Country Representative status</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={handleCountryRepApplication}
+                disabled={isApplyingCountryRep}
+                className="bg-white text-purple-600 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-purple-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isApplyingCountryRep ? "Applying..." : "Apply Now"}
+              </button>
+            </div>
+            <div className="mt-3 pt-3 border-t border-purple-400/30">
+              <p className="text-xs text-purple-200">
+                <strong>Requirement:</strong> $1,000,000 in Team Volume
+              </p>
+              <p className="text-xs text-purple-200 mt-1">
+                Current Volume: ${parseFloat(user.totalVolumeGenerated || "0").toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Country Rep Status - Pending */}
+      {user && user.countryRepStatus === "pending" && (
+        <div className="mx-4 mb-6">
+          <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-4 text-white">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 rounded-full p-2">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-lg">⏳ Country Rep Application Pending</h3>
+                <p className="text-orange-100 text-sm">
+                  Your application is under review. You'll be notified once approved!
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Country Rep Status - Approved */}
+      {user && user.isCountryRep && (
+        <div className="mx-4 mb-6">
+          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 rounded-full p-2">
+                <Crown className="w-6 h-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-lg">👑 Country Representative</h3>
+                <p className="text-green-100 text-sm">
+                  You are now a Country Rep with exclusive benefits and 25% Tier 1 commissions!
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Asset Summary */}
       <div className="flex space-x-4 mx-4 mb-6">
