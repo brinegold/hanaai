@@ -8,6 +8,8 @@ import {
   Plus,
   User,
   Calendar,
+  Users,
+  DollarSign,
 } from "lucide-react";
 import Logo from "@/components/logo";
 import BottomNav from "@/components/bottom-nav";
@@ -18,19 +20,38 @@ import { useToast } from "@/hooks/use-toast";
 import { generateQRCode, formatCurrency } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useLanguage } from "@/hooks/use-language";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 // Define types for referrals
 interface ReferredUser {
   id: number;
   username: string;
+  email: string;
   createdAt: string;
 }
 
 interface ReferralDetail {
   id: number;
-  level: number;
+  referredId: number;
+  level: string;
   commission: number;
-  referredUser: ReferredUser;
+  totalDeposits: number;
+  displayName: string;
+  username: string;
+  email: string;
+  totalAssets: number;
+  rechargeAmount: number;
+  commissionAssets: number;
+  createdAt: string;
+}
+
+interface ReferralSummary {
+  tier1: number;
+  tier2: number;
+  tier3: number;
+  tier4: number;
+  total: number;
 }
 
 interface ProfileResponse {
@@ -51,12 +72,17 @@ const InvitePage: React.FC = () => {
   const [isLoadingReferrals, setIsLoadingReferrals] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 40;
+  const [referralSummary, setReferralSummary] = useState<ReferralSummary>({ tier1: 0, tier2: 0, tier3: 0, tier4: 0, total: 0 });
+  const [selectedTier, setSelectedTier] = useState<string>('1');
+  const [tierReferrals, setTierReferrals] = useState<ReferralDetail[]>([]);
+  const [isLoadingTier, setIsLoadingTier] = useState(false);
 
   // Fetch user's invites and profile data when component mounts
   useEffect(() => {
     if (user) {
       fetchInviteCodes();
-      fetchProfileData();
+      fetchReferralSummary();
+      fetchTierReferrals('1');
 
       if (user.referralCode) {
         const link = `${window.location.origin}/auth?ref=${user.referralCode}`;
@@ -90,23 +116,63 @@ const InvitePage: React.FC = () => {
     }
   };
 
-  // Fetch profile data including referrals
-  const fetchProfileData = async () => {
+  // Fetch referral summary
+  const fetchReferralSummary = async () => {
+    if (!user) {
+      console.log("No user authenticated, skipping referral summary fetch");
+      return;
+    }
+    
     try {
-      setIsLoadingReferrals(true);
-      const res = await apiRequest("GET", "/api/profile");
-      const data: ProfileResponse = await res.json();
-      setReferrals(data.referrals || []);
+      const res = await apiRequest("GET", "/api/referrals/summary");
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${res.statusText}`);
+      }
+      const data: ReferralSummary = await res.json();
+      setReferralSummary(data);
     } catch (error) {
-      console.error("Error fetching profile data:", error);
+      console.error("Error fetching referral summary:", error);
       toast({
         title: "Error",
-        description: "Failed to load team information",
+        description: "Failed to load referral summary. Please try logging in again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Fetch referrals for specific tier
+  const fetchTierReferrals = async (tier: string) => {
+    if (!user) {
+      console.log("No user authenticated, skipping tier referrals fetch");
+      setTierReferrals([]);
+      return;
+    }
+    
+    try {
+      setIsLoadingTier(true);
+      const res = await apiRequest("GET", `/api/referrals/tier/${tier}`);
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${res.statusText}`);
+      }
+      const data: ReferralDetail[] = await res.json();
+      setTierReferrals(data);
+    } catch (error) {
+      console.error("Error fetching tier referrals:", error);
+      setTierReferrals([]);
+      toast({
+        title: "Error",
+        description: "Failed to load tier referrals. Please try logging in again.",
         variant: "destructive",
       });
     } finally {
-      setIsLoadingReferrals(false);
+      setIsLoadingTier(false);
     }
+  };
+
+  // Handle tier change
+  const handleTierChange = (tier: string) => {
+    setSelectedTier(tier);
+    fetchTierReferrals(tier);
   };
 
   // Generate a new invite code
@@ -164,60 +230,6 @@ const InvitePage: React.FC = () => {
           description: "Referral link copied to clipboard",
         });
 
-        <Card className="bg-white border-gray-200">
-          <CardHeader>
-            <CardTitle className="text-black">Your Referral Link</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <p className="text-gray-400 text-sm">
-                Share your referral link and earn multi-level commission when your
-                referrals make investments!
-              </p>
-
-              <div className="bg-white border border-gray-200 p-3 rounded-lg flex items-center justify-between">
-                <input
-                  type="text"
-                  value={referralLink}
-                  readOnly
-                  className="bg-transparent text-[#4F9CF9] flex-1 mr-2 overflow-hidden text-ellipsis"
-                />
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => {
-                      copyToClipboard(referralLink);
-                      setLinkCopied(true);
-                      setTimeout(() => setLinkCopied(false), 2000);
-                    }}
-                    className="text-black hover:text-[#4F9CF9] transition-colors"
-                  >
-                    {linkCopied ? (
-                      <span className="text-green-500">Copied!</span>
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => shareReferralLink()}
-                    className="text-black hover:text-[#4F9CF9] transition-colors"
-                  >
-                    <Share2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              {qrCodeUrl && (
-                <div className="flex justify-center mt-4">
-                  <img
-                    src={qrCodeUrl}
-                    alt="Referral QR Code"
-                    className="w-32 h-32"
-                  />
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>;
       },
       (err) => {
         toast({
@@ -331,12 +343,12 @@ const InvitePage: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
-                <p className="text-green-700 font-semibold mb-1">
-                  💰 Weekly Salary Bonus
+              <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                <p className="text-blue-700 font-semibold mb-1">
+                  💰 Daily Referral Withdrawals Available
                 </p>
-                <p className="text-sm text-green-600">
-                  Earn 10% of your total referral income (Mon-Fri) as salary every Saturday!
+                <p className="text-sm text-blue-600">
+                  Withdraw your referral bonuses anytime! No restrictions - available 24/7.
                 </p>
               </div>
             </div>
@@ -399,104 +411,148 @@ const InvitePage: React.FC = () => {
 
         <Card className="bg-white border-gray-200">
           <CardHeader>
-            <CardTitle className="text-black">My Team</CardTitle>
+            <CardTitle className="text-black flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              My Team
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoadingReferrals ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="w-8 h-8 animate-spin text-[#4F9CF9]" />
-              </div>
-            ) : referrals.length > 0 ? (
-              <div className="space-y-4">
-                <p className="text-gray-400 text-sm">
-                  Referral Earnings - Commission from your team investments
-                </p>
-                
-                {(() => {
-                  const totalPages = Math.ceil(referrals.length / itemsPerPage);
-                  const startIndex = (currentPage - 1) * itemsPerPage;
-                  const endIndex = startIndex + itemsPerPage;
-                  const currentReferrals = referrals.slice(startIndex, endIndex);
-                  
-                  return (
-                    <>
-                      <div className="space-y-2">
-                        {currentReferrals.map((referral, index) => {
-                          // Calculate commission based on tier percentages
-                          const tierPercentages = [5, 3, 2, 1]; // Tier 1: 5%, Tier 2: 3%, etc.
-                          const tierPercentage = tierPercentages[referral.level - 1] || 0;
-                          const commissionAmount = (referral.totalDeposits || 0) * (tierPercentage / 100);
-                          
-                          return (
-                            <div key={referral.id} className="flex items-center justify-between py-2 border-b border-gray-700">
-                              <div className="flex items-center space-x-3">
-                                <span className="text-gray-400 text-sm w-8">
-                                  {startIndex + index + 1})
-                                </span>
-                                <div className="bg-gray-50 w-8 h-8 rounded-full flex items-center justify-center">
-                                  <User className="h-4 w-4 text-[#4F9CF9]" />
-                                </div>
-                                <div>
-                                  <p className="text-black font-medium">
-                                    {referral.referredUser.username}(${commissionAmount.toFixed(2)}) Tier {referral.level}
-                                  </p>
-                                  <p className="text-xs text-gray-400">
-                                    Deposited: ${referral.totalDeposits || 0}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      
-                      {totalPages > 1 && (
-                        <div className="flex justify-center items-center space-x-2 mt-4">
-                          <button
-                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                            disabled={currentPage === 1}
-                            className="px-3 py-1 bg-gray-700 text-black rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            Previous
-                          </button>
-                          <span className="text-gray-400 text-sm">
-                            Page {currentPage} of {totalPages}
-                          </span>
-                          <button
-                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                            disabled={currentPage === totalPages}
-                            className="px-3 py-1 bg-gray-700 text-black rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            Next
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-400">
-                <p>You haven't invited anyone yet</p>
-                <p className="mt-2 text-sm">
-                  Share your invite code with unlimited friends to earn
-                  commissions!{" "}
-                  {user?.isCountryRep
-                    ? "Multi-level referral system: 5% + 3% + 2% + 1%!"
-                    : ""}
-                </p>
-                <p className="mt-2 text-sm text-[#4F9CF9]">
-                  Generational bonuses: 5% (Tier 1), 3% (Tier 2), 2% (Tier 3), 1% (Tier 4)
-                  instantly.
-                </p>
-              </div>
-            )}
+            <Tabs value={selectedTier} onValueChange={handleTierChange} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 mb-4">
+                <TabsTrigger value="1" className="flex flex-col items-center gap-1 py-3">
+                  <span className="font-medium">TIER 1</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {referralSummary.tier1}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger value="2" className="flex flex-col items-center gap-1 py-3">
+                  <span className="font-medium">TIER 2</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {referralSummary.tier2}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger value="3" className="flex flex-col items-center gap-1 py-3">
+                  <span className="font-medium">TIER 3</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {referralSummary.tier3}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger value="4" className="flex flex-col items-center gap-1 py-3">
+                  <span className="font-medium">TIER 4</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {referralSummary.tier4}
+                  </Badge>
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="1" className="mt-4">
+                <TierReferralList tier="1" referrals={tierReferrals} isLoading={isLoadingTier} />
+              </TabsContent>
+              <TabsContent value="2" className="mt-4">
+                <TierReferralList tier="2" referrals={tierReferrals} isLoading={isLoadingTier} />
+              </TabsContent>
+              <TabsContent value="3" className="mt-4">
+                <TierReferralList tier="3" referrals={tierReferrals} isLoading={isLoadingTier} />
+              </TabsContent>
+              <TabsContent value="4" className="mt-4">
+                <TierReferralList tier="4" referrals={tierReferrals} isLoading={isLoadingTier} />
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
 
       {/* Bottom Navigation */}
       <BottomNav />
+    </div>
+  );
+};
+
+// Component to display referrals for a specific tier
+const TierReferralList: React.FC<{
+  tier: string;
+  referrals: ReferralDetail[];
+  isLoading: boolean;
+}> = ({ tier, referrals, isLoading }) => {
+  const tierPercentages: { [key: string]: number } = {
+    "1": 5,
+    "2": 3,
+    "3": 2,
+    "4": 1,
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="w-8 h-8 animate-spin text-[#4F9CF9]" />
+      </div>
+    );
+  }
+
+  if (referrals.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+        <p className="text-lg font-medium mb-2">No Tier {tier} Referrals Yet</p>
+        <p className="text-sm">
+          When users join through your Tier {parseInt(tier) - 1 || "direct"} referrals, they'll appear here.
+        </p>
+        <p className="text-xs text-[#4F9CF9] mt-2">
+          Earn {tierPercentages[tier]}% commission on their investments!
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-gray-600">
+          Tier {tier} Referrals ({referrals.length}) - {tierPercentages[tier]}% Commission
+        </p>
+      </div>
+      
+      {referrals.map((referral, index) => {
+        const totalDeposits = Number(referral.totalDeposits || 0);
+        const commissionAmount = totalDeposits * (tierPercentages[tier] / 100);
+        
+        return (
+          <div key={referral.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="bg-[#4F9CF9] text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium">
+                  {index + 1}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-gray-900">
+                      {referral.displayName || referral.username || `User${referral.referredId}`}
+                    </p>
+                    <Badge variant="outline" className="text-xs">
+                      Tier {tier}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Joined: {new Date(referral.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="text-right">
+                <div className="flex items-center gap-2 mb-1">
+                  <DollarSign className="h-4 w-4 text-green-600" />
+                  <span className="font-semibold text-green-600">
+                    ${commissionAmount.toFixed(2)}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Deposited: ${totalDeposits.toFixed(2)}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };

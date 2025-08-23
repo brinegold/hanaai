@@ -175,13 +175,12 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
                 <p className="text-xs text-gray-400">Min withdrawal: 1 USDT</p>
                 <p className="text-xs text-gray-400">Fee: 10%</p>
                 <p className="text-xs text-gray-400">
-                  Available every day.
+                Withdrawals are available every day.
+
                 </p>
+
                 <p className="text-xs text-gray-400">
-                  Note: 10% of your Referrals bonus can only be withdraw every Saturdays
-                </p>
-                <p className="text-xs text-gray-400">
-                  Processing time: 6-24 hours
+                Processing time: 20mins to 1Hr
                 </p>
               </div>
 

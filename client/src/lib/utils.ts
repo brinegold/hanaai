@@ -8,17 +8,23 @@ export function cn(...inputs: ClassValue[]) {
 export function formatCurrency(amount: string | number, currency = "USD"): string {
   const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
   
+  // If the number is a whole number, show no decimals
+  // If it has decimals, show up to 2 decimal places but remove trailing zeros
+  const isWholeNumber = numAmount % 1 === 0;
+  
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
-    minimumFractionDigits: 2,
+    minimumFractionDigits: isWholeNumber ? 0 : 0,
     maximumFractionDigits: 2,
   }).format(numAmount);
 }
 
 export function formatNumber(num: number, decimals = 2): string {
+  const isWholeNumber = num % 1 === 0;
+  
   return num.toLocaleString('en-US', {
-    minimumFractionDigits: decimals,
+    minimumFractionDigits: isWholeNumber ? 0 : 0,
     maximumFractionDigits: decimals
   });
 }

@@ -11,6 +11,7 @@ import {
   MessageCircle,
   TrendingUp,
   Mail,
+  Twitter,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import Logo from "@/components/logo";
@@ -43,7 +44,7 @@ const RankDisplay: React.FC = () => {
   });
 
   // Automatically check and update user rank when component loads
-  useQuery({
+  const { data: rankData, refetch: refetchRank } = useQuery({
     queryKey: ["/api/check-rank", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -51,11 +52,13 @@ const RankDisplay: React.FC = () => {
       return response.json();
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 1000, // 30 seconds - shorter cache for more frequent updates
+    refetchOnWindowFocus: true,
   });
 
   const currentRank = user?.currentRank || "none";
-  const totalVolume = parseFloat(user?.totalVolumeGenerated?.toString() || "0");
+  // Use the calculated volume from the rank check API if available, otherwise fall back to user data
+  const totalVolume = rankData?.totalVolume || parseFloat(user?.totalVolumeGenerated?.toString() || "0");
 
   // Find next rank
   const nextRank = ranks?.find((rank: any) => 
@@ -163,6 +166,7 @@ const DashboardPage: React.FC = () => {
 
   const telegramStyle = bubbleStyle('80px', '#229ED9');
   const emailStyle = bubbleStyle('140px', '#4CAF50');
+  const twitterStyle = bubbleStyle('200px', '#1DA1F2');
 
   // Dialog states
   const [rechargeDialogOpen, setRechargeDialogOpen] = useState(false);
@@ -306,7 +310,10 @@ const DashboardPage: React.FC = () => {
             <span className="text-xs text-gray-400">USDT</span>
           </div>
           <div className="font-mono font-medium text-gray-900 text-xl">
-            ${parseFloat(user?.totalAssets?.toString() || "0").toFixed(2)}
+            ${parseFloat(user?.totalAssets?.toString() || "0").toLocaleString('en-US', {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 2
+            })}
           </div>
           <div className="text-xs flex items-center">
             <span className="text-[#4CAF50]">+2.5%</span>
@@ -363,7 +370,7 @@ const DashboardPage: React.FC = () => {
 
       {/* Telegram Bubble */}
       <a 
-        href="https://t.me/Tibankofficial1"
+        href="https://t.me/Nebrixdex"
         target="_blank"
         rel="noopener noreferrer"
         style={telegramStyle}
@@ -374,13 +381,24 @@ const DashboardPage: React.FC = () => {
 
       {/* Email Bubble */}
       <a 
-        href="mailto:Support@tibank.vip"
+        href="mailto:support@nebrix.dev"
         target="_blank"
         rel="noopener noreferrer"
         style={emailStyle}
         className="hover:transform hover:scale-110"
       >
         <Mail size={24} />
+      </a>
+
+      {/* Twitter Bubble */}
+      <a 
+        href="https://x.com/NebrixCoin"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={twitterStyle}
+        className="hover:transform hover:scale-110"
+      >
+        <Twitter size={24} />
       </a>
 
       {/* Random User Display */}
@@ -395,24 +413,16 @@ const DashboardPage: React.FC = () => {
           three minutes.<br></br>
           <br></br>
           <br></br> ===========<br></br> ✔How to make money: <br></br>
-          1. Invest now and earn 3% per day (weekly cash Withdrawals are
-          available every Fridays)<br></br>2. To Generate Daily Returns You Must
-          click on "Quantify", then click on "Start Trading" wait
-          for few seconds .<br></br>
-          3. Invite others to participate and get 5% referral commission
-          <br></br>
-          <br></br>✔<b> Quantification Trade time:</b> Trading Time at is 11am
-          Taipei Time Zone(UTC +8)
-          <br></br>
-          <br></br>
-          <b> Withdrawal days: Fridays Only</b> <br></br>
-          <br></br>
-          <b>Online customer service:</b> https://t.me/Tibankofficial1 <br></br>
-          <br></br>Note: The stored value is used to open the corresponding
-          level and obtain the current level percentage benefit.
-          <br></br>
-          For example, if you deposit 100 USDT , the quantitative profit of a
-          single transaction is 100×3%=3 USDT
+          1. Deposit Now and Earn 1.5% daily(Withdrawals available each day)<br></br>
+2. To Generate Daily Returns You Must Click on "Trade now" ,then Click on Start Trading" wait for few seconds for Nebrix AI to generate profits. <br></br>
+3.  Invite others participate and earn in Nebrix Uni-level referral Program earning in 4 levels; 5%,3%,2% and 1%.<br></br>
+
+<strong>
+Trade Time : Once Per day
+</strong>
+<br></br>
+
+ <strong>Withdrawal days : Every day</strong>
         </div>
       </div>
 

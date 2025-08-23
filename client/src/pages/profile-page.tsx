@@ -47,6 +47,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useUser } from "../hooks/useUser";
+import { format } from "date-fns";
 
 const ProfilePage: React.FC = () => {
   const { user, logoutMutation } = useAuth();
@@ -68,6 +74,7 @@ const ProfilePage: React.FC = () => {
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const [comingSoonTitle, setComingSoonTitle] = useState("");
   const [languageSettingsOpen, setLanguageSettingsOpen] = useState(false);
+  const [showTibankInfo, setShowTibankInfo] = useState(false);
 
   // Fetch notifications when component mounts or user changes
   useEffect(() => {
@@ -109,14 +116,14 @@ const ProfilePage: React.FC = () => {
   };
 
   const handleAboutClick = () => {
-    // Redirect to home page for About Us information
-    setLocation("/");
+    // Open the about.pdf file
+    window.open("/src/about.pdf", "_blank");
   };
 
   // Handler for Quantization Tutorial click
   const handleTutorialClick = () => {
-    // Redirect to quantitative page for tutorial
-    setLocation("/quantitative");
+    // Open the Nebrix AI Trading dialog
+    setShowTibankInfo(true);
   };
 
   // Handler for Security Center click
@@ -831,6 +838,114 @@ const ProfilePage: React.FC = () => {
         open={withdrawDialogOpen}
         onOpenChange={setWithdrawDialogOpen}
       />
+
+      {/* Nebrix Info Dialog */}
+      <Dialog open={showTibankInfo} onOpenChange={setShowTibankInfo}>
+        <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-[600px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-center text-black mb-4">
+              Welcome To Nebrix Ai Trading
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 text-sm">
+            <p>
+            Nebrix is an advanced AI-powered quantitative trading ecosystem designed to transform the way investors interact with the digital economy. By integrating Hermetic AI, a proprietary trading engine, Nebrix delivers consistent and sustainable returns through adaptive strategies that thrive in the fast-paced crypto market.
+            </p>
+
+            <h3 className="text-[#4F9CF9] font-medium mt-4">
+              Nebrix automatic Ai money-making function
+            </h3>
+            <p>
+              Nebrix can buy Bitcoin at a low price from Exchange A within 1
+              second, and sell it at a high price on Exchange B to make a
+              profit.
+            </p>
+            
+            <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mt-3">
+              <p className="text-blue-700 font-medium text-sm">
+                📅 Trading Schedule: Monday to Friday only
+              </p>
+              <p className="text-blue-600 text-xs mt-1">
+                Daily returns are generated on weekdays. No trading activity on weekends.
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-3 rounded-lg my-4">
+              <p>
+                Example: (BTC/USDT) is bought at 30743.32 USDT on Binance and
+                sold at 30761.32 USDT on Huobi. This transaction can earn 18
+                USDT.
+              </p>
+              <p className="text-blue-400 text-xs mt-2">
+                Note: It is impossible for humans to buy at the lowest price and
+                sell at the highest price almost at the same time within 1
+                second.
+              </p>
+            </div>
+
+            <h3 className="text-[#4F9CF9] font-medium">Key Advantages:</h3>
+
+            <div className="space-y-3">
+              <div>
+                <h4 className="font-medium mb-1">1. Speed and Accuracy</h4>
+                <p className="text-gray-700">
+                  Nebrix executes trades with unparalleled speed and accuracy,
+                  operating 24/7 through automated algorithms.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-medium mb-1">2. Emotion-Free Trading</h4>
+                <p className="text-gray-700">
+                  Nebrix uses computer programs and algorithms to ensure
+                  consistent trading results without emotional bias.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-medium mb-1">3. Advanced Backtesting</h4>
+                <p className="text-gray-700">
+                  Uses historical market data to customize and optimize trading
+                  models for maximum profit.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-medium mb-1">4. Strict Discipline</h4>
+                <p className="text-gray-700">
+                  Helps investors stick to established trading plans and avoid
+                  human errors in volatile markets.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-medium mb-1">5. Market Trend Analysis</h4>
+                <p className="text-gray-700">
+                  Real-time analysis of market prospects across multiple
+                  cryptocurrency categories.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-medium mb-1">6. Decentralized Trading</h4>
+                <p className="text-gray-700">
+                  Enables diversified trading across multiple exchanges and
+                  trading types automatically.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-blue-600/20 to-blue-500/20 p-4 rounded-lg mt-6">
+              <p className="text-center">
+                Nebrix has undergone its fourth transformation, expanding
+                functionality while simplifying investor transactions. Profits
+                can be realized with just one click and waiting for 1-2 minutes.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Bottom Navigation */}
       <BottomNav />

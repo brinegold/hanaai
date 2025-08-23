@@ -223,11 +223,10 @@ export function registerAdminRoutes(app: Express) {
         const depositAmount = parseFloat(transaction.amount.toString());
         let totalAmount = depositAmount;
 
-        // Handle referral commission (5%)
+        // Handle multi-tier referral commissions
         const referrals = await storage.getReferralsByReferredId(user.id);
-        const level1Referral = referrals.find((r) => r.level === "1");
 
-        if (level1Referral) {
+        if (referrals.length > 0) {
           // Check if user has previous deposits
           const userDeposits = await storage.getTransactionsByUserId(user.id);
           const completedDeposits = userDeposits.filter(
@@ -236,88 +235,78 @@ export function registerAdminRoutes(app: Express) {
 
           // Only give commission if this is the first deposit
           if (completedDeposits.length === 0) {
-            const referrer = await storage.getUser(level1Referral.referrerId);
-            if (referrer) {
-              // Set commission rate based on Country Rep status
-              const commissionRate = referrer.isCountryRep ? 0.25 : 0.05; // 25% for Country Rep, 5% for regular users
-              const commissionAmount = depositAmount * commissionRate;
+            // Commission rates for each tier
+            const tierCommissionRates = {
+              "1": 0.05, // 5% for Tier 1
+              "2": 0.03, // 3% for Tier 2
+              "3": 0.02, // 2% for Tier 3
+              "4": 0.01, // 1% for Tier 4
+            };
 
-              // Update referrer's assets with commission
-              await storage.updateUser(referrer.id, {
-                commissionAssets: (
-                  parseFloat(referrer.commissionAssets.toString()) +
-                  commissionAmount
-                ).toString(),
-                commissionToday: (
-                  parseFloat(referrer.commissionToday.toString()) +
-                  commissionAmount
-                ).toString(),
-                totalAssets: (
-                  parseFloat(referrer.totalAssets.toString()) + commissionAmount
-                ).toString(),
-                quantitativeAssets: (
-                  parseFloat(referrer.quantitativeAssets.toString()) +
-                  commissionAmount
-                ).toString(),
-                withdrawableAmount: (
-                  parseFloat(referrer.withdrawableAmount.toString()) +
-                  commissionAmount
-                ).toString(),
-              });
+            // Process commissions for all tiers
+            for (const referral of referrals) {
+              const referrer = await storage.getUser(referral.referrerId);
+              if (referrer) {
+                let commissionRate = tierCommissionRates[referral.level] || 0;
+                
+                // Apply Country Rep bonus for Tier 1 only
+                if (referral.level === "1" && referrer.isCountryRep) {
+                  commissionRate = 0.25; // 25% for Country Rep Tier 1
+                }
 
-              // Update referral commission record
-              const currentCommission = parseFloat(
-                level1Referral.commission || "0",
-              );
-              await storage.updateReferral(level1Referral.id, {
-                commission: (currentCommission + commissionAmount).toString(),
-              });
+                const commissionAmount = depositAmount * commissionRate;
 
-              // Create commission transaction
-              await storage.createTransaction({
-                userId: referrer.id,
-                type: "Commission",
-                amount: commissionAmount.toString(),
-                status: "Completed",
-                txHash: null,
-              });
+                if (commissionAmount > 0) {
+                  // Update referrer's assets with commission
+                  await storage.updateUser(referrer.id, {
+                    commissionAssets: (
+                      parseFloat(referrer.commissionAssets.toString()) +
+                      commissionAmount
+                    ).toString(),
+                    commissionToday: (
+                      parseFloat(referrer.commissionToday.toString()) +
+                      commissionAmount
+                    ).toString(),
+                    totalAssets: (
+                      parseFloat(referrer.totalAssets.toString()) + commissionAmount
+                    ).toString(),
+                    quantitativeAssets: (
+                      parseFloat(referrer.quantitativeAssets.toString()) +
+                      commissionAmount
+                    ).toString(),
+                    withdrawableAmount: (
+                      parseFloat(referrer.withdrawableAmount.toString()) +
+                      commissionAmount
+                    ).toString(),
+                  });
+
+                  // Update referral commission record
+                  const currentCommission = parseFloat(
+                    referral.commission || "0",
+                  );
+                  await storage.updateReferral(referral.id, {
+                    commission: (currentCommission + commissionAmount).toString(),
+                  });
+
+                  // Create commission transaction
+                  await storage.createTransaction({
+                    userId: referrer.id,
+                    type: "Commission",
+                    amount: commissionAmount.toString(),
+                    status: "Completed",
+                    reason: `Tier ${referral.level} referral commission from ${user.username || user.email}`,
+                    txHash: null,
+                  });
+                }
+              }
             }
           }
-        }
-
-        // Check if this is the first deposit to apply bonus
-        const existingDeposits = await storage.getTransactionsByUserId(user.id);
-        const completedDeposits = existingDeposits.filter(
-          (t) =>
-            t.type === "Deposit" &&
-            t.status === "Completed" &&
-            t.id !== transaction.id,
-        );
-
-        if (completedDeposits.length === 0) {
-          // First deposit - add 10% bonus
-          const bonusAmount = depositAmount * 0.1;
-          totalAmount += bonusAmount;
-
-          // Create bonus transaction
-          await storage.createTransaction({
-            userId: user.id,
-            type: "Bonus",
-            amount: bonusAmount.toString(),
-            status: "Completed",
-            txHash: null,
-          });
-
-          // Update withdrawable amount with bonus
-          await storage.updateUser(user.id, {
-            withdrawableAmount: bonusAmount.toString(),
-          });
         }
 
         // Update user balance
         await storage.updateUser(user.id, {
           totalAssets: (
-            parseFloat(user.totalAssets.toString()) + totalAmount
+            parseFloat(user.totalAssets.toString()) + depositAmount
           ).toString(),
           rechargeAmount: (
             parseFloat(user.rechargeAmount.toString()) + depositAmount

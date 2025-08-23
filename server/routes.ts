@@ -254,10 +254,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         {
           id: "ai-trading",
           name: "AI Trading",
-          minAmount: Math.max(1, userBalance),
+          minAmount: Math.max(5, userBalance),
           maxAmount: 500000,
           dailyRate: 1.5,
-          description: `Earn 1.5% daily on your investment (Min $1)`,
+          description: `Earn 1.5% daily on your investment (Min $5)`,
         },
       ];
 
@@ -282,10 +282,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userBalance = parseFloat(user.totalAssets.toString());
 
-      if (typeof amount !== "number" || amount < 1) {
+      if (typeof amount !== "number" || amount < 5) {
         return res
           .status(400)
-          .json({ error: "Investment amount must be at least $1" });
+          .json({ error: "Investment amount must be at least $5" });
       }
 
       if (amount > 500000) {
@@ -399,6 +399,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     const referrals = await storage.getReferralsByReferrerId(req.user!.id);
     res.json(referrals);
+  });
+
+  // Get user referrals by tier - protected route
+  app.get("/api/referrals/tier/:tier", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+
+    try {
+      const tier = req.params.tier;
+      const userId = req.user!.id;
+
+      // Get referrals for specific tier
+      const tierReferrals = await db
+        .select({
+          id: referrals.id,
+          referredId: referrals.referredId,
+          level: referrals.level,
+          commission: referrals.commission,
+          createdAt: referrals.createdAt,
+          username: users.username,
+          email: users.email,
+          totalAssets: users.totalAssets,
+          rechargeAmount: users.rechargeAmount,
+          commissionAssets: users.commissionAssets,
+        })
+        .from(referrals)
+        .innerJoin(users, eq(users.id, referrals.referredId))
+        .where(and(eq(referrals.referrerId, userId), eq(referrals.level, tier)))
+        .orderBy(desc(referrals.createdAt));
+
+      // Get deposit amounts for each referred user
+      const referralDetails = [];
+      for (const referral of tierReferrals) {
+        const userTransactions = await db
+          .select({ amount: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` })
+          .from(transactions)
+          .where(
+            and(
+              eq(transactions.userId, referral.referredId),
+              eq(transactions.type, "Deposit"),
+              eq(transactions.status, "Completed")
+            )
+          );
+
+        const totalDeposits = userTransactions[0]?.amount || 0;
+
+        referralDetails.push({
+          ...referral,
+          totalDeposits: totalDeposits,
+          displayName: referral.username || referral.email || `User${referral.referredId}`,
+        });
+      }
+
+      res.json(referralDetails);
+    } catch (error) {
+      console.error("Error fetching tier referrals:", error);
+      res.status(500).json({ error: "Failed to fetch tier referrals" });
+    }
+  });
+
+  // Get referral summary by tiers - protected route
+  app.get("/api/referrals/summary", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+
+    try {
+      const userId = req.user!.id;
+
+      // Get counts for each tier
+      const tierCounts = await Promise.all([
+        db.select({ count: sql<number>`COUNT(*)` }).from(referrals).where(and(eq(referrals.referrerId, userId), eq(referrals.level, "1"))),
+        db.select({ count: sql<number>`COUNT(*)` }).from(referrals).where(and(eq(referrals.referrerId, userId), eq(referrals.level, "2"))),
+        db.select({ count: sql<number>`COUNT(*)` }).from(referrals).where(and(eq(referrals.referrerId, userId), eq(referrals.level, "3"))),
+        db.select({ count: sql<number>`COUNT(*)` }).from(referrals).where(and(eq(referrals.referrerId, userId), eq(referrals.level, "4"))),
+      ]);
+
+      const summary = {
+        tier1: tierCounts[0][0]?.count || 0,
+        tier2: tierCounts[1][0]?.count || 0,
+        tier3: tierCounts[2][0]?.count || 0,
+        tier4: tierCounts[3][0]?.count || 0,
+        total: (tierCounts[0][0]?.count || 0) + (tierCounts[1][0]?.count || 0) + (tierCounts[2][0]?.count || 0) + (tierCounts[3][0]?.count || 0)
+      };
+
+      res.json(summary);
+    } catch (error) {
+      console.error("Error fetching referral summary:", error);
+      res.status(500).json({ error: "Failed to fetch referral summary" });
+    }
   });
 
   // Create transaction (deposit/withdrawal) - protected route
@@ -1209,8 +1296,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           withdrawableAmount: (parseFloat(user.withdrawableAmount.toString()) + userReceives).toString(),
         }).where(eq(users.id, req.user!.id));
       } else if (transactionData.type === "Withdrawal") {
-        // Withdrawals are now available every day
-        // Special rule: 10% of referral bonuses can only be withdrawn on Saturdays
+        // Withdrawals are available every day
+        // Referral bonuses can be withdrawn freely without restrictions
 
         // Check for minimum withdrawal
         if (transactionData.amount < 1) {
@@ -1320,13 +1407,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // 3. Update user verification status
       // 4. Queue the document for review
 
-      // For demo purposes, we'll just acknowledge the upload
-      await storage.updateUser(req.user!.id, {
-        verificationStatus: "pending",
+      // Automatically verify user upon image upload
+      const updatedUser = await storage.updateUser(req.user!.id, {
+        verificationStatus: "verified",
         verificationSubmittedAt: new Date(),
       });
 
-      res.status(200).json({ message: "Document uploaded successfully" });
+      res.status(200).json({ 
+        message: "Document uploaded successfully",
+        user: updatedUser 
+      });
     } catch (error) {
       console.error("Verification upload error:", error);
       res.status(500).json({ error: "Failed to upload verification document" });
@@ -1404,35 +1494,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .from(transactions)
       .where(and(eq(transactions.userId, userId), eq(transactions.type, "Deposit")));
 
-    const ownInvestment = userInvestments[0]?.amount || 0;
+    const ownInvestment = parseFloat(userInvestments[0]?.amount?.toString() || "0");
+
+    // Get user's referral commissions earned
+    const userCommissions = await db
+      .select({ amount: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` })
+      .from(transactions)
+      .where(and(eq(transactions.userId, userId), eq(transactions.type, "Commission"), eq(transactions.status, "Completed")));
+
+    const commissionEarned = parseFloat(userCommissions[0]?.amount?.toString() || "0");
 
     // Get downline investments (recursive referral tree)
     const downlineInvestments = await getDownlineInvestments(userId);
 
-    return ownInvestment + downlineInvestments;
+    return ownInvestment + commissionEarned + downlineInvestments;
   }
 
   async function getDownlineInvestments(userId: number): Promise<number> {
-    // Get direct referrals
-    const directReferrals = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.referrerId, userId));
+    // Get all referrals across all tiers for this user
+    const allReferrals = await db
+      .select({
+        referredId: referrals.referredId,
+        level: referrals.level
+      })
+      .from(referrals)
+      .where(eq(referrals.referrerId, userId));
 
     let totalDownlineInvestment = 0;
 
-    for (const referral of directReferrals) {
-      // Get referral's investments
+    for (const referral of allReferrals) {
+      // Get referral's total deposits
       const referralInvestments = await db
         .select({ amount: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` })
         .from(transactions)
-        .where(and(eq(transactions.userId, referral.id), eq(transactions.type, "Deposit")));
+        .where(
+          and(
+            eq(transactions.userId, referral.referredId), 
+            eq(transactions.type, "Deposit"),
+            eq(transactions.status, "Completed")
+          )
+        );
 
-      const referralAmount = referralInvestments[0]?.amount || 0;
+      const referralAmount = parseFloat(referralInvestments[0]?.amount?.toString() || "0");
       totalDownlineInvestment += referralAmount;
-
-      // Recursively get their downline
-      totalDownlineInvestment += await getDownlineInvestments(referral.id);
     }
 
     return totalDownlineInvestment;
@@ -1440,8 +1544,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Check and update user rank
   app.get("/api/check-rank/:userId", async (req, res) => {
-
-
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
     try {
       const userId = parseInt(req.params.userId);
       const totalVolume = await calculateUserVolume(userId);
@@ -1449,7 +1553,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update user's total volume
       await db
         .update(users)
-        .set({ totalVolumeGenerated: totalVolume.toString() })
+        .set({ totalVolumeGenerated: Number(totalVolume).toFixed(2) })
         .where(eq(users.id, userId));
 
       // Get all ranks ordered by required volume (descending)
@@ -1495,7 +1599,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             rankName: newRank,
             incentivePaid: true,
             incentiveAmount: qualifiedRank.incentiveAmount,
-            volumeAtAchievement: totalVolume.toString(),
+            volumeAtAchievement: Number(totalVolume).toFixed(2),
           });
 
           // Add incentive to user's withdrawable balance
@@ -1505,8 +1609,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await db
             .update(users)
             .set({ 
-              withdrawableAmount: (currentWithdrawable + incentiveAmount).toString(),
-              totalAssets: (parseFloat(user[0]?.totalAssets || "0") + incentiveAmount).toString()
+              withdrawableAmount: (currentWithdrawable + incentiveAmount).toFixed(2),
+              totalAssets: (parseFloat(user[0]?.totalAssets || "0") + incentiveAmount).toFixed(2)
             })
             .where(eq(users.id, userId));
 

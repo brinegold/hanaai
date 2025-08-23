@@ -95,6 +95,67 @@ async function comparePasswords(supplied: string, stored: string) {
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
+// Function to create multi-tier referral relationships
+async function createMultiTierReferrals(directReferrerId: number, newUserId: number, newUsername: string) {
+  try {
+    // Create direct referral (Tier 1)
+    await storage.createReferral({
+      referrerId: directReferrerId,
+      referredId: newUserId,
+      level: "1",
+      commission: "0",
+    });
+
+    // Send notification to direct referrer
+    await storage.createNotification({
+      userId: directReferrerId,
+      type: "referral",
+      message: `New user ${newUsername} has joined using your referral code!`,
+      isRead: false,
+    });
+
+    // Get the direct referrer to find their upline
+    const directReferrer = await storage.getUser(directReferrerId);
+    if (!directReferrer || !directReferrer.referrerId) return;
+
+    // Create Tier 2 referral
+    await storage.createReferral({
+      referrerId: directReferrer.referrerId,
+      referredId: newUserId,
+      level: "2",
+      commission: "0",
+    });
+
+    // Get Tier 2 referrer to find Tier 3
+    const tier2Referrer = await storage.getUser(directReferrer.referrerId);
+    if (!tier2Referrer || !tier2Referrer.referrerId) return;
+
+    // Create Tier 3 referral
+    await storage.createReferral({
+      referrerId: tier2Referrer.referrerId,
+      referredId: newUserId,
+      level: "3",
+      commission: "0",
+    });
+
+    // Get Tier 3 referrer to find Tier 4
+    const tier3Referrer = await storage.getUser(tier2Referrer.referrerId);
+    if (!tier3Referrer || !tier3Referrer.referrerId) return;
+
+    // Create Tier 4 referral
+    await storage.createReferral({
+      referrerId: tier3Referrer.referrerId,
+      referredId: newUserId,
+      level: "4",
+      commission: "0",
+    });
+
+  } catch (error) {
+    console.error("Error creating multi-tier referrals:", error);
+    // Don't throw - we don't want registration to fail if referral creation fails
+  }
+}
+
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || randomUUID(),
@@ -259,15 +320,21 @@ export function setupAuth(app: Express) {
       // Generate a new invite code for the user
       const newInviteCode = storage.generateReferralCode();
 
-      // Create user
-      const user = await storage.createUser({
+      // Create user with proper referrerId handling
+      const userCreateData = {
         ...userData,
         password: hashedPassword,
         securityPassword: hashedSecurityPassword,
         referralCode: newInviteCode,
         inviteCode: userData.inviteCode, // Store the invite code used
-        referrerId: inviteCode.createdById || null, // Store referrer ID directly
-      });
+      };
+
+      // Only add referrerId if it exists and is not null
+      if (inviteCode.createdById && inviteCode.createdById !== null) {
+        userCreateData.referrerId = inviteCode.createdById;
+      }
+
+      const user = await storage.createUser(userCreateData);
 
       await sendWelcomeEmail(user);
 
@@ -280,23 +347,9 @@ export function setupAuth(app: Express) {
       // Validate the invite code is valid
       await storage.useInviteCode(userData.inviteCode, user.id);
 
-      // Add referral if the invite code has a creator
-      if (inviteCode.createdById) {
-        // Create referral relationship
-        await storage.createReferral({
-          referrerId: inviteCode.createdById,
-          referredId: user.id,
-          level: "1",
-          commission: "0",
-        });
-
-        // Send notification to referrer
-        await storage.createNotification({
-          userId: inviteCode.createdById,
-          type: "referral",
-          message: `New user ${user.username} has joined using your referral code!`,
-          isRead: false,
-        });
+      // Add multi-tier referral relationships if the invite code has a creator
+      if (inviteCode.createdById && inviteCode.createdById !== null) {
+        await createMultiTierReferrals(inviteCode.createdById, user.id, user.username);
       }
 
       // Login the user

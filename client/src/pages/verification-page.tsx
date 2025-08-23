@@ -43,9 +43,14 @@ const VerificationPage: React.FC = () => {
       });
 
       if (response.ok) {
+        const data = await response.json();
+        
+        // Refresh the page to update user context with new verification status
+        window.location.reload();
+        
         toast({
-          title: "Document uploaded successfully",
-          description: "We will review your document and update your verification status",
+          title: "Verification Complete!",
+          description: "Your account has been verified instantly",
         });
         setIsVerified(true);
       } else {
@@ -76,9 +81,9 @@ const VerificationPage: React.FC = () => {
             {isVerified ? (
               <div className="text-center py-8">
                 <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                <h3 className="text-white text-lg font-medium mb-2">Verification Submitted</h3>
-                <p className="text-gray-400">
-                  Your document is under review. This usually takes 1-2 business days.
+                <h3 className="text-gray-900 text-lg font-medium mb-2">Verification Complete!</h3>
+                <p className="text-gray-600">
+                  Your account has been verified successfully. You can now access all features.
                 </p>
               </div>
             ) : (

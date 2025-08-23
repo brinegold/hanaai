@@ -365,10 +365,10 @@ const QuantitativePage: React.FC = () => {
         <div className="px-4 mb-4">
           <Alert className="bg-blue-900/30 border-blue-700 text-blue-200">
             <Clock className="h-5 w-5 text-blue-400" />
-            <AlertTitle className="ml-2 font-semibold text-blue-300">
+            <AlertTitle className="ml-2 font-semibold text-blue-900">
               Trading Cooldown Period
             </AlertTitle>
-            <AlertDescription className="ml-2 text-blue-200">
+            <AlertDescription className="ml-2 text-black">
               You can start a new investment in {timeRemaining} hour
               {timeRemaining === 1 ? "" : "s"}. Only one Ai trade is
               allowed every 24 hours.
@@ -539,7 +539,7 @@ const QuantitativePage: React.FC = () => {
                   AI Trading
                 </Badge>
                 <span className="text-gray-400 text-xs">
-                  $1 - $500,000
+                  $5 - $500,000
                 </span>
               </div>
               <h3 className="text-black font-medium text-lg mb-1">AI Trading System</h3>
@@ -604,7 +604,7 @@ const QuantitativePage: React.FC = () => {
                       {t('quantitative.minimumInvestment')}
                     </span>
                     <span className="text-black font-medium">
-                      $1
+                      $5
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -705,10 +705,7 @@ const QuantitativePage: React.FC = () => {
 
           <div className="space-y-4 text-sm">
             <p>
-              Nebrix is a global Ai trading platform focused on helping
-              bank that helps people in Taiwan and around the world trade
-              currencies. The bank was established in 2011 and is making inroads
-              into the African market.
+            Nebrix is an advanced AI-powered quantitative trading ecosystem designed to transform the way investors interact with the digital economy. By integrating Hermetic AI, a proprietary trading engine, Nebrix delivers consistent and sustainable returns through adaptive strategies that thrive in the fast-paced crypto market.
             </p>
 
             <h3 className="text-[#4F9CF9] font-medium mt-4">
@@ -747,7 +744,7 @@ const QuantitativePage: React.FC = () => {
             <div className="space-y-3">
               <div>
                 <h4 className="font-medium mb-1">1. Speed and Accuracy</h4>
-                <p className="text-gray-300">
+                <p className="text-gray-700">
                   Nebrix executes trades with unparalleled speed and accuracy,
                   operating 24/7 through automated algorithms.
                 </p>
@@ -755,7 +752,7 @@ const QuantitativePage: React.FC = () => {
 
               <div>
                 <h4 className="font-medium mb-1">2. Emotion-Free Trading</h4>
-                <p className="text-gray-300">
+                <p className="text-gray-700">
                   Nebrix uses computer programs and algorithms to ensure
                   consistent trading results without emotional bias.
                 </p>
@@ -763,7 +760,7 @@ const QuantitativePage: React.FC = () => {
 
               <div>
                 <h4 className="font-medium mb-1">3. Advanced Backtesting</h4>
-                <p className="text-gray-300">
+                <p className="text-gray-700">
                   Uses historical market data to customize and optimize trading
                   models for maximum profit.
                 </p>
@@ -771,7 +768,7 @@ const QuantitativePage: React.FC = () => {
 
               <div>
                 <h4 className="font-medium mb-1">4. Strict Discipline</h4>
-                <p className="text-gray-300">
+                <p className="text-gray-700">
                   Helps investors stick to established trading plans and avoid
                   human errors in volatile markets.
                 </p>
@@ -779,7 +776,7 @@ const QuantitativePage: React.FC = () => {
 
               <div>
                 <h4 className="font-medium mb-1">5. Market Trend Analysis</h4>
-                <p className="text-gray-300">
+                <p className="text-gray-700">
                   Real-time analysis of market prospects across multiple
                   cryptocurrency categories.
                 </p>
@@ -787,7 +784,7 @@ const QuantitativePage: React.FC = () => {
 
               <div>
                 <h4 className="font-medium mb-1">6. Decentralized Trading</h4>
-                <p className="text-gray-300">
+                <p className="text-gray-700">
                   Enables diversified trading across multiple exchanges and
                   trading types automatically.
                 </p>

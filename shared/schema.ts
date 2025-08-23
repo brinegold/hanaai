@@ -22,7 +22,7 @@ export const users = pgTable("users", {
   inviteCode: text("invite_code"),
   referralCode: text("referral_code").notNull().unique(),
   currentRank: text("current_rank").default("none").notNull(),
-  totalVolumeGenerated: numeric("total_volume_generated", { precision: 12, scale: 2 })
+  totalVolumeGenerated: numeric("total_volume_generated", { precision: 10, scale: 2 })
     .default("0")
     .notNull(),
   totalAssets: numeric("total_assets", { precision: 10, scale: 2 })
@@ -63,7 +63,7 @@ export const users = pgTable("users", {
     .default("0")
     .notNull(),
   lastInvestmentDate: timestamp("last_investment_date"),
-  referrerId: serial("referrer_id"),
+  referrerId: integer("referrer_id"),
   resetToken: text("reset_token"),
   resetTokenExpiry: timestamp("reset_token_expiry"),
   verificationStatus: text("verification_status").default('unverified'),
@@ -226,7 +226,7 @@ export const insertInvestmentSchema = createInsertSchema(investments)
     status: true,
   })
   .extend({
-    amount: z.number().min(1).max(500000),
+    amount: z.number().min(5).max(500000),
     plan: z.string(),
     dailyRate: z.number(),
   });

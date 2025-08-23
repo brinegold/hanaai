@@ -44,7 +44,7 @@ const translations: Record<string, Record<string, string>> = {
     'dashboard.deposit': 'Deposit',
     'dashboard.withdraw': 'Withdraw',
     'dashboard.aiTrading': 'AI Trading',
-    'dashboard.marketBanner': 'Market trading is in USDT, and the minimum withdrawal amount is 1 USDT. The withdrawal fee is 10%. Minimum Deposit is 5%, Daily Returns is 1.5% and Withdrawal is available every day. Please note Trading Signals is once Per Day',
+    'dashboard.marketBanner': 'Market trading is in USDT, and the minimum withdrawal amount is 1 USDT. The withdrawal fee is 10%. Minimum Deposit is $5, Daily Returns is 1.5% and Withdrawal is available every day. Please note Trading Signals is once Per Day',
     
     // Invite Page
     'invite.title': 'Invite Friends',
@@ -127,7 +127,7 @@ const translations: Record<string, Record<string, string>> = {
     'dashboard.deposit': 'Depósito',
     'dashboard.withdraw': 'Retirar',
     'dashboard.aiTrading': 'Trading IA',
-    'dashboard.marketBanner': 'El trading del mercado es en USDT, y el monto mínimo de retiro es 1 USDT. La tarifa de retiro es 10%. El depósito mínimo es 5%, los retornos diarios son 1.5% y el retiro está disponible todos los días. Tenga en cuenta que las señales de trading son una vez por día',
+    'dashboard.marketBanner': 'El trading del mercado es en USDT, y el monto mínimo de retiro es 1 USDT. La tarifa de retiro es 10%. El depósito mínimo es $5, los retornos diarios son 1.5% y el retiro está disponible todos los días. Tenga en cuenta que las señales de trading son una vez por día',
     
     // Invite Page
     'invite.title': 'Invitar Amigos',
@@ -193,7 +193,7 @@ const translations: Record<string, Record<string, string>> = {
     'dashboard.deposit': 'Dépôt',
     'dashboard.withdraw': 'Retirer',
     'dashboard.aiTrading': 'Trading IA',
-    'dashboard.marketBanner': 'Le trading de marché est en USDT, et le montant minimum de retrait est 1 USDT. Les frais de retrait sont de 10%. Le dépôt minimum est de 5%, les rendements quotidiens sont de 1,5% et le retrait est disponible tous les jours. Veuillez noter que les signaux de trading sont une fois par jour',
+    'dashboard.marketBanner': 'Le trading de marché est en USDT, et le montant minimum de retrait est 1 USDT. Les frais de retrait sont de 10%. Le dépôt minimum est de $5, les rendements quotidiens sont de 1,5% et le retrait est disponible tous les jours. Veuillez noter que les signaux de trading sont une fois par jour',
     
     // Invite Page
     'invite.title': 'Inviter des Amis',
@@ -259,7 +259,7 @@ const translations: Record<string, Record<string, string>> = {
     'dashboard.deposit': '存款',
     'dashboard.withdraw': '提取',
     'dashboard.aiTrading': 'AI交易',
-    'dashboard.marketBanner': '市场交易以USDT计价，最低提现金额为1 USDT。提现手续费为10%。最低存款为5%，每日回报为1.5%，每天都可以提现。请注意交易信号每天一次',
+    'dashboard.marketBanner': '市场交易以USDT计价，最低提现金额为1 USDT。提现手续费为10%。最低存款为$5，每日回报为1.5%，每天都可以提现。请注意交易信号每天一次',
     
     // Invite Page
     'invite.title': '邀请朋友',
