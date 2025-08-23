@@ -59,6 +59,13 @@ interface ProfileResponse {
   referrals: ReferralDetail[];
 }
 
+interface UplineInfo {
+  id: number;
+  username: string;
+  email: string;
+  createdAt: string;
+}
+
 const InvitePage: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -76,6 +83,8 @@ const InvitePage: React.FC = () => {
   const [selectedTier, setSelectedTier] = useState<string>('1');
   const [tierReferrals, setTierReferrals] = useState<ReferralDetail[]>([]);
   const [isLoadingTier, setIsLoadingTier] = useState(false);
+  const [upline, setUpline] = useState<UplineInfo | null>(null);
+  const [isLoadingUpline, setIsLoadingUpline] = useState(false);
 
   // Fetch user's invites and profile data when component mounts
   useEffect(() => {
@@ -83,6 +92,7 @@ const InvitePage: React.FC = () => {
       fetchInviteCodes();
       fetchReferralSummary();
       fetchTierReferrals('1');
+      fetchUpline();
 
       if (user.referralCode) {
         const link = `${window.location.origin}/auth?ref=${user.referralCode}`;
@@ -166,6 +176,35 @@ const InvitePage: React.FC = () => {
       });
     } finally {
       setIsLoadingTier(false);
+    }
+  };
+
+  // Fetch upline information
+  const fetchUpline = async () => {
+    if (!user) {
+      console.log("No user authenticated, skipping upline fetch");
+      setUpline(null);
+      return;
+    }
+    
+    try {
+      setIsLoadingUpline(true);
+      const res = await apiRequest("GET", "/api/upline");
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${res.statusText}`);
+      }
+      const data = await res.json();
+      setUpline(data.upline);
+    } catch (error) {
+      console.error("Error fetching upline:", error);
+      setUpline(null);
+      toast({
+        title: "Error",
+        description: "Failed to load upline information.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingUpline(false);
     }
   };
 
@@ -296,6 +335,43 @@ const InvitePage: React.FC = () => {
       </header>
 
       <div className="px-4 space-y-6">
+        {/* Upline Information Card */}
+        <Card className="bg-white border-gray-200">
+          <CardHeader>
+            <CardTitle className="text-black flex items-center gap-2">
+              <User className="h-5 w-5" />
+              My Upline
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoadingUpline ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className="w-6 h-6 animate-spin text-[#4F9CF9]" />
+              </div>
+            ) : upline ? (
+              <div className="flex items-center space-x-3 p-3 bg-[#4F9CF9]/10 rounded-lg border border-[#4F9CF9]/30">
+                <div className="bg-[#4F9CF9] text-white w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold">
+                  {upline.username.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-[#4F9CF9] text-lg">
+                    {upline.username}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Your referrer • Joined {new Date(upline.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                <User className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm">No upline found</p>
+                <p className="text-xs text-gray-400">You joined directly without a referrer</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <Card className="bg-white border-gray-200">
           <CardHeader>
             <CardTitle className="text-black">{t('invite.totalEarnings')}</CardTitle>

@@ -858,6 +858,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get upline information - protected route
+  app.get("/api/upline", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+
+    try {
+      const userResult = await db.select().from(users).where(eq(users.id, req.user!.id));
+      const user = userResult[0];
+      if (!user) return res.status(404).send("User not found");
+
+      // Check if user has an upline (referrer)
+      if (!user.referrerId) {
+        return res.json({ upline: null });
+      }
+
+      // Get upline user information
+      const uplineResult = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          email: users.email,
+          createdAt: users.createdAt,
+        })
+        .from(users)
+        .where(eq(users.id, user.referrerId));
+
+      const upline = uplineResult[0];
+      if (!upline) {
+        return res.json({ upline: null });
+      }
+
+      res.json({
+        upline: {
+          id: upline.id,
+          username: upline.username,
+          email: upline.email,
+          createdAt: upline.createdAt,
+        },
+      });
+    } catch (err) {
+      console.error("Error fetching upline info:", err);
+      res.status(500).json({ error: "Failed to fetch upline information" });
+    }
+  });
+
   // Get dashboard statistics - protected route
   app.get("/api/dashboard/stats", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
