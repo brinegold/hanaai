@@ -45,12 +45,15 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 import { registerAdminRoutes } from "./admin-routes";
+import { registerBSCRoutes } from "./bsc-routes";
 import { notifications, users, transactions, investments, referrals } from "@shared/schema";
 import { sql, sum, and } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register admin routes
   registerAdminRoutes(app);
+  // Register BSC blockchain routes
+  registerBSCRoutes(app);
   // Set up authentication routes
   setupAuth(app);
 

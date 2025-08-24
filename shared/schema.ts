@@ -72,6 +72,7 @@ export const users = pgTable("users", {
   isBanned: boolean("is_banned").default(false).notNull(),
   isCountryRep: boolean("is_country_rep").default(false).notNull(),
   countryRepStatus: text("country_rep_status").default("none"),  // none, pending, approved
+  bscWalletAddress: text("bsc_wallet_address"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -276,11 +277,34 @@ export const userRankAchievements = pgTable("user_rank_achievements", {
   volumeAtAchievement: numeric("volume_at_achievement", { precision: 12, scale: 2 }).notNull(),
 });
 
+export const bscTransactions = pgTable("bsc_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  transactionHash: text("transaction_hash").notNull().unique(),
+  blockNumber: integer("block_number"),
+  fromAddress: text("from_address").notNull(),
+  toAddress: text("to_address").notNull(),
+  amount: numeric("amount", { precision: 18, scale: 8 }).notNull(),
+  type: text("type").notNull(), // "deposit" or "withdrawal"
+  status: text("status").default("pending").notNull(), // "pending", "confirmed", "failed"
+  processed: boolean("processed").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  processedAt: timestamp("processed_at"),
+});
+
+export const bscMonitoring = pgTable("bsc_monitoring", {
+  id: serial("id").primaryKey(),
+  lastProcessedBlock: integer("last_processed_block").default(0).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export type InviteCode = typeof inviteCodes.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type TransactionHistory = typeof transactionHistory.$inferSelect;
 export type Rank = typeof ranks.$inferSelect;
 export type UserRankAchievement = typeof userRankAchievements.$inferSelect;
+export type BSCTransaction = typeof bscTransactions.$inferSelect;
+export type BSCMonitoring = typeof bscMonitoring.$inferSelect;
 
 export const insertRankSchema = createInsertSchema(ranks).omit({
   id: true,
