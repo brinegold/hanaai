@@ -13,15 +13,17 @@ interface BSCConfig {
 
 class BSCService {
   private web3: Web3;
-  private contract: Contract;
-  private usdtContract: Contract;
+  private contract!: Contract<any>;
+  private usdtContract!: Contract<any>;
   private config: BSCConfig;
   private account: any;
 
   constructor(config: BSCConfig) {
     this.config = config;
     this.web3 = new Web3(config.rpcUrl);
-    this.account = this.web3.eth.accounts.privateKeyToAccount(config.privateKey);
+    // Ensure private key has 0x prefix
+    const privateKey = config.privateKey.startsWith('0x') ? config.privateKey : `0x${config.privateKey}`;
+    this.account = this.web3.eth.accounts.privateKeyToAccount(privateKey);
     this.web3.eth.accounts.wallet.add(this.account);
     
     // Initialize contracts
@@ -126,7 +128,7 @@ class BSCService {
         amountWei
       ).send({
         from: this.account.address,
-        gas: 200000
+        gas: '200000'
       });
 
       return tx.transactionHash;
@@ -146,7 +148,7 @@ class BSCService {
         amountWei
       ).send({
         from: this.account.address,
-        gas: 200000
+        gas: '200000'
       });
 
       return tx.transactionHash;
@@ -159,7 +161,7 @@ class BSCService {
   // Get USDT balance of an address
   async getUSDTBalance(address: string): Promise<string> {
     try {
-      const balance = await this.usdtContract.methods.balanceOf(address).call();
+      const balance = await this.usdtContract.methods.balanceOf(address).call() as string;
       return this.web3.utils.fromWei(balance, 'ether');
     } catch (error) {
       console.error('Error getting USDT balance:', error);
@@ -177,7 +179,7 @@ class BSCService {
         
         if (block.transactions) {
           for (const tx of block.transactions) {
-            if (userAddresses.includes(tx.to?.toLowerCase() || '')) {
+            if (typeof tx !== 'string' && tx.to && userAddresses.includes(tx.to.toLowerCase())) {
               callback({
                 hash: tx.hash,
                 from: tx.from,

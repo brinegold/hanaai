@@ -9,6 +9,7 @@ import ProfilePage from "@/pages/profile-page";
 import VerificationPage from "@/pages/verification-page";
 import InvitePage from "@/pages/invite-page";
 import QuantitativePage from "@/pages/quantitative-page";
+import BSCPage from "@/pages/bsc-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import ResetPasswordPage from "./pages/reset-password-page";
@@ -29,6 +30,7 @@ function Router() {
       <ProtectedRoute path="/verify" component={VerificationPage} />
       <ProtectedRoute path="/invite" component={InvitePage} />
       <ProtectedRoute path="/tradenow" component={QuantitativePage} />
+      <ProtectedRoute path="/bsc" component={BSCPage} />
       <ProtectedRoute path="/admin" component={AdminPage} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />

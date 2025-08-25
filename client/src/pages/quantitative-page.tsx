@@ -327,7 +327,7 @@ const QuantitativePage: React.FC = () => {
                   onChange={(e) => setStrategy(e.target.value)}
                   className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-[#4F9CF9]"
                 >
-                  <option value="Hermatic">Nerbix</option>
+                  <option value="Nebrix">Nebrix</option>
                 </select>
               </div>
             </div>

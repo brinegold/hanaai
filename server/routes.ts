@@ -50,12 +50,12 @@ import { notifications, users, transactions, investments, referrals } from "@sha
 import { sql, sum, and } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication routes FIRST
+  setupAuth(app);
   // Register admin routes
   registerAdminRoutes(app);
   // Register BSC blockchain routes
   registerBSCRoutes(app);
-  // Set up authentication routes
-  setupAuth(app);
 
   // API routes - all prefixed with /api
 

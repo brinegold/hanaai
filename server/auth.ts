@@ -184,7 +184,7 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: "Invalid username or password" });
         }
         if (user.isBanned) {
-          return done(null, false, { message: "Your account has been banned" });
+          return done(null, false, { message: "You have been banned please contact support: Support@nebrix.dev" });
         }
         return done(null, user);
       } catch (err) {
@@ -205,7 +205,7 @@ export function setupAuth(app: Express) {
           }
           if (user.isBanned) {
             return done(null, false, {
-              message: "Your account has been banned",
+              message: "You have been banned please contact support: Support@nebrix.dev",
             });
           }
           return done(null, user);
