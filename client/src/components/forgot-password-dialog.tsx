@@ -60,7 +60,7 @@ export const ForgotPasswordDialog = ({
               id="email"
               type="email"
               placeholder="Enter your email"
-              className="bg-[#252525] border-[#333333] text-black"
+              className="bg-white border-[#333333] text-black"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />

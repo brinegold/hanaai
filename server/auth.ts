@@ -51,7 +51,8 @@ async function sendWelcomeEmail(user) {
     <ul style="color: #333; font-size: 16px; padding-left: 20px; line-height: 1.6;">
       <li>💰 Make your first deposit and start investing</li>
       <li>👥 Generate your referral code and invite friends</li>
-      <li>📢 Join our Telegram Channel: <a href="https://t.me/Tibankofficial1" style="color: #2980b9; text-decoration: none;">Telegram</a></li>
+      <li>📢 Join our Telegram Channel: <a href="https://t.me/Nebrixdex" style="color: #2980b9; text-decoration: none;">Telegram</a></li>
+      <li>📢 Follow us on X(Twitter): <a href="https://x.com/NebrixCoin"style="color: #2980b9; text-decoration: none;">Telegram</a></li>
     </ul>
   
     <!-- Support -->
