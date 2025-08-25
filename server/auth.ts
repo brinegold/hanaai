@@ -15,7 +15,7 @@ async function sendWelcomeEmail(user) {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
-      secure: Boolean(process.env.SMTP_SECURE), // true for 465, false for other ports
+      secure: Boolean(true), // true for 465, false for other ports
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD,
@@ -29,7 +29,7 @@ async function sendWelcomeEmail(user) {
     await transporter.sendMail({
       from: process.env.SMTP_USER,
       to: user.email,
-      subject: "Welcome to Tibank Quantitative Trading!",
+      subject: "Welcome to Nebrix AI Trading!",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
     <!-- Logo -->
@@ -366,33 +366,43 @@ export function setupAuth(app: Express) {
   });
 
   // Login routes for different auth methods
-  app.post(
-    "/api/login/username",
-    passport.authenticate("local-username", { failWithError: true }),
-    (req, res) => {
-      // Return user without sensitive data
-      const { password, securityPassword, ...userWithoutPasswords } =
-        req.user as SelectUser;
-      res.status(200).json(userWithoutPasswords);
-    },
-    (err, req, res, next) => {
-      res.status(401).json({ message: "Invalid username or password" });
-    },
-  );
+  app.post("/api/login/username", (req, res, next) => {
+    passport.authenticate("local-username", (err, user, info) => {
+      if (err) {
+        return res.status(500).json({ message: "Internal server error" });
+      }
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Invalid username or password" });
+      }
+      req.logIn(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "Login failed" });
+        }
+        // Return user without sensitive data
+        const { password, securityPassword, ...userWithoutPasswords } = user;
+        res.status(200).json(userWithoutPasswords);
+      });
+    })(req, res, next);
+  });
 
-  app.post(
-    "/api/login/email",
-    passport.authenticate("local-email", { failWithError: true }),
-    (req, res) => {
-      // Return user without sensitive data
-      const { password, securityPassword, ...userWithoutPasswords } =
-        req.user as SelectUser;
-      res.status(200).json(userWithoutPasswords);
-    },
-    (err, req, res, next) => {
-      res.status(401).json({ message: "Invalid email or password" });
-    },
-  );
+  app.post("/api/login/email", (req, res, next) => {
+    passport.authenticate("local-email", (err, user, info) => {
+      if (err) {
+        return res.status(500).json({ message: "Internal server error" });
+      }
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Invalid email or password" });
+      }
+      req.logIn(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "Login failed" });
+        }
+        // Return user without sensitive data
+        const { password, securityPassword, ...userWithoutPasswords } = user;
+        res.status(200).json(userWithoutPasswords);
+      });
+    })(req, res, next);
+  });
 
   app.post(
     "/api/login/phone",
@@ -404,7 +414,11 @@ export function setupAuth(app: Express) {
       res.status(200).json(userWithoutPasswords);
     },
     (err, req, res, next) => {
-      res.status(401).json({ message: "Invalid phone or password" });
+      if (err && err.message) {
+        res.status(401).json({ message: err.message });
+      } else {
+        res.status(401).json({ message: "Invalid phone or password" });
+      }
     },
   );
 
@@ -418,7 +432,11 @@ export function setupAuth(app: Express) {
       res.status(200).json(userWithoutPasswords);
     },
     (err, req, res, next) => {
-      res.status(401).json({ message: "Invalid Telegram ID or password" });
+      if (err && err.message) {
+        res.status(401).json({ message: err.message });
+      } else {
+        res.status(401).json({ message: "Invalid Telegram ID or password" });
+      }
     },
   );
 

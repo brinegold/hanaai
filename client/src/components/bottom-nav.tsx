@@ -1,7 +1,7 @@
 import { BsCreditCard2Back } from "react-icons/bs";
 import { HiOutlineHome } from "react-icons/hi";
 import { IoPersonOutline } from "react-icons/io5";
-import { Wallet } from "lucide-react";
+import { Wallet, Users } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { useLocation } from "wouter";
@@ -48,6 +48,18 @@ export default function BottomNav() {
           >
             <Wallet className="h-6 w-6" />
             <span className="text-xs">BSC</span>
+          </div>
+        </Link>
+
+        <Link href="/invite">
+          <div
+            className={cn(
+              "flex cursor-pointer flex-col items-center justify-center",
+              isActive("/invite") && "text-primary",
+            )}
+          >
+            <Users className="h-6 w-6" />
+            <span className="text-xs">{t('nav.invite')}</span>
           </div>
         </Link>
 
