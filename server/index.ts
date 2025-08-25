@@ -51,7 +51,7 @@ app.use((req, res, next) => {
   await setupVite(app, server);
   
   const port = parseInt(process.env.PORT || "5000", 10);
-  const host = process.env.HOST || "localhost";
+  const host = process.env.HOST || "0.0.0.0";
 
   server.listen(port, host, () => {
     log(`serving on ${host}:${port}`);
