@@ -150,6 +150,14 @@ export const storage = {
       .where(eq(transactions.userId, userId));
   },
 
+  async getTransactionByHash(txHash) {
+    const [transaction] = await db
+      .select()
+      .from(transactions)
+      .where(eq(transactions.txHash, txHash));
+    return transaction;
+  },
+
   async createInviteCode(codeData) {
     const [code] = await db.insert(inviteCodes).values(codeData).returning();
     return code;

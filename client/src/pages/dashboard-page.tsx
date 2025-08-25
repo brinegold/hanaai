@@ -723,7 +723,7 @@ Trade Time : Once Per day
                 The withdrawal fee is 10% and the funds will be credited to your account within few minutes.
               </p>
               <p>
-                Please if you have any enquiries send us an email at: Support@nebrix.dev
+                Please if you have any enquiries send us an email at: <span style="color: #2563eb; font-weight: bold;">Support@nebrix.dev</span>
               </p>
               
               <div className="border-t border-b border-gray-600 py-4 my-4">

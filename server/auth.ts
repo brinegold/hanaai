@@ -34,10 +34,10 @@ async function sendWelcomeEmail(user) {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
     <!-- Logo -->
     <div style="text-align: center; margin-bottom: 30px;">
-      TIBANK
+      <img src="https://raw.githubusercontent.com/areebasiddiqi/nebrix/refs/heads/main/public/logo.jpg" alt="Nebrix" style="max-width: 200px; height: auto;" />
       </div>
     <!-- Header -->
-    <h1 style="color: #2c3e50; text-align: center;">Welcome to Tibank Quantitative Trading.
+    <h1 style="color: #2c3e50; text-align: center;">Welcome to Nebrix Ai Trading.
         !</h1>
   
     <!-- Greeting -->
@@ -52,11 +52,11 @@ async function sendWelcomeEmail(user) {
       <li>💰 Make your first deposit and start investing</li>
       <li>👥 Generate your referral code and invite friends</li>
       <li>📢 Join our Telegram Channel: <a href="https://t.me/Nebrixdex" style="color: #2980b9; text-decoration: none;">Telegram</a></li>
-      <li>📢 Follow us on X(Twitter): <a href="https://x.com/NebrixCoin"style="color: #2980b9; text-decoration: none;">Telegram</a></li>
+      <li>📢 Follow us on X(Twitter): <a href="https://x.com/NebrixCoin"style="color: #2980b9; text-decoration: none;">X</a></li>
     </ul>
   
     <!-- Support -->
-    <p style="color: #333; font-size: 16px;">If you have any questions or need assistance, please don't hesitate to contact our <a href="mailto:support@tibank.vip" style="color: #2980b9; text-decoration: none;">Support Team</a>.</p>
+    <p style="color: #333; font-size: 16px;">If you have any questions or need assistance, please don't hesitate to contact our <a href="mailto:support@nebrix.dev" style="color: #2980b9; text-decoration: none;">Support Team</a>.</p>
   
     <!-- Footer -->
     <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc;">

@@ -2,10 +2,10 @@ const { ethers } = require("hardhat");
 
 async function main() {
   // Replace with your deployed TestUSDT contract address
-  const TEST_USDT_ADDRESS = "YOUR_TEST_USDT_CONTRACT_ADDRESS";
+  const TEST_USDT_ADDRESS = "0x7C5FCE4f6aF59eCd7a557Fa9a7812Eaf0A4E42cb";
   
-  // Replace with the address you want to mint tokens to
-  const RECIPIENT_ADDRESS = "0x17b6B0942F074907E52975eD44927996F6C27e88";
+  // Replace with YOUR MetaMask wallet address
+  const RECIPIENT_ADDRESS = "0xe808d79525FA7ac0287db6a9523B4680091e57f9";
   
   // Amount to mint (1000 TUSDT with 18 decimals)
   const MINT_AMOUNT = ethers.parseEther("1000");
@@ -54,3 +54,15 @@ main()
     console.error(error);
     process.exit(1);
   });
+
+
+
+
+
+
+
+
+
+
+
+  
