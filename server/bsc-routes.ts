@@ -184,10 +184,26 @@ export function registerBSCRoutes(app: Express) {
 
       const withdrawAmount = parseFloat(amount);
       const userBalance = parseFloat(user.withdrawableAmount.toString());
+      const directDepositAmount = parseFloat(user.directDepositAmount?.toString() || user.rechargeAmount?.toString() || "0");
+      const totalWithdrawnFromDeposits = parseFloat(user.totalWithdrawnFromDeposits?.toString() || "0");
+      const referralBonuses = parseFloat(user.referralBonuses?.toString() || "0");
+      const rankingBonuses = parseFloat(user.rankingBonuses?.toString() || "0");
+
+      // Calculate withdrawal limits
+      const maxWithdrawableFromDeposits = Math.max(0, (directDepositAmount * 3) - totalWithdrawnFromDeposits);
+      const availableReferralAndRankingBonuses = referralBonuses + rankingBonuses;
+      const totalAvailableForWithdrawal = maxWithdrawableFromDeposits + availableReferralAndRankingBonuses;
 
       // Verify user has sufficient balance
       if (withdrawAmount > userBalance) {
         return res.status(400).json({ error: "Insufficient balance" });
+      }
+
+      // Check if withdrawal exceeds limits
+      if (withdrawAmount > totalAvailableForWithdrawal) {
+        return res.status(400).json({ 
+          error: `Withdrawal limit exceeded. Maximum available: $${totalAvailableForWithdrawal.toFixed(2)} (Trading profits: $${maxWithdrawableFromDeposits.toFixed(2)}, Bonuses: $${availableReferralAndRankingBonuses.toFixed(2)})` 
+        });
       }
 
       // Calculate amounts (10% fee, 90% to user)
@@ -245,11 +261,42 @@ export function registerBSCRoutes(app: Express) {
         reason: `10% withdrawal fee`
       });
 
-      // Update user balance
-      await storage.updateUser(user.id, {
+      // Calculate how much comes from deposits vs bonuses
+      let withdrawnFromDeposits = 0;
+      let withdrawnFromBonuses = 0;
+      
+      if (withdrawAmount <= availableReferralAndRankingBonuses) {
+        // Withdrawal comes entirely from bonuses
+        withdrawnFromBonuses = withdrawAmount;
+      } else if (withdrawAmount <= maxWithdrawableFromDeposits) {
+        // Withdrawal comes entirely from trading profits
+        withdrawnFromDeposits = withdrawAmount;
+      } else {
+        // Withdrawal comes from both sources
+        withdrawnFromBonuses = availableReferralAndRankingBonuses;
+        withdrawnFromDeposits = withdrawAmount - availableReferralAndRankingBonuses;
+      }
+
+      // Update user balance and tracking fields
+      const updateData: any = {
         withdrawableAmount: (userBalance - withdrawAmount).toString(),
         totalAssets: (parseFloat(user.totalAssets.toString()) - withdrawAmount).toString()
-      });
+      };
+
+      if (withdrawnFromDeposits > 0) {
+        updateData.totalWithdrawnFromDeposits = (totalWithdrawnFromDeposits + withdrawnFromDeposits).toString();
+      }
+
+      if (withdrawnFromBonuses > 0) {
+        const newReferralBonuses = Math.max(0, referralBonuses - Math.min(withdrawnFromBonuses, referralBonuses));
+        const remainingToWithdraw = withdrawnFromBonuses - (referralBonuses - newReferralBonuses);
+        const newRankingBonuses = Math.max(0, rankingBonuses - remainingToWithdraw);
+        
+        updateData.referralBonuses = newReferralBonuses.toString();
+        updateData.rankingBonuses = newRankingBonuses.toString();
+      }
+
+      await storage.updateUser(user.id, updateData);
 
       console.log("Withdrawal request created successfully:", {
         newWithdrawableAmount: userBalance - withdrawAmount,

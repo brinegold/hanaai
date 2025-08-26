@@ -1606,15 +1606,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             volumeAtAchievement: Number(totalVolume).toFixed(2),
           });
 
-          // Add incentive to user's withdrawable balance
+          // Add incentive to user's withdrawable balance and ranking bonuses
           const incentiveAmount = parseFloat(qualifiedRank.incentiveAmount);
           const currentWithdrawable = parseFloat(user[0]?.withdrawableAmount || "0");
+          const currentRankingBonuses = parseFloat(user[0]?.rankingBonuses?.toString() || "0");
           
           await db
             .update(users)
             .set({ 
               withdrawableAmount: (currentWithdrawable + incentiveAmount).toFixed(2),
-              totalAssets: (parseFloat(user[0]?.totalAssets || "0") + incentiveAmount).toFixed(2)
+              totalAssets: (parseFloat(user[0]?.totalAssets || "0") + incentiveAmount).toFixed(2),
+              rankingBonuses: (currentRankingBonuses + incentiveAmount).toFixed(2)
             })
             .where(eq(users.id, userId));
 

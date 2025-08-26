@@ -62,6 +62,18 @@ export const users = pgTable("users", {
   withdrawableAmount: numeric("withdrawable_amount", { precision: 10, scale: 2 })
     .default("0")
     .notNull(),
+  directDepositAmount: numeric("direct_deposit_amount", { precision: 10, scale: 2 })
+    .default("0")
+    .notNull(),
+  totalWithdrawnFromDeposits: numeric("total_withdrawn_from_deposits", { precision: 10, scale: 2 })
+    .default("0")
+    .notNull(),
+  referralBonuses: numeric("referral_bonuses", { precision: 10, scale: 2 })
+    .default("0")
+    .notNull(),
+  rankingBonuses: numeric("ranking_bonuses", { precision: 10, scale: 2 })
+    .default("0")
+    .notNull(),
   lastInvestmentDate: timestamp("last_investment_date"),
   referrerId: integer("referrer_id"),
   resetToken: text("reset_token"),

@@ -165,11 +165,19 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
         <div className="space-y-6">
           {/* Balance Information */}
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
-            <h3 className="text-sm font-medium text-gray-800 mb-3">Available Balance</h3>
+            <h3 className="text-sm font-medium text-gray-800 mb-3">Withdrawal Information</h3>
             <div className="space-y-2 text-xs text-gray-600">
               <div className="flex justify-between">
-                <span>Total Balance:</span>
-                <span className="font-medium">{availableBalance.toFixed(2)} USDT</span>
+                <span>Total Withdrawable:</span>
+                <span className="font-medium text-green-600 text-sm">${availableBalance.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Trading Profits (300% limit):</span>
+                <span className="font-medium">${Math.max(0, (user ? parseFloat(user.rechargeAmount?.toString() || "0") * 3 - parseFloat(user.totalWithdrawnFromDeposits?.toString() || "0") : 0)).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Referral & Ranking Bonuses:</span>
+                <span className="font-medium">${((user ? parseFloat(user.referralBonuses?.toString() || "0") + parseFloat(user.rankingBonuses?.toString() || "0") : 0)).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Withdrawal Fee:</span>
@@ -183,6 +191,11 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
                 <span>Processing:</span>
                 <span className="font-medium text-green-600">Instant</span>
               </div>
+            </div>
+            <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded">
+              <p className="text-xs text-blue-800">
+                <strong>Note:</strong> Trading profits are limited to 300% of your direct deposits. Referral and ranking bonuses have no withdrawal limits.
+              </p>
             </div>
           </div>
 
