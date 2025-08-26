@@ -311,34 +311,34 @@ class BSCService {
     }
   }
 
-  // Process deposit by transferring tokens to admin wallets
-  async processDepositTransfers(userWallet: string, depositAmount: string, adminFee: string): Promise<{ adminFeeTxHash: string, userDepositTxHash: string }> {
+  // Collect deposited tokens from contract and distribute to admin wallets
+  async collectDepositTokens(depositAmount: string, adminFee: string): Promise<{ adminFeeTxHash: string, globalAdminTxHash: string }> {
     try {
-      console.log(`Processing deposit transfers: ${depositAmount} total, ${adminFee} fee`);
+      console.log(`Collecting deposit tokens: ${depositAmount} total, ${adminFee} fee`);
       
-      // Get user's private key for their BSC wallet
-      const userPrivateKey = this.getUserPrivateKey(userWallet);
-      const fromAccount = this.web3.eth.accounts.privateKeyToAccount(userPrivateKey);
+      // Use the backend's private key to collect tokens from the contract
+      const backendPrivateKey = this.config.privateKey.startsWith('0x') ? this.config.privateKey : `0x${this.config.privateKey}`;
+      const backendAccount = this.web3.eth.accounts.privateKeyToAccount(backendPrivateKey);
       
-      // Get starting nonce and manage sequential transactions
-      const startingNonce = await this.web3.eth.getTransactionCount(fromAccount.address, 'pending');
-      console.log(`Starting nonce: ${startingNonce}`);
+      // Get starting nonce for backend account
+      const startingNonce = await this.web3.eth.getTransactionCount(backendAccount.address, 'pending');
+      console.log(`Backend starting nonce: ${startingNonce}`);
       
       // Convert bigint to number for nonce handling
       const nonceNumber = Number(startingNonce);
       
-      // Transfer admin fee to admin fee wallet (using nonce)
+      // Transfer admin fee to admin fee wallet
       const adminFeeTxHash = await this.transferUSDT(
-        userPrivateKey,
+        backendPrivateKey,
         this.config.adminFeeWallet,
         adminFee,
         nonceNumber
       );
       
-      // Transfer remaining amount to global admin wallet (using nonce + 1)
+      // Transfer remaining amount to global admin wallet
       const remainingAmount = (parseFloat(depositAmount) - parseFloat(adminFee)).toString();
-      const userDepositTxHash = await this.transferUSDT(
-        userPrivateKey,
+      const globalAdminTxHash = await this.transferUSDT(
+        backendPrivateKey,
         this.config.globalAdminWallet,
         remainingAmount,
         nonceNumber + 1
@@ -346,10 +346,10 @@ class BSCService {
       
       return {
         adminFeeTxHash,
-        userDepositTxHash
+        globalAdminTxHash
       };
     } catch (error) {
-      console.error('Error processing deposit transfers:', error);
+      console.error('Error collecting deposit tokens:', error);
       throw error;
     }
   }

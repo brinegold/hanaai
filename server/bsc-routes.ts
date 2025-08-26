@@ -36,6 +36,7 @@ export function registerBSCRoutes(app: Express) {
       }
 
       res.json({
+        address: walletAddress,
         walletAddress,
         qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${walletAddress}`,
         network: "BSC (Binance Smart Chain)",
@@ -99,10 +100,21 @@ export function registerBSCRoutes(app: Express) {
         userId: user.id
       });
 
-      // For deposits, we don't need to transfer tokens since they're already sent to the contract
-      // The user has already sent tokens to the TestUSDT contract in their original transaction
-      // We just need to record the deposit and update balances
-      console.log("Deposit verified - tokens already received in original transaction");
+      // Collect deposited tokens and distribute to admin wallets
+      let transferHashes;
+      try {
+        transferHashes = await bscService.collectDepositTokens(
+          depositAmount.toString(),
+          adminFee.toString()
+        );
+        console.log("Deposit tokens collected and distributed:", transferHashes);
+      } catch (transferError) {
+        console.error("Error collecting deposit tokens:", transferError);
+        return res.status(500).json({ 
+          error: "Failed to collect deposit tokens",
+          details: transferError instanceof Error ? transferError.message : String(transferError)
+        });
+      }
 
       // Create deposit transaction record
       await storage.createTransaction({
@@ -124,12 +136,12 @@ export function registerBSCRoutes(app: Express) {
         type: "Admin Fee",
         amount: adminFee.toString(),
         status: "Completed",
-        txHash: txHash, // Use original transaction hash
-        fromAddress: txDetails.from,
-        toAddress: txDetails.to,
+        txHash: transferHashes.adminFeeTxHash, // Use admin fee transfer hash
+        fromAddress: BSC_CONFIG.globalAdminWallet,
+        toAddress: BSC_CONFIG.adminFeeWallet,
         blockNumber: txDetails.blockNumber,
         confirmationStatus: "confirmed",
-        reason: `Admin fee for deposit - TX: ${txHash}`
+        reason: `Admin fee for deposit - Original TX: ${txHash}`
       });
 
       // Update user balance

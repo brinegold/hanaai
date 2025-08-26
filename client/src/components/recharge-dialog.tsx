@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,66 +6,123 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Copy } from "lucide-react";
+import { Copy, CheckCircle, Clock, Wallet } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 
-interface RechargeDialogProps {
+interface AutoDepositDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const RechargeDialog: React.FC<RechargeDialogProps> = ({
+const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
   open,
   onOpenChange,
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [network, setNetwork] = useState<"bsc">("bsc");
-  const [amount, setAmount] = useState("");
-  const [step, setStep] = useState<"amount" | "address">("amount");
-  const [address, setAddress] = useState("");
-  const [txId, setTxId] = useState(""); // Added state for transaction ID
+  const [userWallet, setUserWallet] = useState("");
+  const [txHash, setTxHash] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [depositStatus, setDepositStatus] = useState<"idle" | "pending" | "verified" | "failed">("idle");
+  const [loading, setLoading] = useState(true);
 
-  // These would typically come from your backend in a real implementation
-  const addresses = {
-    tron: "TBMnamBQLj3Cy9aC1eZm2hfBT8u7odsgfr",
-    bsc: "0xf0d3b31fe7dddf2cde60497e8e94b8187a68cbe2",
-  };
+  // Fetch user's unique BSC wallet address
+  useEffect(() => {
+    const fetchUserWallet = async () => {
+      if (!open || !user) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        setLoading(true);
+        const response = await apiRequest("GET", "/api/bsc/wallet");
+        if (response.ok) {
+          const data = await response.json();
+          setUserWallet(data.address);
+        } else {
+          throw new Error("Failed to fetch wallet");
+        }
+      } catch (error) {
+        console.error("Error fetching wallet:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load your deposit wallet",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleRecharge = async () => {
-    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+    if (open) {
+      fetchUserWallet();
+    } else {
+      setLoading(false);
+      setUserWallet("");
+    }
+  }, [open, user, toast]);
+
+  const handleVerifyDeposit = async () => {
+    if (!txHash.trim()) {
       toast({
-        title: "Invalid amount",
-        description: "Please enter a valid amount to deposit",
+        title: "Transaction Hash Required",
+        description: "Please enter your transaction hash",
         variant: "destructive",
       });
       return;
     }
 
-    setStep("address");
+    setIsVerifying(true);
+    setDepositStatus("pending");
 
-    // In a real implementation, you would create a transaction record on your backend
     try {
-      await apiRequest("POST", "/api/transactions", {
-        type: "Deposit",
-        amount: parseFloat(amount),
-        status: "Pending",
-        network: network.toUpperCase(),
-        address: address,
-        txHash: txId || null,
+      const response = await apiRequest("POST", "/api/bsc/deposit", {
+        txHash: txHash.trim(),
+        amount: 0, // Amount will be determined from blockchain
       });
 
-      // Invalidate queries that might be affected
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      if (response.ok) {
+        const data = await response.json();
+        setDepositStatus("verified");
+        
+        toast({
+          title: "Deposit Verified!",
+          description: `${data.amount} USDT has been added to your account (after 5% fee)`,
+        });
+
+        // Invalidate queries to refresh user balance
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+
+        // Close dialog after 2 seconds
+        setTimeout(() => {
+          onOpenChange(false);
+          resetDialog();
+        }, 2000);
+      } else {
+        const errorData = await response.json();
+        setDepositStatus("failed");
+        toast({
+          title: "Verification Failed",
+          description: errorData.message || "Transaction could not be verified",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
-      console.error("Error creating transaction record:", error);
+      setDepositStatus("failed");
+      toast({
+        title: "Verification Error",
+        description: "Failed to verify transaction. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -74,7 +131,7 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({
       () => {
         toast({
           title: "Copied!",
-          description: "Address copied to clipboard",
+          description: "Wallet address copied to clipboard",
         });
       },
       (err) => {
@@ -88,10 +145,11 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({
   };
 
   const resetDialog = () => {
-    setStep("amount");
-    setAmount("");
-    setTxId(""); // Reset txId on reset
-    setAddress(""); //Reset Address on reset
+    setTxHash("");
+    setDepositStatus("idle");
+    setIsVerifying(false);
+    setUserWallet("");
+    setLoading(false);
   };
 
   return (
@@ -102,160 +160,135 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({
         onOpenChange(value);
       }}
     >
-      <DialogContent className="bg-white text-black border-[#333333] max-w-md w-[80%] sm:w-full max-h-[85vh] overflow-y-auto">
+      <DialogContent className="bg-white text-black border-gray-200 max-w-md w-[80%] sm:w-full max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-black">Deposit USDT</DialogTitle>
-          <DialogDescription className="text-gray-400">
-            Add funds to your account using USDT
+          <DialogTitle className="text-black flex items-center gap-2">
+            <Wallet className="h-5 w-5" />
+            Automatic Deposit
+          </DialogTitle>
+          <DialogDescription className="text-gray-600">
+            Send USDT to your unique wallet address for automatic processing
           </DialogDescription>
         </DialogHeader>
 
-        {step === "amount" ? (
-          <>
-            <div className="w-full">
-              <div className="bg-[#4F9CF9] text-black text-center py-2 px-4 rounded-lg font-medium">
-                USDT-BEP20 (BSC)
-              </div>
-
-              <div className="mt-4">
-                <div className="space-y-4">
-                  <div className="bg-white border border-gray-200 p-3 rounded-lg">
-                    <p className="text-sm text-black mb-2 font-medium">
-                      Network Information
-                    </p>
-                    <p className="text-xs font-bold text-black">
-                      Address: {addresses.bsc}
-                    </p>
-                    <p className="text-xs text-black">
-                      USDT on Binance Smart Chain (BEP20)
-                    </p>
-                    <p className="text-xs text-black">
-                      Min deposit: 5 USDT
-                    </p>
-                    <p className="text-xs text-black">
-                      Platform fee: 5% (95% will reflect in your dashboard)
-                    </p>
-                    <p className="text-xs text-black">
-                      Processing time: Immediate via smart contract
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="bsc-amount">Enter Amount (USDT)</Label>
-                    <Input
-                      id="bsc-amount"
-                      type="number"
-                      min="50"
-                      step="1"
-                      placeholder="Minimum 5USDT"
-                      className="bg-white border-gray-200 text-gray-900"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="wallet-address">
-                Your Deposit Wallet Address
-              </Label>
-              <Input
-                id="wallet-address"
-                placeholder="Enter the wallet address you're sending from"
-                className="bg-white border-[#333333] text-black"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="tx-id">Transaction ID/Hash</Label>
-              <Input
-                id="tx-id"
-                placeholder="Enter the transaction ID after sending"
-                className="bg-white border-[#333333] text-black"
-                value={txId}
-                onChange={(e) => setTxId(e.target.value)} //Added onChange handler
-              />
-            </div>
-
-            <div className="bg-red-900/20 p-3 rounded-lg border border-red-600/30 mt-4">
-              <p className="text-xs text-red-800">
-                WARNING: Providing fake deposit details will result in an
-                immediate permanent ban from the platform.
-              </p>
-            </div>
-
-            <Button
-              className="w-full bg-[#4F9CF9] hover:bg-[#E0B83C] text-black mt-4"
-              onClick={() => {
-                if (!amount || parseFloat(amount) < 10) {
-                  toast({
-                    title: "Invalid amount",
-                    description: "Minimum deposit amount is $10",
-                    variant: "destructive",
-                  });
-                  return;
-                }
-                handleRecharge();
-              }}
-            >
-              Continue
-            </Button>
-          </>
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Clock className="h-6 w-6 animate-spin text-[#4F9CF9]" />
+            <span className="ml-2 text-gray-600">Loading your wallet...</span>
+          </div>
         ) : (
-          <div className="space-y-4">
-            <div className="bg-white p-4 rounded-lg text-center">
-              <p className="text-sm text-gray-300 mb-2">Send exactly</p>
-              <p className="text-2xl font-bold text-[#4F9CF9] mb-2">
-                {amount} USDT
-              </p>
-              <p className="text-xs text-gray-400">
-                on BSC (BEP20) network
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm">To this address:</Label>
-              <div className="flex items-center bg-white p-3 rounded-lg">
-                <p className="text-xs text-gray-300 flex-1 font-mono break-all">
-                  {addresses.bsc}
-                </p>
+          <div className="space-y-6">
+            {/* Wallet Address Section */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2 mb-3">
+                <Wallet className="h-4 w-4 text-[#4F9CF9]" />
+                <span className="text-sm font-medium text-gray-800">Your Unique Deposit Address</span>
+              </div>
+              
+              <div className="flex items-center bg-white p-3 rounded-lg border">
+                <code className="text-xs text-gray-800 flex-1 font-mono break-all">
+                  {userWallet || "Loading..."}
+                </code>
                 <Button
                   size="sm"
                   variant="ghost"
                   className="text-[#4F9CF9] hover:text-[#E0B83C] hover:bg-transparent ml-2"
-                  onClick={() =>
-                    copyAddress(addresses.bsc)
-                  }
+                  onClick={() => copyAddress(userWallet)}
+                  disabled={!userWallet}
                 >
                   <Copy size={16} />
                 </Button>
               </div>
             </div>
 
-            <div className="space-y-2 bg-blue-900/20 p-3 rounded-lg border border-blue-600/30">
-              <p className="text-sm text-amber-300">Important:</p>
-              <ul className="list-disc list-inside text-xs text-amber-200 space-y-1">
-                <li>
-                  Only send USDT on the BSC (BEP20) network
-                </li>
-                <li>Sending any other token may result in permanent loss</li>
-                <li>
-                  Include your user ID: {user?.id} in the memo/description if
-                  possible
-                </li>
-              </ul>
+            {/* Network Information */}
+            <div className="bg-white border border-gray-200 p-4 rounded-lg">
+              <h3 className="text-sm font-medium text-gray-800 mb-3">Network Information</h3>
+              <div className="space-y-2 text-xs text-gray-600">
+                <div className="flex justify-between">
+                  <span>Network:</span>
+                  <span className="font-medium">BSC (BEP20)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Token:</span>
+                  <span className="font-medium">USDT</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Min Deposit:</span>
+                  <span className="font-medium">5 USDT</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Platform Fee:</span>
+                  <span className="font-medium">5%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Processing:</span>
+                  <span className="font-medium text-green-600">Automatic</span>
+                </div>
+              </div>
             </div>
 
+            {/* Transaction Hash Input */}
+            <div className="space-y-3">
+              <Label htmlFor="tx-hash" className="text-sm font-medium">
+                Transaction Hash (Optional for faster processing)
+              </Label>
+              <Input
+                id="tx-hash"
+                placeholder="Enter transaction hash after sending USDT"
+                className="bg-white border-gray-200 text-gray-900"
+                value={txHash}
+                onChange={(e) => setTxHash(e.target.value)}
+              />
+              <p className="text-xs text-gray-500">
+                Providing the transaction hash enables instant verification
+              </p>
+            </div>
+
+            {/* Status Display */}
+            {depositStatus !== "idle" && (
+              <div className={`p-3 rounded-lg border ${
+                depositStatus === "verified" 
+                  ? "bg-green-50 border-green-200" 
+                  : depositStatus === "failed"
+                  ? "bg-red-50 border-red-200"
+                  : "bg-blue-50 border-blue-200"
+              }`}>
+                <div className="flex items-center gap-2">
+                  {depositStatus === "verified" && <CheckCircle className="h-4 w-4 text-green-600" />}
+                  {depositStatus === "pending" && <Clock className="h-4 w-4 animate-spin text-blue-600" />}
+                  {depositStatus === "failed" && <div className="h-4 w-4 rounded-full bg-red-600" />}
+                  <span className={`text-sm font-medium ${
+                    depositStatus === "verified" ? "text-green-800" :
+                    depositStatus === "failed" ? "text-red-800" : "text-blue-800"
+                  }`}>
+                    {depositStatus === "verified" && "Deposit Verified!"}
+                    {depositStatus === "pending" && "Verifying Transaction..."}
+                    {depositStatus === "failed" && "Verification Failed"}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Action Button */}
             <Button
               className="w-full bg-[#4F9CF9] hover:bg-[#E0B83C] text-black"
-              onClick={() => onOpenChange(false)}
+              onClick={handleVerifyDeposit}
+              disabled={isVerifying || !txHash.trim()}
             >
-              I've made the payment
+              {isVerifying ? "Verifying..." : "Verify Deposit"}
             </Button>
+
+            {/* Important Notes */}
+            <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+              <p className="text-xs text-amber-800 font-medium mb-2">Important Notes:</p>
+              <ul className="list-disc list-inside text-xs text-amber-700 space-y-1">
+                <li>Only send USDT on BSC (BEP20) network to this address</li>
+                <li>Deposits are processed automatically by smart contract</li>
+                <li>5% platform fee is deducted automatically</li>
+                <li>Your balance updates immediately after verification</li>
+              </ul>
+            </div>
           </div>
         )}
       </DialogContent>
@@ -263,4 +296,4 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({
   );
 };
 
-export default RechargeDialog;
+export default AutoDepositDialog;

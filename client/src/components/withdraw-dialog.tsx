@@ -6,40 +6,40 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ArrowDownLeft, CheckCircle, Clock } from "lucide-react";
 
-interface WithdrawDialogProps {
+interface AutoWithdrawDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
+const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
   open,
   onOpenChange,
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [network, setNetwork] = useState<"bsc">("bsc");
   const [amount, setAmount] = useState("");
   const [address, setAddress] = useState("");
   const [securityPassword, setSecurityPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [withdrawStatus, setWithdrawStatus] = useState<"idle" | "processing" | "completed" | "failed">("idle");
 
-  // Calculate maximum amount that can be withdrawn (total assets - 10% fee)
-  const maxAmount = user
-    ? Math.max(0, parseFloat(user.withdrawableAmount.toString()) * 0.9)
-    : 0;
+  // Calculate available balance and fees
+  const availableBalance = user ? parseFloat(user.withdrawableAmount?.toString() || "0") : 0;
+  const withdrawalFee = 0.1; // 10% fee
+  const maxWithdrawable = Math.max(0, availableBalance * (1 - withdrawalFee));
 
   const handleWithdraw = async () => {
     const amountNum = parseFloat(amount);
 
+    // Validation
     if (!amount || isNaN(amountNum) || amountNum <= 0) {
       toast({
         title: "Invalid amount",
@@ -48,8 +48,6 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
       });
       return;
     }
-
-    // Withdrawals are available every day - no day restriction
 
     if (amountNum < 1) {
       toast({
@@ -60,19 +58,19 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
       return;
     }
 
-    if (amountNum > maxAmount) {
+    if (amountNum > availableBalance) {
       toast({
         title: "Insufficient balance",
-        description: `Maximum withdrawal amount is ${maxAmount.toFixed(2)} USDT (after 10% fee)`,
+        description: `Maximum available: ${availableBalance.toFixed(2)} USDT`,
         variant: "destructive",
       });
       return;
     }
 
-    if (!address) {
+    if (!address || address.length < 10) {
       toast({
-        title: "Missing address",
-        description: "Please enter your withdrawal address",
+        title: "Invalid address",
+        description: "Please enter a valid BSC wallet address",
         variant: "destructive",
       });
       return;
@@ -88,30 +86,14 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
     }
 
     setSubmitting(true);
+    setWithdrawStatus("processing");
 
     try {
-      // First verify security password
-      const verifyResponse = await apiRequest(
-        "POST",
-        "/api/verify-security-password",
-        {
-          securityPassword,
-        },
-      );
-
-      if (!verifyResponse.ok) {
-        const errorData = await verifyResponse.json();
-        throw new Error(errorData.message || "Invalid security password");
-      }
-
-      // Create withdrawal transaction
-      const response = await apiRequest("POST", "/api/transactions", {
-        type: "Withdrawal",
+      // Process automatic withdrawal through BSC service
+      const response = await apiRequest("POST", "/api/bsc/withdraw", {
         amount: amountNum,
-        status: "Pending",
-        network: network.toUpperCase(),
-        address: address,
-        fee: amountNum * 0.1, // 10% fee
+        walletAddress: address,
+        securityPassword: securityPassword,
       });
 
       if (!response.ok) {
@@ -119,24 +101,29 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
         throw new Error(errorData.message || "Withdrawal failed");
       }
 
-      // Success
+      const data = await response.json();
+      setWithdrawStatus("completed");
+
       toast({
-        title: "Withdrawal Submitted",
-        description:
-          "Your withdrawal request has been received and is being processed.",
+        title: "Withdrawal Successful!",
+        description: `${data.netAmount} USDT sent to your wallet. Transaction: ${data.txHash}`,
       });
 
-      // Invalidate queries that might be affected
+      // Invalidate queries to refresh user balance
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
 
-      // Close dialog
-      onOpenChange(false);
+      // Close dialog after 3 seconds
+      setTimeout(() => {
+        onOpenChange(false);
+        resetDialog();
+      }, 3000);
+
     } catch (error) {
+      setWithdrawStatus("failed");
       toast({
         title: "Withdrawal Failed",
-        description:
-          error instanceof Error ? error.message : "An unknown error occurred",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
     } finally {
@@ -145,95 +132,111 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
   };
 
   const handleSetMaxAmount = () => {
-    setAmount(maxAmount.toString());
+    setAmount(availableBalance.toString());
+  };
+
+  const resetDialog = () => {
+    setAmount("");
+    setAddress("");
+    setSecurityPassword("");
+    setWithdrawStatus("idle");
+    setSubmitting(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog 
+      open={open} 
+      onOpenChange={(value) => {
+        if (!value) resetDialog();
+        onOpenChange(value);
+      }}
+    >
       <DialogContent className="bg-white text-gray-900 border-gray-200 max-w-md w-[80%] sm:w-full max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-black">Withdraw USDT</DialogTitle>
-          <DialogDescription className="text-gray-400">
-            Withdraw funds from your account
+          <DialogTitle className="text-black flex items-center gap-2">
+            <ArrowDownLeft className="h-5 w-5" />
+            Automatic Withdrawal
+          </DialogTitle>
+          <DialogDescription className="text-gray-600">
+            Instant withdrawal to your BSC wallet address
           </DialogDescription>
         </DialogHeader>
 
-        <div className="w-full">
-          <div className="bg-[#4F9CF9] text-black text-center py-2 px-4 rounded-md mb-4">
-            USDT-BEP20 (BSC)
-          </div>
-
-          <div className="mt-4">
-            <div className="space-y-4">
-              <div className="bg-white border border-gray-200 p-3 rounded-lg">
-                <p className="text-sm text-gray-300 mb-2">
-                  Withdrawal Information
-                </p>
-                <p className="text-xs text-gray-400">
-                  USDT on Binance Smart Chain (BEP20)
-                </p>
-                <p className="text-xs text-gray-400">Min withdrawal: 1 USDT</p>
-                <p className="text-xs text-gray-400">Fee: 10%</p>
-                <p className="text-xs text-gray-400">
-                Withdrawals are available every day.
-
-                </p>
-
-                <p className="text-xs text-gray-400">
-                Processing time: 20mins to 1Hr
-                </p>
+        <div className="space-y-6">
+          {/* Balance Information */}
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+            <h3 className="text-sm font-medium text-gray-800 mb-3">Available Balance</h3>
+            <div className="space-y-2 text-xs text-gray-600">
+              <div className="flex justify-between">
+                <span>Total Balance:</span>
+                <span className="font-medium">{availableBalance.toFixed(2)} USDT</span>
               </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="bsc-amount">Amount (USDT)</Label>
-                  <button
-                    type="button"
-                    className="text-xs text-[#4F9CF9] hover:text-[#E0B83C]"
-                    onClick={handleSetMaxAmount}
-                  >
-                    MAX
-                  </button>
-                </div>
-                <Input
-                  id="bsc-amount"
-                  type="number"
-                  min="1"
-                  step="1"
-                  placeholder="Minimum 1 USDT"
-                  className="bg-white border-gray-200 text-gray-900"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                />
-                <p className="text-xs text-gray-400 flex justify-between">
-                  <span>
-                    Available:{" "}
-                    {parseFloat(user?.withdrawableAmount?.toString() || "0").toFixed(
-                      2,
-                    )}{" "}
-                    USDT
-                  </span>
-                  <span>Fee: 10%</span>
-                </p>
+              <div className="flex justify-between">
+                <span>Withdrawal Fee:</span>
+                <span className="font-medium text-red-600">10%</span>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bsc-address">BSC (BEP20) Address</Label>
-                <Input
-                  id="bsc-address"
-                  placeholder="Enter your BSC wallet address"
-                  className="bg-white border-gray-200 text-gray-900"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                />
+              <div className="flex justify-between">
+                <span>Network:</span>
+                <span className="font-medium">BSC (BEP20)</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Processing:</span>
+                <span className="font-medium text-green-600">Instant</span>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="security-password">Security Password</Label>
+          {/* Amount Input */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <Label htmlFor="amount" className="text-sm font-medium">
+                Withdrawal Amount (USDT)
+              </Label>
+              <button
+                type="button"
+                className="text-xs text-[#4F9CF9] hover:text-[#E0B83C] font-medium"
+                onClick={handleSetMaxAmount}
+              >
+                MAX
+              </button>
+            </div>
+            <Input
+              id="amount"
+              type="number"
+              min="1"
+              step="0.01"
+              placeholder="Minimum 1 USDT"
+              className="bg-white border-gray-200 text-gray-900"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+            {amount && (
+              <div className="text-xs text-gray-500 flex justify-between">
+                <span>Fee (10%): {(parseFloat(amount) * 0.1).toFixed(2)} USDT</span>
+                <span>You'll receive: {(parseFloat(amount) * 0.9).toFixed(2)} USDT</span>
+              </div>
+            )}
+          </div>
+
+          {/* Destination Address */}
+          <div className="space-y-3">
+            <Label htmlFor="address" className="text-sm font-medium">
+              Destination BSC Address
+            </Label>
+            <Input
+              id="address"
+              placeholder="0x... (BSC/BEP20 wallet address)"
+              className="bg-white border-gray-200 text-gray-900 font-mono text-sm"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+          </div>
+
+          {/* Security Password */}
+          <div className="space-y-3">
+            <Label htmlFor="security-password" className="text-sm font-medium">
+              Security Password
+            </Label>
             <Input
               id="security-password"
               type="password"
@@ -244,39 +247,55 @@ const WithdrawDialog: React.FC<WithdrawDialogProps> = ({
             />
           </div>
 
-          <div className="space-y-4">
-            <div className="bg-blue-900/20 p-3 rounded-lg border border-blue-600/30 flex items-start space-x-3">
-              <AlertTriangle className="h-5 w-5 text-blue-900 shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <p className="text-sm text-blue-900">Important:</p>
-                <p className="text-xs text-blue-700">
-                  Make sure the address is correct and supports BSC (BEP20) network.
-                  Sending to the wrong network may result in permanent loss of
-                  funds.
-                </p>
+          {/* Status Display */}
+          {withdrawStatus !== "idle" && (
+            <div className={`p-3 rounded-lg border ${
+              withdrawStatus === "completed" 
+                ? "bg-green-50 border-green-200" 
+                : withdrawStatus === "failed"
+                ? "bg-red-50 border-red-200"
+                : "bg-blue-50 border-blue-200"
+            }`}>
+              <div className="flex items-center gap-2">
+                {withdrawStatus === "completed" && <CheckCircle className="h-4 w-4 text-green-600" />}
+                {withdrawStatus === "processing" && <Clock className="h-4 w-4 animate-spin text-blue-600" />}
+                {withdrawStatus === "failed" && <div className="h-4 w-4 rounded-full bg-red-600" />}
+                <span className={`text-sm font-medium ${
+                  withdrawStatus === "completed" ? "text-green-800" :
+                  withdrawStatus === "failed" ? "text-red-800" : "text-blue-800"
+                }`}>
+                  {withdrawStatus === "completed" && "Withdrawal Completed!"}
+                  {withdrawStatus === "processing" && "Processing Withdrawal..."}
+                  {withdrawStatus === "failed" && "Withdrawal Failed"}
+                </span>
               </div>
             </div>
+          )}
 
-            <div className="bg-red-900/20 p-3 rounded-lg border border-red-600/30">
-              <p className="text-xs text-red-900">
-                WARNING: The admin is not liable for any loss of funds due to
-                incorrect wallet addresses. Double check your wallet address
-                before submitting. This action cannot be undone.
-              </p>
-            </div>
-          </div>
-
+          {/* Action Button */}
           <Button
             className="w-full bg-[#4F9CF9] hover:bg-[#E0B83C] text-black"
             onClick={handleWithdraw}
-            disabled={submitting}
+            disabled={submitting || !amount || !address || !securityPassword}
           >
-            {submitting ? "Processing..." : "Withdraw"}
+            {submitting ? "Processing..." : "Withdraw Now"}
           </Button>
+
+          {/* Warning */}
+          <div className="bg-red-50 p-3 rounded-lg border border-red-200 flex items-start space-x-3">
+            <AlertTriangle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-xs text-red-800 font-medium">Important Warning:</p>
+              <p className="text-xs text-red-700">
+                Double-check your BSC wallet address. Incorrect addresses will result in permanent loss of funds. 
+                This transaction cannot be reversed.
+              </p>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 };
 
-export default WithdrawDialog;
+export default AutoWithdrawDialog;
