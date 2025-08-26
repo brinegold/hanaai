@@ -26,6 +26,7 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
   const { toast } = useToast();
   const { user } = useAuth();
   const [userWallet, setUserWallet] = useState("");
+  const [amount, setAmount] = useState("");
   const [txHash, setTxHash] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [depositStatus, setDepositStatus] = useState<"idle" | "pending" | "verified" | "failed">("idle");
@@ -69,6 +70,15 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
   }, [open, user, toast]);
 
   const handleVerifyDeposit = async () => {
+    if (!amount || parseFloat(amount) < 5) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid amount (minimum 5 USDT)",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!txHash.trim()) {
       toast({
         title: "Transaction Hash Required",
@@ -84,7 +94,7 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
     try {
       const response = await apiRequest("POST", "/api/bsc/deposit", {
         txHash: txHash.trim(),
-        amount: 0, // Amount will be determined from blockchain
+        amount: amount,
       });
 
       if (response.ok) {
@@ -145,6 +155,7 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
   };
 
   const resetDialog = () => {
+    setAmount("");
     setTxHash("");
     setDepositStatus("idle");
     setIsVerifying(false);
@@ -228,10 +239,30 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
               </div>
             </div>
 
+            {/* Amount Input */}
+            <div className="space-y-3">
+              <Label htmlFor="amount" className="text-sm font-medium">
+                Deposit Amount (USDT)
+              </Label>
+              <Input
+                id="amount"
+                type="number"
+                min="5"
+                step="0.01"
+                placeholder="Minimum 5 USDT"
+                className="bg-white border-gray-200 text-gray-900"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+              <p className="text-xs text-gray-500">
+                Enter the amount you're depositing to your unique wallet address
+              </p>
+            </div>
+
             {/* Transaction Hash Input */}
             <div className="space-y-3">
               <Label htmlFor="tx-hash" className="text-sm font-medium">
-                Transaction Hash (Optional for faster processing)
+                Transaction Hash (Required for verification)
               </Label>
               <Input
                 id="tx-hash"
@@ -241,7 +272,7 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
                 onChange={(e) => setTxHash(e.target.value)}
               />
               <p className="text-xs text-gray-500">
-                Providing the transaction hash enables instant verification
+                Paste the transaction hash from your wallet after sending USDT
               </p>
             </div>
 
