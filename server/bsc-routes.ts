@@ -99,22 +99,10 @@ export function registerBSCRoutes(app: Express) {
         userId: user.id
       });
 
-      // Process actual token transfers to admin wallets
-      let transferHashes;
-      try {
-        transferHashes = await bscService.processDepositTransfers(
-          user.bscWalletAddress!,
-          depositAmount.toString(),
-          adminFee.toString()
-        );
-        console.log("Deposit transfers completed:", transferHashes);
-      } catch (transferError) {
-        console.error("Error processing deposit transfers:", transferError);
-        return res.status(500).json({ 
-          error: "Failed to process deposit transfers",
-          details: transferError instanceof Error ? transferError.message : String(transferError)
-        });
-      }
+      // For deposits, we don't need to transfer tokens since they're already sent to the contract
+      // The user has already sent tokens to the TestUSDT contract in their original transaction
+      // We just need to record the deposit and update balances
+      console.log("Deposit verified - tokens already received in original transaction");
 
       // Create deposit transaction record
       await storage.createTransaction({
@@ -122,12 +110,12 @@ export function registerBSCRoutes(app: Express) {
         type: "Deposit",
         amount: userAmount.toString(),
         status: "Completed",
-        txHash: transferHashes.userDepositTxHash, // Use transfer transaction hash
-        fromAddress: user.bscWalletAddress!,
-        toAddress: BSC_CONFIG.globalAdminWallet,
+        txHash: txHash, // Use original transaction hash
+        fromAddress: txDetails.from,
+        toAddress: txDetails.to,
         blockNumber: txDetails.blockNumber,
         confirmationStatus: "confirmed",
-        reason: `BSC testnet deposit - Original TX: ${txHash}`
+        reason: `BSC testnet deposit - TX: ${txHash}`
       });
 
       // Create admin fee transaction record
@@ -136,12 +124,12 @@ export function registerBSCRoutes(app: Express) {
         type: "Admin Fee",
         amount: adminFee.toString(),
         status: "Completed",
-        txHash: transferHashes.adminFeeTxHash, // Use fee transfer transaction hash
-        fromAddress: user.bscWalletAddress!,
-        toAddress: BSC_CONFIG.adminFeeWallet,
+        txHash: txHash, // Use original transaction hash
+        fromAddress: txDetails.from,
+        toAddress: txDetails.to,
         blockNumber: txDetails.blockNumber,
         confirmationStatus: "confirmed",
-        reason: `Admin fee for deposit - Original TX: ${txHash}`
+        reason: `Admin fee for deposit - TX: ${txHash}`
       });
 
       // Update user balance
