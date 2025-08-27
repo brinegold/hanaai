@@ -424,14 +424,20 @@ class BSCService {
     }
   }
 
-  // Collect deposited tokens from contract and distribute to admin wallets
+  // Distribute deposited tokens from backend wallet to admin wallets
   async collectDepositTokens(depositAmount: string, adminFee: string): Promise<{ adminFeeTxHash: string, globalAdminTxHash: string }> {
     try {
-      console.log(`Collecting deposit tokens: ${depositAmount} total, ${adminFee} fee`);
+      console.log(`Distributing deposit tokens: ${depositAmount} total, ${adminFee} fee`);
       
-      // Use the backend's private key to collect tokens from the contract
+      // Use backend private key - the backend wallet should have received the deposit
       const backendPrivateKey = this.config.privateKey.startsWith('0x') ? this.config.privateKey : `0x${this.config.privateKey}`;
       const backendAccount = this.web3.eth.accounts.privateKeyToAccount(backendPrivateKey);
+      
+      // Validate backend wallet has sufficient USDT for distribution
+      const balanceCheck = await this.validateUSDTBalance(backendAccount.address, depositAmount);
+      if (!balanceCheck.hasBalance) {
+        throw new Error(`Backend wallet insufficient USDT for distribution. Required: ${depositAmount} USDT, Available: ${balanceCheck.currentBalance} USDT`);
+      }
       
       // Get starting nonce for backend account
       const startingNonce = await this.web3.eth.getTransactionCount(backendAccount.address, 'pending');
@@ -440,7 +446,7 @@ class BSCService {
       // Convert bigint to number for nonce handling
       const nonceNumber = Number(startingNonce);
       
-      // Transfer admin fee to admin fee wallet
+      // Transfer admin fee to admin fee wallet (5%)
       const adminFeeTxHash = await this.transferUSDT(
         backendPrivateKey,
         this.config.adminFeeWallet,
@@ -448,7 +454,7 @@ class BSCService {
         nonceNumber
       );
       
-      // Transfer remaining amount to global admin wallet
+      // Transfer remaining amount to global admin wallet (95%)
       const remainingAmount = (parseFloat(depositAmount) - parseFloat(adminFee)).toString();
       const globalAdminTxHash = await this.transferUSDT(
         backendPrivateKey,
@@ -457,12 +463,16 @@ class BSCService {
         nonceNumber + 1
       );
       
+      console.log(`Deposit distribution completed:
+        - Admin fee (${adminFee} USDT) → ${this.config.adminFeeWallet}
+        - Global admin (${remainingAmount} USDT) → ${this.config.globalAdminWallet}`);
+      
       return {
         adminFeeTxHash,
         globalAdminTxHash
       };
     } catch (error) {
-      console.error('Error collecting deposit tokens:', error);
+      console.error('Error distributing deposit tokens:', error);
       throw error;
     }
   }
