@@ -59,27 +59,35 @@ class BSCService {
       const currentGasPrice = await this.web3.eth.getGasPrice();
       const gasPriceGwei = Number(this.web3.utils.fromWei(currentGasPrice, 'gwei'));
       
-      // BSC gas price optimization
-      let multiplier = 0.8; // Default 20% reduction
+      // BSC minimum gas price is typically 10 Gwei
+      const minimumGasPrice = this.web3.utils.toWei('10', 'gwei');
       
-      if (gasPriceGwei <= 3) {
-        multiplier = 0.9; // Only 10% reduction for very low gas
-      } else if (gasPriceGwei <= 5) {
-        multiplier = 0.8; // 20% reduction for normal gas
+      // BSC gas price optimization with minimum enforcement
+      let multiplier = 0.95; // Conservative 5% reduction
+      
+      if (gasPriceGwei <= 10) {
+        // Don't reduce if already at or below 10 Gwei
+        multiplier = 1.0;
+      } else if (gasPriceGwei <= 15) {
+        multiplier = 0.95; // Small 5% reduction
+      } else if (gasPriceGwei <= 25) {
+        multiplier = 0.9; // 10% reduction for moderate gas
       } else {
-        multiplier = 0.7; // 30% reduction for high gas periods
+        multiplier = 0.85; // 15% reduction for high gas periods
       }
       
       const optimizedPrice = (BigInt(currentGasPrice) * BigInt(Math.floor(multiplier * 100)) / BigInt(100)).toString();
       
-      console.log(`Gas price optimization: ${gasPriceGwei} Gwei → ${Number(this.web3.utils.fromWei(optimizedPrice, 'gwei')).toFixed(2)} Gwei (${Math.floor((1-multiplier)*100)}% reduction)`);
+      // Ensure we don't go below minimum
+      const finalPrice = BigInt(optimizedPrice) < BigInt(minimumGasPrice) ? minimumGasPrice : optimizedPrice;
       
-      return optimizedPrice;
+      console.log(`Gas price optimization: ${gasPriceGwei} Gwei → ${Number(this.web3.utils.fromWei(finalPrice.toString(), 'gwei')).toFixed(2)} Gwei (min: 10 Gwei enforced)`);
+      
+      return finalPrice.toString();
     } catch (error) {
       console.error('Error getting optimized gas price:', error);
-      // Fallback to standard gas price
-      const fallbackPrice = await this.web3.eth.getGasPrice();
-      return fallbackPrice.toString();
+      // Fallback to minimum gas price
+      return this.web3.utils.toWei('10', 'gwei');
     }
   }
 
@@ -118,7 +126,7 @@ class BSCService {
         
         const transferTx = this.usdtContract.methods.transfer(transfer.toAddress, amountWei);
         const gasEstimateRaw = await transferTx.estimateGas({ from: fromAccount.address });
-        const gasEstimate = (BigInt(gasEstimateRaw) * BigInt(90) / BigInt(100)).toString();
+        const gasEstimate = (BigInt(gasEstimateRaw) * BigInt(110) / BigInt(100)).toString();
         
         const txData = {
           from: fromAccount.address,
@@ -377,9 +385,9 @@ class BSCService {
       // Create transfer transaction
       const transferTx = this.usdtContract.methods.transfer(toAddress, amountWei);
       
-      // Estimate gas with buffer reduction (use 90% of estimated gas)
+      // Estimate gas with safety buffer (use 110% of estimated gas to prevent out of gas)
       const gasEstimateRaw = await transferTx.estimateGas({ from: fromAccount.address });
-      const gasEstimate = (BigInt(gasEstimateRaw) * BigInt(90) / BigInt(100)).toString();
+      const gasEstimate = (BigInt(gasEstimateRaw) * BigInt(110) / BigInt(100)).toString();
       
       // Get optimized gas price using dynamic optimization
       const gasPrice = await this.getOptimizedGasPrice();
@@ -388,7 +396,7 @@ class BSCService {
       const txNonce = nonce !== undefined ? nonce : await this.web3.eth.getTransactionCount(fromAccount.address, 'pending');
       
       console.log(`Using nonce ${txNonce} for transfer to ${toAddress}`);
-      console.log(`Gas optimization: Estimate ${gasEstimateRaw} → ${gasEstimate}, Price reduced by 20%`);
+      console.log(`Gas optimization: Estimate ${gasEstimateRaw} → ${gasEstimate} (+10% safety buffer), Price reduced by 20%`);
       
       // Build transaction with optimized gas settings
       const txData = {
