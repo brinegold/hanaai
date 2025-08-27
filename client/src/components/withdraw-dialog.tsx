@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
   const [securityPassword, setSecurityPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [withdrawStatus, setWithdrawStatus] = useState<"idle" | "processing" | "completed" | "failed">("idle");
+
 
   // Calculate available balance and fees
   const availableBalance = user ? parseFloat(user.withdrawableAmount?.toString() || "0") : 0;
@@ -109,8 +110,9 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
         description: `${data.netAmount} USDT sent to your wallet. Transaction: ${data.txHash}`,
       });
 
-      // Invalidate queries to refresh user balance
+      // Invalidate queries to refresh user balance and account data
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/account"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
 
       // Close dialog after 3 seconds

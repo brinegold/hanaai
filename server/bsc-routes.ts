@@ -3,9 +3,9 @@ import BSCService from "./bsc-service";
 import { storage } from './storage';
 
 const BSC_CONFIG = {
-  rpcUrl: process.env.BSC_TESTNET_RPC_URL || "https://data-seed-prebsc-1-s1.binance.org:8545/",
+  rpcUrl: process.env.BSC_RPC_URL || "https://bsc-dataseed1.binance.org/",
   contractAddress: process.env.PAYMENT_CONTRACT_ADDRESS || "",
-  usdtContractAddress: process.env.USDT_CONTRACT_ADDRESS || "0x7C5FCE4f6aF59eCd7a557Fa9a7812Eaf0A4E42cb",
+  usdtContractAddress: process.env.USDT_CONTRACT_ADDRESS || "0x55d398326f99059fF775485246999027B3197955",
   adminFeeWallet: process.env.ADMIN_FEE_WALLET || "",
   globalAdminWallet: process.env.GLOBAL_ADMIN_WALLET || "",
   privateKey: process.env.BSC_PRIVATE_KEY || ""
@@ -241,6 +241,8 @@ export function registerBSCRoutes(app: Express) {
         type: "Withdrawal",
         amount: netAmount.toString(),
         status: "Completed",
+        address: walletAddress, // Save withdrawal address for display in account details
+        network: "BSC",
         txHash: transferHashes.withdrawalTxHash,
         fromAddress: BSC_CONFIG.globalAdminWallet,
         toAddress: walletAddress,

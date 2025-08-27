@@ -1,7 +1,8 @@
-const { ethers } = require("hardhat");
+import pkg from 'hardhat';
+const { ethers } = pkg;
 
 async function main() {
-  console.log("Deploying PaymentProcessor contract to BSC testnet...");
+  console.log("Deploying PaymentProcessor contract to BSC mainnet...");
 
   // Get the contract factory
   const PaymentProcessor = await ethers.getContractFactory("PaymentProcessor");

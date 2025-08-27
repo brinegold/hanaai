@@ -318,8 +318,14 @@ const ProfilePage: React.FC = () => {
                   Account Details
                 </DialogTitle>
               </DialogHeader>
-              <Tabs defaultValue="transactions" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+              <Tabs defaultValue="account-info" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger
+                    value="account-info"
+                    className="text-xs sm:text-sm"
+                  >
+                    Account Info
+                  </TabsTrigger>
                   <TabsTrigger
                     value="transactions"
                     className="text-xs sm:text-sm"
@@ -327,6 +333,107 @@ const ProfilePage: React.FC = () => {
                     Transactions
                   </TabsTrigger>
                 </TabsList>
+                <TabsContent value="account-info">
+                  <ScrollArea className="h-[60vh] sm:h-[50vh]">
+                    <div className="space-y-6 p-2">
+                      {/* Account Information */}
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">Username:</span>
+                            <span className="text-gray-900 font-medium">{user.username}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">Email:</span>
+                            <span className="text-gray-900 font-medium">{user.email || "-"}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">Phone:</span>
+                            <span className="text-gray-900 font-medium">{user.phone || "-"}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">Telegram:</span>
+                            <span className="text-gray-900 font-medium">{user.telegram || "-"}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">Verification Status:</span>
+                            <span className={`px-2 py-1 rounded text-xs ${
+                              user.verificationStatus === "verified" 
+                                ? "bg-green-500/20 text-green-500"
+                                : user.verificationStatus === "pending"
+                                  ? "bg-blue-500/20 text-blue-500"
+                                  : "bg-gray-500/20 text-gray-500"
+                            }`}>
+                              {user.verificationStatus?.charAt(0).toUpperCase() + user.verificationStatus?.slice(1) || "Unverified"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Wallet Information */}
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Wallet Information</h3>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">Network:</span>
+                            <span className="text-gray-900 font-medium bg-yellow-100 px-2 py-1 rounded text-sm">BSC (Binance Smart Chain)</span>
+                          </div>
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                            <span className="text-gray-600">Withdrawal/Deposit Address:</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-900 font-mono text-sm bg-white px-2 py-1 rounded border break-all">
+                                {user.bscWalletAddress || "Not set"}
+                              </span>
+                              {user.bscWalletAddress && (
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(user.bscWalletAddress);
+                                    toast({
+                                      title: "Copied!",
+                                      description: "Wallet address copied to clipboard",
+                                    });
+                                  }}
+                                  className="text-blue-500 hover:text-blue-700 text-xs px-2 py-1 border border-blue-500 rounded hover:bg-blue-50"
+                                >
+                                  Copy
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          {!user.bscWalletAddress && (
+                            <div className="text-amber-600 text-sm bg-amber-50 p-2 rounded border border-amber-200">
+                              <p>⚠️ No wallet address set. Please set your BSC wallet address to enable deposits and withdrawals.</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Asset Summary */}
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Asset Summary</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="bg-white p-3 rounded border">
+                            <div className="text-gray-600 text-sm">Total Assets</div>
+                            <div className="text-xl font-bold text-gray-900">${parseFloat(user.totalAssets.toString()).toFixed(2)}</div>
+                          </div>
+                          <div className="bg-white p-3 rounded border">
+                            <div className="text-gray-600 text-sm">Profit Assets</div>
+                            <div className="text-xl font-bold text-green-600">${parseFloat(user.profitAssets.toString()).toFixed(2)}</div>
+                          </div>
+                          <div className="bg-white p-3 rounded border">
+                            <div className="text-gray-600 text-sm">Deposit Amount</div>
+                            <div className="text-xl font-bold text-blue-600">${parseFloat(user.rechargeAmount.toString()).toFixed(2)}</div>
+                          </div>
+                          <div className="bg-white p-3 rounded border">
+                            <div className="text-gray-600 text-sm">Withdrawable</div>
+                            <div className="text-xl font-bold text-purple-600">${parseFloat(user.withdrawableAmount.toString()).toFixed(2)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
                 <TabsContent value="transactions">
                   <ScrollArea className="h-[60vh] sm:h-[50vh]">
                     <div className="overflow-x-auto">

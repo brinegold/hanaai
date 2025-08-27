@@ -21,8 +21,8 @@ class BSCService {
   constructor(config: BSCConfig) {
     this.config = config;
     
-    // Use BSC testnet RPC URL specifically
-    const rpcUrl = config.rpcUrl || "https://data-seed-prebsc-1-s1.binance.org:8545/";
+    // Use BSC mainnet RPC URL
+    const rpcUrl = config.rpcUrl || "https://bsc-dataseed1.binance.org/";
     console.log("BSC Service initialized with RPC:", rpcUrl);
     
     this.web3 = new Web3(rpcUrl);
@@ -45,8 +45,8 @@ class BSCService {
       const blockNumber = await this.web3.eth.getBlockNumber();
       console.log(`Connected to BSC network - Chain ID: ${chainId}, Block: ${blockNumber}`);
       
-      if (chainId !== 97n) { // BSC testnet chain ID
-        console.warn(`Warning: Expected BSC testnet (97) but connected to chain ${chainId}`);
+      if (chainId !== BigInt(56)) { // BSC testnet chain ID
+        console.warn(`Warning: Expected BSC testnet (56) but connected to chain ${chainId}`);
       }
     } catch (error) {
       console.error("Failed to connect to BSC network:", error);
@@ -182,7 +182,7 @@ class BSCService {
       if (!transaction) {
         throw new Error(`Transaction ${txHash} not found after ${maxRetries} attempts. Please verify:
 1. Transaction hash is correct
-2. Transaction is on BSC testnet (Chain ID 97)
+2. Transaction is on BSC mainnet (Chain ID 56)
 3. Transaction has been broadcasted to the network`);
       }
       
