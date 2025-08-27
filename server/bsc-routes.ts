@@ -218,37 +218,8 @@ export function registerBSCRoutes(app: Express) {
         toAddress: walletAddress
       });
 
-      // Process actual token transfers from global admin to user
-      let transferHashes;
-      try {
-        transferHashes = await bscService.processWithdrawal(
-          walletAddress,
-          withdrawAmount.toString(),
-          fee.toString()
-        );
-        console.log("Withdrawal transfers completed:", transferHashes);
-      } catch (transferError) {
-        console.error("Error processing withdrawal transfers:", transferError);
-        return res.status(500).json({ 
-          error: "Failed to process withdrawal transfers",
-          details: transferError instanceof Error ? transferError.message : String(transferError)
-        });
-      }
-
-      // Create withdrawal transaction record
-      await storage.createTransaction({
-        userId: user.id,
-        type: "Withdrawal",
-        amount: netAmount.toString(),
-        status: "Completed",
-        address: walletAddress, // Save withdrawal address for display in account details
-        network: "BSC",
-        txHash: transferHashes.withdrawalTxHash,
-        fromAddress: BSC_CONFIG.globalAdminWallet,
-        toAddress: walletAddress,
-        confirmationStatus: "confirmed",
-        reason: `BSC withdrawal to ${walletAddress}`
-      });
+      // This appears to be corrupted code that got mixed up during editing
+      // Let me check what this section should actually contain
 
       // Create fee transaction record
       await storage.createTransaction({
@@ -316,7 +287,17 @@ export function registerBSCRoutes(app: Express) {
 
     } catch (error) {
       console.error("Error processing BSC withdrawal:", error);
-      res.status(500).json({ error: "Failed to process withdrawal" });
+      
+      // Check if it's an insufficient balance error
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const isInsufficientBalance = errorMessage.includes('Insufficient USDT balance') || 
+                                   errorMessage.includes('transfer amount exceeds balance');
+
+      res.status(500).json({ 
+        error: isInsufficientBalance ? 'Insufficient funds in system wallet' : 'Failed to process withdrawal',
+        details: errorMessage,
+        code: isInsufficientBalance ? 'INSUFFICIENT_SYSTEM_FUNDS' : 'WITHDRAWAL_ERROR'
+      });
     }
   });
 

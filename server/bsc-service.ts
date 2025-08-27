@@ -53,6 +53,101 @@ class BSCService {
     }
   }
 
+  // Get optimized gas price based on network conditions
+  private async getOptimizedGasPrice(): Promise<string> {
+    try {
+      const currentGasPrice = await this.web3.eth.getGasPrice();
+      const gasPriceGwei = Number(this.web3.utils.fromWei(currentGasPrice, 'gwei'));
+      
+      // BSC gas price optimization
+      let multiplier = 0.8; // Default 20% reduction
+      
+      if (gasPriceGwei <= 3) {
+        multiplier = 0.9; // Only 10% reduction for very low gas
+      } else if (gasPriceGwei <= 5) {
+        multiplier = 0.8; // 20% reduction for normal gas
+      } else {
+        multiplier = 0.7; // 30% reduction for high gas periods
+      }
+      
+      const optimizedPrice = (BigInt(currentGasPrice) * BigInt(Math.floor(multiplier * 100)) / BigInt(100)).toString();
+      
+      console.log(`Gas price optimization: ${gasPriceGwei} Gwei → ${Number(this.web3.utils.fromWei(optimizedPrice, 'gwei')).toFixed(2)} Gwei (${Math.floor((1-multiplier)*100)}% reduction)`);
+      
+      return optimizedPrice;
+    } catch (error) {
+      console.error('Error getting optimized gas price:', error);
+      // Fallback to standard gas price
+      const fallbackPrice = await this.web3.eth.getGasPrice();
+      return fallbackPrice.toString();
+    }
+  }
+
+  // Validate if address has sufficient USDT balance for transfer
+  async validateUSDTBalance(address: string, requiredAmount: string): Promise<{hasBalance: boolean, currentBalance: string, required: string}> {
+    try {
+      const currentBalance = await this.getUSDTBalance(address);
+      const hasBalance = parseFloat(currentBalance) >= parseFloat(requiredAmount);
+      
+      return {
+        hasBalance,
+        currentBalance,
+        required: requiredAmount
+      };
+    } catch (error) {
+      console.error('Error validating USDT balance:', error);
+      throw error;
+    }
+  }
+
+  // Batch multiple transfers to save gas costs
+  async batchTransferUSDT(transfers: Array<{toAddress: string, amount: string}>, fromPrivateKey: string): Promise<string[]> {
+    try {
+      const fromAccount = this.web3.eth.accounts.privateKeyToAccount(fromPrivateKey);
+      const txHashes: string[] = [];
+      
+      // Get starting nonce
+      let nonce = await this.web3.eth.getTransactionCount(fromAccount.address, 'pending');
+      const gasPrice = await this.getOptimizedGasPrice();
+      
+      console.log(`Batch processing ${transfers.length} transfers with optimized gas`);
+      
+      for (let i = 0; i < transfers.length; i++) {
+        const transfer = transfers[i];
+        const amountWei = this.web3.utils.toWei(transfer.amount, 'ether');
+        
+        const transferTx = this.usdtContract.methods.transfer(transfer.toAddress, amountWei);
+        const gasEstimateRaw = await transferTx.estimateGas({ from: fromAccount.address });
+        const gasEstimate = (BigInt(gasEstimateRaw) * BigInt(90) / BigInt(100)).toString();
+        
+        const txData = {
+          from: fromAccount.address,
+          to: this.config.usdtContractAddress,
+          data: transferTx.encodeABI(),
+          gas: gasEstimate,
+          gasPrice: gasPrice,
+          nonce: Number(nonce) + i
+        };
+        
+        const signedTx = await fromAccount.signTransaction(txData);
+        const receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction as string);
+        
+        txHashes.push(receipt.transactionHash.toString());
+        console.log(`Batch transfer ${i+1}/${transfers.length}: ${transfer.amount} USDT to ${transfer.toAddress}`);
+        
+        // Small delay to prevent nonce conflicts
+        if (i < transfers.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+      
+      return txHashes;
+    } catch (error) {
+      console.error('Error in batch transfer:', error);
+      throw error;
+    }
+  }
+
   private initializeContracts() {
     // Payment Processor Contract ABI
     const paymentProcessorABI = [
@@ -268,30 +363,40 @@ class BSCService {
       // Create account from private key
       const fromAccount = this.web3.eth.accounts.privateKeyToAccount(fromPrivateKey);
       
+      // Validate balance before transfer
+      const balanceCheck = await this.validateUSDTBalance(fromAccount.address, amount);
+      if (!balanceCheck.hasBalance) {
+        throw new Error(`Insufficient USDT balance. Required: ${balanceCheck.required} USDT, Available: ${balanceCheck.currentBalance} USDT`);
+      }
+      
+      console.log(`Balance validation passed: ${balanceCheck.currentBalance} USDT available for ${balanceCheck.required} USDT transfer`);
+      
       // Convert amount to wei (18 decimals for USDT)
       const amountWei = this.web3.utils.toWei(amount, 'ether');
       
       // Create transfer transaction
       const transferTx = this.usdtContract.methods.transfer(toAddress, amountWei);
       
-      // Estimate gas
-      const gasEstimate = await transferTx.estimateGas({ from: fromAccount.address });
+      // Estimate gas with buffer reduction (use 90% of estimated gas)
+      const gasEstimateRaw = await transferTx.estimateGas({ from: fromAccount.address });
+      const gasEstimate = (BigInt(gasEstimateRaw) * BigInt(90) / BigInt(100)).toString();
       
-      // Get current gas price
-      const gasPrice = await this.web3.eth.getGasPrice();
+      // Get optimized gas price using dynamic optimization
+      const gasPrice = await this.getOptimizedGasPrice();
       
       // Get nonce - use provided nonce or fetch current
       const txNonce = nonce !== undefined ? nonce : await this.web3.eth.getTransactionCount(fromAccount.address, 'pending');
       
       console.log(`Using nonce ${txNonce} for transfer to ${toAddress}`);
+      console.log(`Gas optimization: Estimate ${gasEstimateRaw} → ${gasEstimate}, Price reduced by 20%`);
       
-      // Build transaction
+      // Build transaction with optimized gas settings
       const txData = {
         from: fromAccount.address,
         to: this.config.usdtContractAddress,
         data: transferTx.encodeABI(),
-        gas: gasEstimate.toString(),
-        gasPrice: gasPrice.toString(),
+        gas: gasEstimate,
+        gasPrice: gasPrice,
         nonce: txNonce
       };
       
