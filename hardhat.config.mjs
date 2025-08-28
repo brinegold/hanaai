@@ -23,7 +23,7 @@ const config = {
       gas: 2100000,
       gasPrice: 20000000000,
     },
-    bscMainnet: {
+    bsc_mainnet: {
       url: process.env.BSC_RPC_URL || "https://bsc-dataseed1.binance.org/",
       chainId: 56,
       accounts: process.env.BSC_PRIVATE_KEY ? [process.env.BSC_PRIVATE_KEY] : [],

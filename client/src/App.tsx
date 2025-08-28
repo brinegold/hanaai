@@ -10,7 +10,6 @@ import VerificationPage from "@/pages/verification-page";
 import InvitePage from "@/pages/invite-page";
 import QuantitativePage from "@/pages/quantitative-page";
 import BSCPage from "@/pages/bsc-page";
-import ReferralSignupPage from "@/pages/referral-signup";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import ResetPasswordPage from "./pages/reset-password-page";
@@ -23,7 +22,6 @@ function Router() {
     <Switch>
       {/* Public routes */}
       <Route path="/auth" component={AuthPage} />
-      <Route path="/signup" component={ReferralSignupPage} />
       <Route path="/reset-password" component={ResetPasswordPage} />{" "}
       {/* Updated reset password route */}
       {/* Protected routes */}

@@ -667,7 +667,7 @@ const DashboardPage: React.FC = () => {
       <div className="mx-4 mb-6 p-4 bg-white border border-gray-200 rounded-lg text-sm">
         <h3 className="text-gray-900 font-medium mb-2">Additional Information</h3>
         <div className="text-gray-700">
-        The Minimum deposit amount for Nebrix AI Trading is 5USDT , and the minimum withdrawal amount is 1USDT .
+        The Minimum deposit amount for Nebrix AI Trading is 5USDT , and the minimum withdrawal amount is 5USDT .
         The funds will be credited to your account within three minutes.<br></br>
           <br></br>
           <br></br> ===========<br></br> ✔How to make money: <br></br>
@@ -711,7 +711,7 @@ Trade Time : Once Per day
           <ScrollArea className="h-[60vh]">
             <div className="space-y-4 pr-4">
               <p>
-                The Minimum deposit amount for Nebrix AI trading is 5USDT, and the minimum withdrawal amount is 1USDT
+                The Minimum deposit amount for Nebrix AI trading is 5USDT, and the minimum withdrawal amount is 5USDT
               </p>
               <p>
                 The Maximum deposit is 500,000USDT.

@@ -536,31 +536,25 @@ const QuantitativePage: React.FC = () => {
               <h3 className="text-black font-medium text-lg mb-1">AI Trading System</h3>
               <div className="space-y-1">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-400">Daily Trading Progress</span>
+                  <span className="text-gray-400">Progress</span>
                   <span className="text-[#4F9CF9]">
-                    {user?.todayEarnings && user?.rechargeAmount
+                    {user?.totalAssets && user?.rechargeAmount
                       ? Math.min(
                           100,
-                          (parseFloat(user.todayEarnings.toString()) /
-                            (parseFloat(user.rechargeAmount.toString()) * 0.015)) *
+                          (parseFloat(user.totalAssets.toString()) /
+                            (parseFloat(user.rechargeAmount.toString()) * 2)) *
                             100,
                         )
                       : 0}%
                   </span>
                 </div>
-                <div className="text-xs text-gray-500 mb-1">
-                  Today's earnings: ${user?.todayEarnings ? parseFloat(user.todayEarnings.toString()).toFixed(2) : '0.00'} / Expected: ${user?.rechargeAmount ? (parseFloat(user.rechargeAmount.toString()) * 0.015).toFixed(2) : '0.00'} (1.5% daily)
-                </div>
-                <div className="text-xs text-gray-500 mb-1">
-                  Withdrawal limit: ${user?.rechargeAmount ? (parseFloat(user.rechargeAmount.toString()) * 3).toFixed(2) : '0.00'} (300% of deposits)
-                </div>
                 <Progress
                   value={
-                    user?.todayEarnings && user?.rechargeAmount
+                    user?.totalAssets && user?.rechargeAmount
                       ? Math.min(
                           100,
-                          (parseFloat(user.todayEarnings.toString()) /
-                            (parseFloat(user.rechargeAmount.toString()) * 0.015)) *
+                          (parseFloat(user.totalAssets.toString()) /
+                            (parseFloat(user.rechargeAmount.toString()) * 2)) *
                             100,
                         )
                       : 0

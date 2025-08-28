@@ -46,7 +46,7 @@ type RegisterData = {
   telegram?: string;
   password: string;
   securityPassword: string;
-  inviteCode: string;
+  inviteCode?: string;
 };
 
 type AuthContextType = {

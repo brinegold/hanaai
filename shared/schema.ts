@@ -62,18 +62,6 @@ export const users = pgTable("users", {
   withdrawableAmount: numeric("withdrawable_amount", { precision: 10, scale: 2 })
     .default("0")
     .notNull(),
-  directDepositAmount: numeric("direct_deposit_amount", { precision: 10, scale: 2 })
-    .default("0")
-    .notNull(),
-  totalWithdrawnFromDeposits: numeric("total_withdrawn_from_deposits", { precision: 10, scale: 2 })
-    .default("0")
-    .notNull(),
-  referralBonuses: numeric("referral_bonuses", { precision: 10, scale: 2 })
-    .default("0")
-    .notNull(),
-  rankingBonuses: numeric("ranking_bonuses", { precision: 10, scale: 2 })
-    .default("0")
-    .notNull(),
   lastInvestmentDate: timestamp("last_investment_date"),
   referrerId: integer("referrer_id"),
   resetToken: text("reset_token"),
@@ -222,7 +210,7 @@ export const insertUserSchema = createInsertSchema(users)
     username: z.string().min(3).max(50),
     password: z.string().min(6),
     securityPassword: z.string().min(6),
-    inviteCode: z.string().min(6).max(10),
+    inviteCode: z.string().min(6).max(10).optional(),
   });
 
 export const insertReferralSchema = createInsertSchema(referrals).omit({

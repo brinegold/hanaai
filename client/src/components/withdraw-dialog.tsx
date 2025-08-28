@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +31,6 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [withdrawStatus, setWithdrawStatus] = useState<"idle" | "processing" | "completed" | "failed">("idle");
 
-
   // Calculate available balance and fees
   const availableBalance = user ? parseFloat(user.withdrawableAmount?.toString() || "0") : 0;
   const withdrawalFee = 0.1; // 10% fee
@@ -53,7 +52,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
     if (amountNum < 1) {
       toast({
         title: "Amount too small",
-        description: "Minimum withdrawal amount is 1 USDT",
+        description: "Minimum withdrawal amount is 5 USDT",
         variant: "destructive",
       });
       return;
@@ -110,9 +109,8 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
         description: `${data.netAmount} USDT sent to your wallet. Transaction: ${data.txHash}`,
       });
 
-      // Invalidate queries to refresh user balance and account data
+      // Invalidate queries to refresh user balance
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/account"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
 
       // Close dialog after 3 seconds
@@ -170,16 +168,8 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
             <h3 className="text-sm font-medium text-gray-800 mb-3">Withdrawal Information</h3>
             <div className="space-y-2 text-xs text-gray-600">
               <div className="flex justify-between">
-                <span>Total Withdrawable:</span>
+                <span>Withdrawables:</span>
                 <span className="font-medium text-green-600 text-sm">${availableBalance.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Trading Profits (300% limit):</span>
-                <span className="font-medium">${Math.max(0, (user ? parseFloat(user.rechargeAmount?.toString() || "0") * 3 - parseFloat(user.totalWithdrawnFromDeposits?.toString() || "0") : 0)).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Referral & Ranking Bonuses:</span>
-                <span className="font-medium">${((user ? parseFloat(user.referralBonuses?.toString() || "0") + parseFloat(user.rankingBonuses?.toString() || "0") : 0)).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Withdrawal Fee:</span>
@@ -193,11 +183,10 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
                 <span>Processing:</span>
                 <span className="font-medium text-green-600">Instant</span>
               </div>
-            </div>
-            <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded">
-              <p className="text-xs text-blue-800">
-                <strong>Note:</strong> Trading profits are limited to 300% of your direct deposits. Referral and ranking bonuses have no withdrawal limits.
-              </p>
+              <div className="flex justify-between">
+                <span>Gas Fee:</span>
+                <span className="font-medium text-red-600">$1</span>
+              </div>
             </div>
           </div>
 
@@ -220,7 +209,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
               type="number"
               min="1"
               step="0.01"
-              placeholder="Minimum 1 USDT"
+              placeholder="Minimum 5 USDT"
               className="bg-white border-gray-200 text-gray-900"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}

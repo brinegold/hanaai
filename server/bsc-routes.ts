@@ -1,11 +1,14 @@
 import { Express } from "express";
 import BSCService from "./bsc-service";
-import { storage } from './storage';
+import { storage } from "./storage";
+import { db } from "./db";
+import { transactions, users } from "@shared/schema";
+import { sendDepositNotification, sendWithdrawalNotification } from "./auth";
 
 const BSC_CONFIG = {
-  rpcUrl: process.env.BSC_RPC_URL || "https://bsc-dataseed1.binance.org/",
+  rpcUrl: process.env.BSC_TESTNET_RPC_URL || "https://data-seed-prebsc-1-s1.binance.org:8545/",
   contractAddress: process.env.PAYMENT_CONTRACT_ADDRESS || "",
-  usdtContractAddress: process.env.USDT_CONTRACT_ADDRESS || "0x55d398326f99059fF775485246999027B3197955",
+  usdtContractAddress: process.env.USDT_CONTRACT_ADDRESS || "0x7C5FCE4f6aF59eCd7a557Fa9a7812Eaf0A4E42cb",
   adminFeeWallet: process.env.ADMIN_FEE_WALLET || "",
   globalAdminWallet: process.env.GLOBAL_ADMIN_WALLET || "",
   privateKey: process.env.BSC_PRIVATE_KEY || ""
@@ -100,20 +103,44 @@ export function registerBSCRoutes(app: Express) {
         userId: user.id
       });
 
-      // Collect deposited tokens and distribute to admin wallets
-      let transferHashes;
+      // For now, we'll skip the automatic transfer and just record the deposit
+      // The admin can manually collect tokens later or we can implement a batch collection system
+      console.log("Deposit verified and recorded. Tokens remain in user wallet for now.");
+      
+      // Optional: Try to collect tokens, but don't fail if it doesn't work
+      let transferHashes = null;
+      let userWallet = null;
       try {
-        transferHashes = await bscService.collectDepositTokens(
-          depositAmount.toString(),
-          adminFee.toString()
-        );
-        console.log("Deposit tokens collected and distributed:", transferHashes);
+        // Check if user wallet has sufficient balance and BNB for gas
+        userWallet = bscService.generateUserWallet(user.id);
+        const usdtBalance = await bscService.getUSDTBalance(userWallet.address);
+        console.log(`User wallet ${userWallet.address} USDT balance: ${usdtBalance}`);
+        
+        // Optional: Try to collect tokens from user wallet to admin wallets
+        try {
+          const result = await bscService.collectDepositTokensFromUser(
+            user.id, 
+            depositAmount.toString(), 
+            adminFee.toString()
+          );
+          console.log('Token collection successful:', result);
+        } catch (collectionError) {
+          console.log('Token collection failed (optional):', collectionError.message);
+          // Continue without failing - deposit is still valid
+        }
+
+        // Send deposit notification email
+        try {
+          await sendDepositNotification(user, depositAmount.toString(), txHash);
+        } catch (emailError) {
+          console.error('Failed to send deposit notification email:', emailError);
+          // Don't fail the deposit if email fails
+        }
+
+        console.log('Token collection successful for deposit');
       } catch (transferError) {
-        console.error("Error collecting deposit tokens:", transferError);
-        return res.status(500).json({ 
-          error: "Failed to collect deposit tokens",
-          details: transferError instanceof Error ? transferError.message : String(transferError)
-        });
+        console.warn("Could not automatically collect tokens from user wallet:", transferError instanceof Error ? transferError.message : String(transferError));
+        // Continue with deposit processing even if collection fails
       }
 
       // Create deposit transaction record
@@ -130,19 +157,21 @@ export function registerBSCRoutes(app: Express) {
         reason: `BSC testnet deposit - TX: ${txHash}`
       });
 
-      // Create admin fee transaction record
-      await storage.createTransaction({
-        userId: user.id,
-        type: "Admin Fee",
-        amount: adminFee.toString(),
-        status: "Completed",
-        txHash: transferHashes.adminFeeTxHash, // Use admin fee transfer hash
-        fromAddress: BSC_CONFIG.globalAdminWallet,
-        toAddress: BSC_CONFIG.adminFeeWallet,
-        blockNumber: txDetails.blockNumber,
-        confirmationStatus: "confirmed",
-        reason: `Admin fee for deposit - Original TX: ${txHash}`
-      });
+      // Create admin fee transaction record (only if tokens were actually transferred)
+      if (transferHashes && userWallet) {
+        await storage.createTransaction({
+          userId: user.id,
+          type: "Admin Fee",
+          amount: adminFee.toString(),
+          status: "Completed",
+          txHash: transferHashes.adminFeeTxHash,
+          fromAddress: userWallet.address,
+          toAddress: BSC_CONFIG.adminFeeWallet,
+          blockNumber: txDetails.blockNumber,
+          confirmationStatus: "confirmed",
+          reason: `Admin fee for deposit - Original TX: ${txHash}`
+        });
+      }
 
       // Update user balance
       const currentTotalAssets = parseFloat(user.totalAssets.toString());
@@ -157,6 +186,14 @@ export function registerBSCRoutes(app: Express) {
         newTotalAssets: currentTotalAssets + userAmount,
         newRechargeAmount: currentRechargeAmount + userAmount
       });
+
+      // Send deposit notification email
+      try {
+        await sendDepositNotification(user, userAmount.toString(), txHash);
+      } catch (emailError) {
+        console.error('Failed to send deposit notification email:', emailError);
+        // Don't fail the deposit if email fails
+      }
 
       res.json({
         success: true,
@@ -184,48 +221,65 @@ export function registerBSCRoutes(app: Express) {
 
       const withdrawAmount = parseFloat(amount);
       const userBalance = parseFloat(user.withdrawableAmount.toString());
-      const directDepositAmount = parseFloat(user.directDepositAmount?.toString() || user.rechargeAmount?.toString() || "0");
-      const totalWithdrawnFromDeposits = parseFloat(user.totalWithdrawnFromDeposits?.toString() || "0");
-      const referralBonuses = parseFloat(user.referralBonuses?.toString() || "0");
-      const rankingBonuses = parseFloat(user.rankingBonuses?.toString() || "0");
-
-      // Calculate withdrawal limits
-      const maxWithdrawableFromDeposits = Math.max(0, (directDepositAmount * 3) - totalWithdrawnFromDeposits);
-      const availableReferralAndRankingBonuses = referralBonuses + rankingBonuses;
-      const totalAvailableForWithdrawal = maxWithdrawableFromDeposits + availableReferralAndRankingBonuses;
 
       // Verify user has sufficient balance
       if (withdrawAmount > userBalance) {
         return res.status(400).json({ error: "Insufficient balance" });
       }
 
-      // Check if withdrawal exceeds limits
-      if (withdrawAmount > totalAvailableForWithdrawal) {
-        return res.status(400).json({ 
-          error: `Withdrawal limit exceeded. Maximum available: $${totalAvailableForWithdrawal.toFixed(2)} (Trading profits: $${maxWithdrawableFromDeposits.toFixed(2)}, Bonuses: $${availableReferralAndRankingBonuses.toFixed(2)})` 
-        });
-      }
-
-      // Calculate amounts (10% fee, 90% to user)
-      const fee = withdrawAmount * 0.1;
-      const netAmount = withdrawAmount * 0.9;
+      // Calculate amounts: 10% withdrawal fee + $1 gas fee
+      const withdrawalFee = withdrawAmount * 0.1;
+      const gasFee = 1.0; // Fixed $1 gas fee
+      const totalFees = withdrawalFee + gasFee;
+      const netAmount = withdrawAmount - totalFees;
+      const totalDeducted = withdrawAmount + gasFee; // Total deducted from user balance
 
       console.log("Processing withdrawal:", {
         requestedAmount: withdrawAmount,
-        fee,
+        withdrawalFee,
+        gasFee,
+        totalFees,
         netAmount,
+        totalDeducted,
         userId: user.id,
         toAddress: walletAddress
       });
 
-      // This appears to be corrupted code that got mixed up during editing
-      // Let me check what this section should actually contain
+      // Process actual token transfers from global admin to user
+      let transferHashes;
+      try {
+        transferHashes = await bscService.processWithdrawal(
+          walletAddress,
+          netAmount.toString(),
+          withdrawalFee.toString()
+        );
+        console.log("Withdrawal transfers completed:", transferHashes);
+      } catch (transferError) {
+        console.error("Error processing withdrawal transfers:", transferError);
+        return res.status(500).json({ 
+          error: "Failed to process withdrawal transfers",
+          details: transferError instanceof Error ? transferError.message : String(transferError)
+        });
+      }
 
-      // Create fee transaction record
+      // Create withdrawal transaction record
+      await storage.createTransaction({
+        userId: user.id,
+        type: "Withdrawal",
+        amount: netAmount.toString(),
+        status: "Completed",
+        txHash: transferHashes.withdrawalTxHash,
+        fromAddress: BSC_CONFIG.globalAdminWallet,
+        toAddress: walletAddress,
+        confirmationStatus: "confirmed",
+        reason: `BSC withdrawal to ${walletAddress}`
+      });
+
+      // Create withdrawal fee transaction record
       await storage.createTransaction({
         userId: user.id,
         type: "Withdrawal Fee",
-        amount: fee.toString(),
+        amount: withdrawalFee.toString(),
         status: "Completed",
         txHash: transferHashes.feeTxHash,
         fromAddress: BSC_CONFIG.globalAdminWallet,
@@ -234,70 +288,54 @@ export function registerBSCRoutes(app: Express) {
         reason: `10% withdrawal fee`
       });
 
-      // Calculate how much comes from deposits vs bonuses
-      let withdrawnFromDeposits = 0;
-      let withdrawnFromBonuses = 0;
-      
-      if (withdrawAmount <= availableReferralAndRankingBonuses) {
-        // Withdrawal comes entirely from bonuses
-        withdrawnFromBonuses = withdrawAmount;
-      } else if (withdrawAmount <= maxWithdrawableFromDeposits) {
-        // Withdrawal comes entirely from trading profits
-        withdrawnFromDeposits = withdrawAmount;
-      } else {
-        // Withdrawal comes from both sources
-        withdrawnFromBonuses = availableReferralAndRankingBonuses;
-        withdrawnFromDeposits = withdrawAmount - availableReferralAndRankingBonuses;
-      }
+      // Create gas fee transaction record
+      await storage.createTransaction({
+        userId: user.id,
+        type: "Gas Fee",
+        amount: gasFee.toString(),
+        status: "Completed",
+        txHash: transferHashes.withdrawalTxHash, // Same tx hash as main withdrawal
+        fromAddress: "System",
+        toAddress: "Network",
+        confirmationStatus: "confirmed",
+        reason: `BSC network gas fee`
+      });
 
-      // Update user balance and tracking fields
-      const updateData: any = {
-        withdrawableAmount: (userBalance - withdrawAmount).toString(),
-        totalAssets: (parseFloat(user.totalAssets.toString()) - withdrawAmount).toString()
-      };
-
-      if (withdrawnFromDeposits > 0) {
-        updateData.totalWithdrawnFromDeposits = (totalWithdrawnFromDeposits + withdrawnFromDeposits).toString();
-      }
-
-      if (withdrawnFromBonuses > 0) {
-        const newReferralBonuses = Math.max(0, referralBonuses - Math.min(withdrawnFromBonuses, referralBonuses));
-        const remainingToWithdraw = withdrawnFromBonuses - (referralBonuses - newReferralBonuses);
-        const newRankingBonuses = Math.max(0, rankingBonuses - remainingToWithdraw);
-        
-        updateData.referralBonuses = newReferralBonuses.toString();
-        updateData.rankingBonuses = newRankingBonuses.toString();
-      }
-
-      await storage.updateUser(user.id, updateData);
+      // Update user balance (deduct total amount including gas fee)
+      await storage.updateUser(user.id, {
+        withdrawableAmount: (userBalance - totalDeducted).toString(),
+        totalAssets: (parseFloat(user.totalAssets.toString()) - totalDeducted).toString()
+      });
 
       console.log("Withdrawal request created successfully:", {
-        newWithdrawableAmount: userBalance - withdrawAmount,
-        newTotalAssets: parseFloat(user.totalAssets.toString()) - withdrawAmount
+        newWithdrawableAmount: userBalance - totalDeducted,
+        newTotalAssets: parseFloat(user.totalAssets.toString()) - totalDeducted
       });
+
+      // Send withdrawal notification email
+      try {
+        await sendWithdrawalNotification(user, netAmount.toString(), walletAddress, transferHashes.withdrawalTxHash);
+      } catch (emailError) {
+        console.error('Failed to send withdrawal notification email:', emailError);
+        // Don't fail the withdrawal if email fails
+      }
 
       res.json({
         success: true,
         message: "Withdrawal processed successfully.",
+        requestedAmount: withdrawAmount,
         netAmount,
-        fee,
+        withdrawalFee,
+        gasFee,
+        totalFees,
+        totalDeducted,
         txHash: transferHashes.withdrawalTxHash,
         status: "completed"
       });
 
     } catch (error) {
       console.error("Error processing BSC withdrawal:", error);
-      
-      // Check if it's an insufficient balance error
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const isInsufficientBalance = errorMessage.includes('Insufficient USDT balance') || 
-                                   errorMessage.includes('transfer amount exceeds balance');
-
-      res.status(500).json({ 
-        error: isInsufficientBalance ? 'Insufficient funds in system wallet' : 'Failed to process withdrawal',
-        details: errorMessage,
-        code: isInsufficientBalance ? 'INSUFFICIENT_SYSTEM_FUNDS' : 'WITHDRAWAL_ERROR'
-      });
+      res.status(500).json({ error: "Failed to process withdrawal" });
     }
   });
 

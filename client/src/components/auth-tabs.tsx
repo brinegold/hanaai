@@ -52,7 +52,10 @@ const registerSchema = z.object({
   securityPassword: z
     .string()
     .min(6, "Security password must be at least 6 characters"),
-  inviteCode: z.string().min(6, "Invite code must be at least 6 characters"),
+  inviteCode: z.preprocess(
+    (val) => val === "" ? undefined : val,
+    z.string().min(6).optional()
+  ),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -559,7 +562,7 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
                       <div className="relative">
                         <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
                         <Input
-                          placeholder="Invite Code"
+                          placeholder="Invite Code (Optional)"
                           className="bg-white border-[#333333] pl-10 py-6 text-black focus:ring-[#4F9CF9]"
                           {...field}
                         />
@@ -568,7 +571,7 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
                     <p className="text-xs text-gray-500 mt-1">
                       {welcomeCode
                         ? `Using invite code: ${welcomeCode}`
-                        : "Enter the invite code from your referrer"}
+                        : "Enter invite code (optional) - Leave empty to use default referral"}
                     </p>
                     <FormMessage />
                   </FormItem>

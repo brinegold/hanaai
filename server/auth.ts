@@ -9,21 +9,26 @@ import { User as SelectUser, insertUserSchema } from "@shared/schema";
 import { randomUUID } from "crypto";
 import nodemailer from "nodemailer";
 
+// Email notification functions
+async function createEmailTransporter() {
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: Boolean(true),
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASSWORD,
+    },
+    tls: {
+      rejectUnauthorized: false,
+    },
+  });
+}
+
 async function sendWelcomeEmail(user) {
   try {
     // Create nodemailer transporter with SMTP - reusing the same configuration as forgot-password
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
-      secure: Boolean(true), // true for 465, false for other ports
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
-      },
-      tls: {
-        rejectUnauthorized: false,
-      },
-    });
+    const transporter = await createEmailTransporter();
 
     // Send welcome email
     await transporter.sendMail({
@@ -157,6 +162,96 @@ async function createMultiTierReferrals(directReferrerId: number, newUserId: num
   }
 }
 
+async function sendDepositNotification(user, amount, txHash) {
+  try {
+    const transporter = await createEmailTransporter();
+    await transporter.sendMail({
+      from: process.env.SMTP_USER,
+      to: user.email,
+      subject: "Deposit Successful - Nebrix AI Trading",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <img src="https://raw.githubusercontent.com/areebasiddiqi/nebrix/refs/heads/main/public/logo.jpg" alt="Nebrix" style="max-width: 200px; height: auto;" />
+          </div>
+          <h1 style="color: #27ae60; text-align: center;">Deposit Successful!</h1>
+          <p style="color: #333; font-size: 16px;">Hello <strong>${user.username || user.email}</strong>,</p>
+          <p style="color: #333; font-size: 16px;">Your deposit has been successfully processed:</p>
+          <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 5px 0;"><strong>Amount:</strong> $${amount} USDT</p>
+            <p style="margin: 5px 0;"><strong>Transaction Hash:</strong> ${txHash}</p>
+            <p style="margin: 5px 0;"><strong>Status:</strong> Completed</p>
+          </div>
+          <p style="color: #333; font-size: 16px;">Your funds are now available in your account and ready for trading.</p>
+        </div>
+      `
+    });
+  } catch (error) {
+    console.error('Error sending deposit notification:', error);
+  }
+}
+
+async function sendReferralNotification(referrer, newUser) {
+  try {
+    const transporter = await createEmailTransporter();
+    await transporter.sendMail({
+      from: process.env.SMTP_USER,
+      to: referrer.email,
+      subject: "New Referral Joined - Nebrix AI Trading",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <img src="https://raw.githubusercontent.com/areebasiddiqi/nebrix/refs/heads/main/public/logo.jpg" alt="Nebrix" style="max-width: 200px; height: auto;" />
+          </div>
+          <h1 style="color: #3498db; text-align: center;">New Referral Joined!</h1>
+          <p style="color: #333; font-size: 16px;">Hello <strong>${referrer.username || referrer.email}</strong>,</p>
+          <p style="color: #333; font-size: 16px;">Great news! Someone has joined using your referral link:</p>
+          <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 5px 0;"><strong>New User:</strong> ${newUser.username || newUser.email}</p>
+            <p style="margin: 5px 0;"><strong>Joined:</strong> ${new Date().toLocaleDateString()}</p>
+          </div>
+          <p style="color: #333; font-size: 16px;">You'll earn commission when they make their first deposit. Keep sharing your referral link to earn more!</p>
+        </div>
+      `
+    });
+  } catch (error) {
+    console.error('Error sending referral notification:', error);
+  }
+}
+
+async function sendWithdrawalNotification(user, amount, address, txHash) {
+  try {
+    const transporter = await createEmailTransporter();
+    await transporter.sendMail({
+      from: process.env.SMTP_USER,
+      to: user.email,
+      subject: "Withdrawal Processed - Nebrix AI Trading",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <img src="https://raw.githubusercontent.com/areebasiddiqi/nebrix/refs/heads/main/public/logo.jpg" alt="Nebrix" style="max-width: 200px; height: auto;" />
+          </div>
+          <h1 style="color: #e67e22; text-align: center;">Withdrawal Processed!</h1>
+          <p style="color: #333; font-size: 16px;">Hello <strong>${user.username || user.email}</strong>,</p>
+          <p style="color: #333; font-size: 16px;">Your withdrawal has been successfully processed:</p>
+          <div style="background-color: #fef9e7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 5px 0;"><strong>Amount:</strong> $${amount} USDT</p>
+            <p style="margin: 5px 0;"><strong>Destination:</strong> ${address}</p>
+            <p style="margin: 5px 0;"><strong>Transaction Hash:</strong> ${txHash}</p>
+            <p style="margin: 5px 0;"><strong>Status:</strong> Completed</p>
+          </div>
+          <p style="color: #333; font-size: 16px;">Your funds have been sent to your specified wallet address.</p>
+        </div>
+      `
+    });
+  } catch (error) {
+    console.error('Error sending withdrawal notification:', error);
+  }
+}
+
+// Export email notification functions for use in other modules
+export { sendDepositNotification, sendReferralNotification, sendWithdrawalNotification };
+
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || randomUUID(),
@@ -271,8 +366,20 @@ export function setupAuth(app: Express) {
     try {
       const userData = insertUserSchema.parse(req.body);
 
+      // If no invite code provided, use default "NebrixAi" referral code
+      let inviteCodeToUse = userData.inviteCode;
+      if (!inviteCodeToUse) {
+        // Find NebrixAi user's invite code
+        const nebrixUser = await storage.getUserByUsername("NebrixAi");
+        if (nebrixUser && nebrixUser.referralCode) {
+          inviteCodeToUse = nebrixUser.referralCode;
+        } else {
+          return res.status(400).json({ message: "Default referral system not available" });
+        }
+      }
+
       // Validate invite code
-      const inviteCode = await storage.getInviteCode(userData.inviteCode);
+      const inviteCode = await storage.getInviteCode(inviteCodeToUse);
       if (!inviteCode) {
         return res.status(400).json({ message: "Invalid invite code" });
       }
@@ -327,7 +434,7 @@ export function setupAuth(app: Express) {
         password: hashedPassword,
         securityPassword: hashedSecurityPassword,
         referralCode: newInviteCode,
-        inviteCode: userData.inviteCode, // Store the invite code used
+        inviteCode: inviteCodeToUse, // Store the invite code used (could be default NebrixAi)
       };
 
       // Only add referrerId if it exists and is not null
@@ -346,11 +453,17 @@ export function setupAuth(app: Express) {
       });
 
       // Validate the invite code is valid
-      await storage.useInviteCode(userData.inviteCode, user.id);
+      await storage.useInviteCode(inviteCodeToUse, user.id);
 
       // Add multi-tier referral relationships if the invite code has a creator
       if (inviteCode.createdById && inviteCode.createdById !== null) {
         await createMultiTierReferrals(inviteCode.createdById, user.id, user.username);
+        
+        // Send referral notification to the referrer
+        const referrer = await storage.getUserById(inviteCode.createdById);
+        if (referrer) {
+          await sendReferralNotification(referrer, user);
+        }
       }
 
       // Login the user

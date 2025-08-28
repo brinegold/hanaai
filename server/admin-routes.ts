@@ -246,7 +246,7 @@ export function registerAdminRoutes(app: Express) {
                 const commissionAmount = depositAmount * commissionRate;
 
                 if (commissionAmount > 0) {
-                  // Update referrer's assets with commission - add to withdrawable amount and referral bonuses
+                  // Update referrer's assets with commission - only add to withdrawable amount
                   await storage.updateUser(referrer.id, {
                     commissionAssets: (
                       parseFloat(referrer.commissionAssets.toString()) +
@@ -258,10 +258,6 @@ export function registerAdminRoutes(app: Express) {
                     ).toString(),
                     withdrawableAmount: (
                       parseFloat(referrer.withdrawableAmount.toString()) +
-                      commissionAmount
-                    ).toString(),
-                    referralBonuses: (
-                      parseFloat(referrer.referralBonuses?.toString() || "0") +
                       commissionAmount
                     ).toString(),
                   });

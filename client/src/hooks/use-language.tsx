@@ -44,7 +44,7 @@ const translations: Record<string, Record<string, string>> = {
     'dashboard.deposit': 'Deposit',
     'dashboard.withdraw': 'Withdraw',
     'dashboard.aiTrading': 'AI Trading',
-    'dashboard.marketBanner': 'Market trading is in USDT, and the minimum withdrawal amount is 1 USDT. The withdrawal fee is 10%. Minimum Deposit is $5, Daily Returns is 1.5% and Withdrawal is available every day. Please note Trading Signals is once Per Day',
+    'dashboard.marketBanner': 'Market trading is in USDT, and the minimum withdrawal amount is 5 USDT. The withdrawal fee is 10%. Minimum Deposit is $5, Daily Returns is 1.5% and Withdrawal is available every day. Please note Trading Signals is once Per Day',
     
     // Invite Page
     'invite.title': 'Invite Friends',
@@ -193,7 +193,7 @@ const translations: Record<string, Record<string, string>> = {
     'dashboard.deposit': 'Dépôt',
     'dashboard.withdraw': 'Retirer',
     'dashboard.aiTrading': 'Trading IA',
-    'dashboard.marketBanner': 'Le trading de marché est en USDT, et le montant minimum de retrait est 1 USDT. Les frais de retrait sont de 10%. Le dépôt minimum est de $5, les rendements quotidiens sont de 1,5% et le retrait est disponible tous les jours. Veuillez noter que les signaux de trading sont une fois par jour',
+    'dashboard.marketBanner': 'Le trading de marché est en USDT, et le montant minimum de retrait est 5 USDT. Les frais de retrait sont de 10%. Le dépôt minimum est de $5, les rendements quotidiens sont de 1,5% et le retrait est disponible tous les jours. Veuillez noter que les signaux de trading sont une fois par jour',
     
     // Invite Page
     'invite.title': 'Inviter des Amis',
