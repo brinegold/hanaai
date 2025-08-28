@@ -231,7 +231,7 @@ export function registerBSCRoutes(app: Express) {
       const withdrawalFee = withdrawAmount * 0.1;
       const gasFee = 1.0; // Fixed $1 gas fee
       const totalFees = withdrawalFee + gasFee;
-      const netAmount = withdrawAmount - totalFees;
+      const netAmount = withdrawAmount - withdrawalFee; // Only deduct withdrawal fee from amount sent
       const totalDeducted = withdrawAmount + gasFee; // Total deducted from user balance
 
       console.log("Processing withdrawal:", {

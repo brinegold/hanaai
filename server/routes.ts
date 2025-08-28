@@ -1304,7 +1304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Referral bonuses can be withdrawn freely without restrictions
 
         // Check for minimum withdrawal
-        if (transactionData.amount < 5) {
+        if (transactionData.amount < 1) {
           return res.status(400).json({
             message: "Minimum withdrawal amount is $5",
           });

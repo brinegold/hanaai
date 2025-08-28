@@ -216,7 +216,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
             />
             {amount && (
               <div className="text-xs text-gray-500 flex justify-between">
-                <span>Fee (10%): {(parseFloat(amount) * 0.1).toFixed(2)} USDT</span>
+                <span>Fee (10%)+ gas fee: {(parseFloat(amount) * 0.1).toFixed(2)} USDT</span>
                 <span>You'll receive: {(parseFloat(amount) * 0.9).toFixed(2)} USDT</span>
               </div>
             )}
