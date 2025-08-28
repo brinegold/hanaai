@@ -6,7 +6,7 @@ import { transactions, users } from "@shared/schema";
 import { sendDepositNotification, sendWithdrawalNotification } from "./auth";
 
 const BSC_CONFIG = {
-  rpcUrl: process.env.BSC_TESTNET_RPC_URL || "https://data-seed-prebsc-1-s1.binance.org:8545/",
+  rpcUrl: process.env.BSC_TESTNET_RPC_URL || "https://bsc-dataseed1.binance.org/",
   contractAddress: process.env.PAYMENT_CONTRACT_ADDRESS || "",
   usdtContractAddress: process.env.USDT_CONTRACT_ADDRESS || "0x7C5FCE4f6aF59eCd7a557Fa9a7812Eaf0A4E42cb",
   adminFeeWallet: process.env.ADMIN_FEE_WALLET || "",
