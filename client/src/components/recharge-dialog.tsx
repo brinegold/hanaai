@@ -254,6 +254,23 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
               />
+              
+              {/* Fee Calculation Display */}
+              {amount && parseFloat(amount) > 0 && (
+                <div className="bg-red-50 p-3 rounded-lg border border-red-200">
+                  <p className="text-red-600 font-medium text-sm">
+                    Deposit Amount To Send = Fee(5%) + Deposit: {
+                      (() => {
+                        const depositAmount = parseFloat(amount);
+                        const fee = depositAmount * 0.05;
+                        const totalToSend = fee + depositAmount;
+                        return `${fee.toFixed(2)} + ${depositAmount.toFixed(2)} = ${totalToSend.toFixed(2)} USDT`;
+                      })()
+                    }
+                  </p>
+                </div>
+              )}
+              
               <p className="text-xs text-gray-500">
                 Enter the amount you're depositing to your unique wallet address
               </p>

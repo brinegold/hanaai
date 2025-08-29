@@ -227,11 +227,11 @@ export function registerBSCRoutes(app: Express) {
         return res.status(400).json({ error: "Insufficient balance" });
       }
 
-      // Calculate amounts: 10% withdrawal fee only (gas fee is separate system cost)
+      // Calculate amounts: 10% withdrawal fee + $1 gas fee deducted from requested amount
+      const gasFee = 1.0; // Fixed $1 gas fee (deducted from requested amount)
       const withdrawalFee = withdrawAmount * 0.1;
-      const gasFee = 1.0; // Fixed $1 gas fee (deducted separately from balance)
-      const netAmount = withdrawAmount - withdrawalFee; // Only deduct withdrawal fee from requested amount
-      const totalDeducted = withdrawAmount + gasFee; // Total deducted from user balance (requested + gas)
+      const netAmount = withdrawAmount - withdrawalFee - gasFee; // Deduct both fees from requested amount
+      const totalDeducted = withdrawAmount; // Only deduct requested amount from user balance
 
       console.log("Processing withdrawal:", {
         requestedAmount: withdrawAmount,
@@ -299,7 +299,7 @@ export function registerBSCRoutes(app: Express) {
         reason: `BSC network gas fee`
       });
 
-      // Update user balance (deduct total amount including gas fee)
+      // Update user balance (deduct only requested amount)
       await storage.updateUser(user.id, {
         withdrawableAmount: (userBalance - totalDeducted).toString(),
         totalAssets: (parseFloat(user.totalAssets.toString()) - totalDeducted).toString()
