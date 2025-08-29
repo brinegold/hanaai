@@ -117,7 +117,7 @@ const ProfilePage: React.FC = () => {
 
   const handleAboutClick = () => {
     // Open the about.pdf file
-    window.open("/src/about.pdf", "_blank");
+    window.open("https://raw.githubusercontent.com/areebasiddiqi/nebrix/refs/heads/main/client/src/about.pdf", "_blank");
   };
 
   // Handler for Quantization Tutorial click

@@ -297,11 +297,6 @@ const DashboardPage: React.FC = () => {
           label={t('dashboard.withdraw')}
           onClick={handleWithdrawClick}
         />
-        <FeatureButton
-          icon={Wallet}
-          label="BSC Wallet"
-          onClick={() => navigate("/bsc")}
-        />
         <FeatureButton icon={Users} label={t('nav.invite')} onClick={handleTeamClick} />
 
         {/* Second Row */}
