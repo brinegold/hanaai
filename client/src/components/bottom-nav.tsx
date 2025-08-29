@@ -39,17 +39,7 @@ export default function BottomNav() {
           </div>
         </Link>
 
-        <Link href="/bsc">
-          <div
-            className={cn(
-              "flex cursor-pointer flex-col items-center justify-center",
-              isActive("/bsc") && "text-primary",
-            )}
-          >
-            <Wallet className="h-6 w-6" />
-            <span className="text-xs">BSC</span>
-          </div>
-        </Link>
+      
 
         <Link href="/invite">
           <div
