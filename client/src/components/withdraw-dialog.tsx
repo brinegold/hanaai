@@ -226,7 +226,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
                     <span className="font-medium">1.00 USDT</span>
                   </div>
                   <div className="flex justify-between border-t border-red-200 pt-1">
-                    <span className="font-medium">You'll receive:</span>
+                    <span className="font-medium text-green-600">You'll receive:</span>
                     <span className="font-bold">{Math.max(0, parseFloat(amount) - (parseFloat(amount) * 0.1) - 1).toFixed(2)} USDT</span>
                   </div>
                   <div className="flex justify-between">
