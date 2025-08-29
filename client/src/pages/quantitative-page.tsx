@@ -533,37 +533,55 @@ const QuantitativePage: React.FC = () => {
                   $5 - $500,000
                 </span>
               </div>
-              <h3 className="text-black font-medium text-lg mb-1">AI Trading System</h3>
-              <div className="space-y-1">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-400">Progress</span>
-                  <span className="text-[#4F9CF9]">
-                    {user?.totalAssets && user?.rechargeAmount
-                      ? Math.min(
-                          100,
-                          (parseFloat(user.totalAssets.toString()) /
-                            (parseFloat(user.rechargeAmount.toString()) * 2)) *
-                            100,
-                        )
-                      : 0}%
-                  </span>
-                </div>
-                <Progress
-                  value={
-                    user?.totalAssets && user?.rechargeAmount
-                      ? Math.min(
-                          100,
-                          (parseFloat(user.totalAssets.toString()) /
-                            (parseFloat(user.rechargeAmount.toString()) * 2)) *
-                            100,
-                        )
-                      : 0
-                  }
-                  className="h-1.5 bg-[#333333]"
-                  style={
-                    { "--progress-foreground": "#4F9CF9" } as React.CSSProperties
-                  }
-                />
+              <h3 className="text-black font-medium text-lg mb-3">AI Trading System</h3>
+              
+              {/* Enhanced Progress Section */}
+              <div className="space-y-3">
+                {(() => {
+                  // Calculate daily percentage gain based on direct deposits used for trading
+                  const directDeposits = user?.rechargeAmount ? parseFloat(user.rechargeAmount.toString()) : 0;
+                  const todayEarnings = user?.todayEarnings ? parseFloat(user.todayEarnings.toString()) : 0;
+                  const expectedDailyReturn = directDeposits * 0.015; // 1.5% daily
+                  const dailyProgressPercentage = expectedDailyReturn > 0 ? Math.min(100, (todayEarnings / expectedDailyReturn) * 100) : 0;
+                  
+                  // Calculate 300% withdrawal limit for trading capital only
+                  const maxTradingWithdrawal = directDeposits * 3; // 300% of deposits
+                  const tradingEarnings = user?.totalAssets ? parseFloat(user.totalAssets.toString()) - directDeposits : 0;
+                  const tradingWithdrawalProgress = maxTradingWithdrawal > 0 ? Math.min(100, (tradingEarnings / maxTradingWithdrawal) * 100) : 0;
+                  
+                  return (
+                    <>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-500">Daily Trading Progress</span>
+                        <span className="text-[#4F9CF9] font-medium">{dailyProgressPercentage.toFixed(0)}%</span>
+                      </div>
+                      
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Today's earnings:</span>
+                          <span className="text-black font-medium">
+                            ${todayEarnings.toFixed(2)} / Expected: ${expectedDailyReturn.toFixed(2)} (1.5% daily)
+                          </span>
+                        </div>
+                        
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Withdrawal limit:</span>
+                          <span className="text-black font-medium">
+                            ${Math.min(tradingEarnings, maxTradingWithdrawal - Math.max(0, tradingEarnings - maxTradingWithdrawal)).toFixed(2)} (300% of deposits)
+                          </span>
+                        </div>
+                      </div>
+
+                      <Progress
+                        value={tradingWithdrawalProgress}
+                        className="h-2 bg-gray-200"
+                        style={
+                          { "--progress-foreground": tradingWithdrawalProgress >= 100 ? "#ef4444" : "#4F9CF9" } as React.CSSProperties
+                        }
+                      />
+                    </>
+                  );
+                })()}
               </div>
             </CardContent>
           </Card>

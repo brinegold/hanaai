@@ -82,58 +82,6 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  // Add withdrawable funds to user account
-  app.post("/api/admin/users/:id/add-funds", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { amount, reason } = req.body;
-
-      if (!amount || parseFloat(amount) <= 0) {
-        return res.status(400).json({ message: "Valid amount is required" });
-      }
-
-      const user = await storage.getUser(parseInt(id));
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      const fundAmount = parseFloat(amount);
-
-      // Update user's withdrawable amount
-      await storage.updateUser(parseInt(id), {
-        withdrawableAmount: (parseFloat(user.withdrawableAmount.toString()) + fundAmount).toString(),
-        updatedAt: new Date(),
-      });
-
-      // Create transaction record for admin-added funds
-      const transaction = await storage.createTransaction({
-        userId: parseInt(id),
-        type: "Admin Credit",
-        amount: fundAmount.toString(),
-        status: "Completed",
-        reason: reason || "Admin added withdrawable funds",
-        txHash: null,
-      });
-
-      // Create notification for user
-      await storage.createNotification({
-        userId: parseInt(id),
-        type: "system",
-        message: `💰 Admin has added $${fundAmount.toLocaleString()} to your withdrawable balance. ${reason ? `Reason: ${reason}` : ''}`,
-        isRead: false,
-      });
-
-      res.json({
-        transaction,
-        message: `Successfully added $${fundAmount.toLocaleString()} to user's withdrawable balance`,
-        newWithdrawableBalance: (parseFloat(user.withdrawableAmount.toString()) + fundAmount).toString(),
-      });
-    } catch (err) {
-      console.error("Error adding withdrawable funds:", err);
-      res.status(500).json({ message: "Failed to add withdrawable funds" });
-    }
-  });
-
   // Ban user route
   app.post("/api/admin/users/:id/ban", async (req, res) => {
     try {

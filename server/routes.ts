@@ -1304,7 +1304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Referral bonuses can be withdrawn freely without restrictions
 
         // Check for minimum withdrawal
-        if (transactionData.amount < 1) {
+        if (transactionData.amount < 5) {
           return res.status(400).json({
             message: "Minimum withdrawal amount is $5",
           });
@@ -1318,13 +1318,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const totalCommissions = userTransactions
           .filter((tx) => tx.type === "Commission" && tx.status === "Completed")
           .reduce((sum, tx) => sum + parseFloat(tx.amount.toString()), 0);
+        const totalReferralBonuses = userTransactions
+          .filter((tx) => tx.type === "Referral Bonus" && tx.status === "Completed")
+          .reduce((sum, tx) => sum + parseFloat(tx.amount.toString()), 0);
+        const totalRankingBonuses = userTransactions
+          .filter((tx) => tx.type === "Ranking Bonus" && tx.status === "Completed")
+          .reduce((sum, tx) => sum + parseFloat(tx.amount.toString()), 0);
 
-        // Calculate maximum withdrawable amount (200% of deposits + all commissions)
-        const maxFromDeposits = deposits.reduce(
-          (sum, deposit) => sum + parseFloat(deposit.amount.toString()) * 2,
+        // Calculate maximum withdrawable amount (300% of deposits + all referral/ranking bonuses)
+        const totalDeposits = deposits.reduce(
+          (sum, deposit) => sum + parseFloat(deposit.amount.toString()),
           0,
         );
-        const maxWithdrawableAmount = maxFromDeposits + totalCommissions;
+        const maxFromTradingCapital = totalDeposits * 3; // 300% of deposits
+        const maxWithdrawableAmount = maxFromTradingCapital + totalCommissions + totalReferralBonuses + totalRankingBonuses;
 
         // Calculate 10% withdrawal fee
         const withdrawalFee = transactionData.amount * 0.1;
@@ -1332,7 +1339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (totalAmount > maxWithdrawableAmount) {
           return res.status(400).json({
-            message: `Maximum withdrawal amount is ${maxWithdrawableAmount.toFixed(2)} USDT (200% of deposits plus commissions)`,
+            message: `Maximum withdrawal amount is ${maxWithdrawableAmount.toFixed(2)} USDT (300% of deposits plus all referral/ranking bonuses)`,
           });
         }
 

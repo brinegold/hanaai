@@ -22,7 +22,7 @@ class BSCService {
     this.config = config;
     
     // Use BSC testnet RPC URL specifically
-    const rpcUrl = config.rpcUrl || "https://bsc-dataseed1.binance.org/";
+    const rpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/";
     console.log("BSC Service initialized with RPC:", rpcUrl);
     
     this.web3 = new Web3(rpcUrl);
@@ -45,7 +45,7 @@ class BSCService {
       const blockNumber = await this.web3.eth.getBlockNumber();
       console.log(`Connected to BSC network - Chain ID: ${chainId}, Block: ${blockNumber}`);
       
-      if (chainId !== 97n) { // BSC testnet chain ID
+      if (chainId !== BigInt(97)) { // BSC testnet chain ID
         console.warn(`Warning: Expected BSC testnet (97) but connected to chain ${chainId}`);
       }
     } catch (error) {
@@ -501,14 +501,12 @@ class BSCService {
       // Convert bigint to number for nonce handling
       const nonceNumber = Number(startingNonce);
       
-      // Calculate net amount (withdrawal amount - fee)
-      const netAmount = (parseFloat(withdrawAmount) - parseFloat(fee)).toString();
-      
-      // Transfer net amount to user wallet
+      // withdrawAmount is already the net amount after fees calculated in routes
+      // Transfer the full withdrawal amount to user wallet
       const withdrawalTxHash = await this.transferUSDT(
         adminPrivateKey,
         userWalletAddress,
-        netAmount,
+        withdrawAmount,
         nonceNumber
       );
       

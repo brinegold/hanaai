@@ -244,44 +244,9 @@ export default function AdminPage() {
                               });
                           }
                         }}
-                        className="bg-green-500 text-white px-2 py-1 rounded text-sm mr-2"
+                        className="bg-green-500 text-white px-2 py-1 rounded text-sm"
                       >
                         Add Deposit
-                      </button>
-                      <button
-                        onClick={() => {
-                          const amount = prompt("Enter withdrawable amount to add:");
-                          if (amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0) {
-                            const reason = prompt("Enter reason (optional):");
-                            apiRequest("POST", `/api/admin/users/${user.id}/add-funds`, { 
-                              amount: parseFloat(amount),
-                              reason: reason || undefined
-                            })
-                              .then(() => {
-                                queryClient.invalidateQueries({ queryKey: ["admin"] });
-                                toast({
-                                  title: "Success",
-                                  description: `$${parseFloat(amount).toLocaleString()} added to withdrawable balance`,
-                                });
-                              })
-                              .catch(() => {
-                                toast({
-                                  title: "Error",
-                                  description: "Failed to add withdrawable funds",
-                                  variant: "destructive",
-                                });
-                              });
-                          } else if (amount !== null) {
-                            toast({
-                              title: "Error",
-                              description: "Please enter a valid positive amount",
-                              variant: "destructive",
-                            });
-                          }
-                        }}
-                        className="bg-purple-500 text-white px-2 py-1 rounded text-sm mr-2"
-                      >
-                        Add Funds
                       </button>
                       {!user.isCountryRep && (
                         <button

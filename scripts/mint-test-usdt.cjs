@@ -5,7 +5,7 @@ async function main() {
   const TEST_USDT_ADDRESS = "0x7C5FCE4f6aF59eCd7a557Fa9a7812Eaf0A4E42cb";
   
   // Replace with YOUR MetaMask wallet address
-  const RECIPIENT_ADDRESS = "0xe808d79525FA7ac0287db6a9523B4680091e57f9";
+  const RECIPIENT_ADDRESS = "0x5aD0620BdD2EBc328F854f4F8126B1E663193112";
   
   // Amount to mint (1000 TUSDT with 18 decimals)
   const MINT_AMOUNT = ethers.parseEther("1000");

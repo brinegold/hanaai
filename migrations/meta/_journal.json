@@ -8,6 +8,13 @@
       "when": 1756009026843,
       "tag": "0000_steep_jazinda",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1756395755962,
+      "tag": "0001_late_rumiko_fujikawa",
+      "breakpoints": true
     }
   ]
 }
