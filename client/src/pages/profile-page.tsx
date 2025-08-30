@@ -247,7 +247,7 @@ const ProfilePage: React.FC = () => {
                   </span>
                 )}
               </div>
-              <div className="text-xs text-gray-400">Copy</div>
+              <div className="text-xs text-[#87CEEB]">Copy</div>
             </div>
           </div>
         </div>
@@ -255,25 +255,25 @@ const ProfilePage: React.FC = () => {
         {/* Assets Overview */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <div className="text-gray-400 text-sm">{t('profile.totalAssets')}</div>
+            <div className="text-black text-sm">{t('profile.totalAssets')}</div>
             <div className="text-white font-medium">
               {parseFloat(user.totalAssets.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex justify-between items-center">
-            <div className="text-gray-400 text-sm">{t('profile.profitAssets')}</div>
+            <div className="text-black text-sm">{t('profile.profitAssets')}</div>
             <div className="text-white font-medium">
               {parseFloat(user.profitAssets.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex justify-between items-center">
-            <div className="text-gray-400 text-sm">{t('profile.depositAmount')}</div>
+            <div className="text-black text-sm">{t('profile.depositAmount')}</div>
             <div className="text-white font-medium">
               {parseFloat(user.rechargeAmount.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex justify-between items-center">
-            <div className="text-gray-400 text-sm">{t('profile.withdrawable')}</div>
+            <div className="text-black text-sm">{t('profile.withdrawable')}</div>
             <div className="text-white font-medium">
               {parseFloat(user.withdrawableAmount.toString()).toFixed(2)}
             </div>
@@ -582,12 +582,12 @@ const ProfilePage: React.FC = () => {
               className={`w-10 h-10 rounded-full ${user.verificationStatus === "verified" ? "bg-green-500/20" : "bg-blue-500/20"} flex items-center justify-center`}
             >
               <ShieldCheck
-                className={`h-5 w-5 ${user.verificationStatus === "verified" ? "text-green-500" : "text-blue-500"}`}
+                className={`h-5 w-5 ${user.verificationStatus === "verified" ? "text-green-900" : "text-blue-900"}`}
               />
             </div>
             <div>
               <div className="text-white font-medium">Account Status</div>
-              <div className="text-sm text-gray-400">
+              <div className="text-sm text-black">
                 Verification required for full access
               </div>
             </div>
@@ -609,19 +609,19 @@ const ProfilePage: React.FC = () => {
         <div className="text-white font-medium">Total Revenue</div>
         <div className="grid grid-cols-3 gap-4">
           <div className="flex flex-col items-center">
-            <div className="text-gray-400 text-xs mb-1">Commission Today</div>
+            <div className="text-black text-xs mb-1">Commission Today</div>
             <div className="text-white font-medium">
               {parseFloat(user.commissionToday.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex flex-col items-center">
-            <div className="text-gray-400 text-xs mb-1">Today's Earnings</div>
+            <div className="text-black text-xs mb-1">Today's Earnings</div>
             <div className="text-white font-medium">
               {parseFloat(user.todayEarnings.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex flex-col items-center">
-            <div className="text-gray-400 text-xs mb-1">
+            <div className="text-black text-xs mb-1">
               Yesterday's Earnings
             </div>
             <div className="text-white font-medium">

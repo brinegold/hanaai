@@ -422,13 +422,13 @@ const QuantitativePage: React.FC = () => {
                 <CardTitle className="text-white text-lg">
                   Artificial Intelligence Trading
                 </CardTitle>
-                <CardDescription className="text-gray-400 text-xs">
+                <CardDescription className="text-black text-xs">
                   Automatic algorithmic trading with daily profits
                 </CardDescription>
               </div>
               <button
                 onClick={() => setShowTibankInfo(true)}
-                className="text-[#4F9CF9] text-sm hover:text-blue-400 transition-colors"
+                className="text-[#f5ef42] text-sm hover:text-yellow transition-colors"
               >
                 Welcome To Nebrix Ai Trading
               </button>
