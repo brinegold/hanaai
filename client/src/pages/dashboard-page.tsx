@@ -476,13 +476,13 @@ const DashboardPage: React.FC = () => {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="h-5 w-5 mr-2 text-green-500"
+              className="h-5 w-5 mr-2 text-green-900"
             >
               <circle cx="12" cy="12" r="10" />
               <path d="M12 6v12" />
               <path d="M8 10h8" />
             </svg>
-            <span className="text-xs text-gray-400">USDT</span>
+            <span className="text-xs text-black">USDT</span>
           </div>
           <div className="font-mono font-medium text-white text-xl">
             ${parseFloat(user?.totalAssets?.toString() || "0").toLocaleString('en-US', {
@@ -491,8 +491,8 @@ const DashboardPage: React.FC = () => {
             })}
           </div>
           <div className="text-xs flex items-center">
-            <span className="text-[#4CAF50]">+2.5%</span>
-            <span className="text-gray-400 ml-1">24h</span>
+            <span className="text-black">+2.5%</span>
+            <span className="text-black ml-1">24h</span>
           </div>
         </div>
 
@@ -508,16 +508,16 @@ const DashboardPage: React.FC = () => {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="h-5 w-5 mr-2 text-blue-500"
+              className="h-5 w-5 mr-2 text-green-900"
             >
               <path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97" />
             </svg>
-            <span className="text-xs text-gray-400">ETH</span>
+            <span className="text-xs text-black">ETH</span>
           </div>
           <div className="font-mono font-medium text-white text-xl">$0.00</div>
           <div className="text-xs flex items-center">
-            <span className="text-[#4CAF50]">+3.2%</span>
-            <span className="text-gray-400 ml-1">24h</span>
+            <span className="text-black">+3.2%</span>
+            <span className="text-black ml-1">24h</span>
           </div>
         </div>
       </div>

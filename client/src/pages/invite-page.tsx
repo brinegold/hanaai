@@ -354,10 +354,10 @@ const InvitePage: React.FC = () => {
                   {upline.username.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-[#4F9CF9] text-lg">
+                  <p className="font-semibold text-black text-lg">
                     {upline.username}
                   </p>
-                  <p className="text-sm text-yellow-600">
+                  <p className="text-sm text-black">
                     Your referrer • Joined {new Date(upline.createdAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -487,7 +487,7 @@ const InvitePage: React.FC = () => {
 
         <Card className="bg-black/20 backdrop-blur-md border-white/10">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-black flex items-center gap-2">
               <Users className="h-5 w-5" />
               My Team
             </CardTitle>
@@ -567,13 +567,13 @@ const LevelReferralList: React.FC<{
 
   if (referrals.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+      <div className="text-center py-8 text-black">
+        <Users className="h-12 w-12 mx-auto mb-4 text-black" />
         <p className="text-lg font-medium mb-2">No Level {level} Referrals Yet</p>
         <p className="text-sm">
           When users join through your Level {parseInt(level) - 1 || "direct"} referrals, they'll appear here.
         </p>
-        <p className="text-xs text-[#4F9CF9] mt-2">
+        <p className="text-xs text-grey-300 mt-2">
           Earn {levelPercentages[level]}% commission on their investments!
         </p>
       </div>
