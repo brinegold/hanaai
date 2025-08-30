@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Redirect, useLocation } from "wouter";
 
 const AuthPage: React.FC = () => {
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register">("register");
   const { user, isLoading } = useAuth();
   const [location] = useLocation();
   const [referralCode, setReferralCode] = useState<string | null>(null);
@@ -84,6 +84,14 @@ const AuthPage: React.FC = () => {
           <Logo size="medium" />
         </div>
 
+        {/* Nebrix Description */}
+        <div className="text-center mb-8 px-4">
+          <div className="text-white/90 text-sm leading-relaxed space-y-2">
+            <p>Nebrix is a mobile advanced crypto trading Bot owned by Nebrix Global LTD.</p>
+            <p>It is the future of Decentralized Finance, powered by Ai driven insights & trading signals utilizing same tools as Hematic.</p>
+          </div>
+        </div>
+
         {/* YouTube Video */}
         {mode === "register" && (
           <div className="flex justify-center mb-8">
@@ -91,7 +99,7 @@ const AuthPage: React.FC = () => {
               <iframe
                 width="100%"
                 height="200"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                src="https://www.youtube.com/embed/ysTVTmrfDnU"
                 title="Nebrix Introduction"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
