@@ -1,5 +1,69 @@
 import type { Express } from "express";
 import { storage } from "./storage";
+import nodemailer from "nodemailer";
+
+
+
+async function sendWithdrawalApprovalEmail(user: any, transaction: any, txHash: string) {
+  try {
+    const transporter = nodemailer.createTransport({
+              host: process.env.SMTP_HOST,
+              port: Number(process.env.SMTP_PORT),
+              secure: Boolean(true), // true for 465, false for other ports
+              auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASSWORD,
+              },
+              tls: {
+                rejectUnauthorized: false,
+              },
+            });
+
+    await transporter.sendMail({
+      from: process.env.SMTP_USER,
+      to: user.email,
+      subject: "Withdrawal Approved - Nebrix AI Trading",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <img src="https://raw.githubusercontent.com/areebasiddiqi/nebrix/refs/heads/main/public/logo.jpg" alt="Nebrix" style="max-width: 200px; height: auto;" />
+          </div>
+          
+          <h1 style="color: #2c3e50; text-align: center;">Withdrawal Approved!</h1>
+          
+          <p style="color: #333; font-size: 16px;">Hello <strong>${user.username || user.email}</strong>,</p>
+          
+          <p style="color: #333; font-size: 16px;">Great news! Your withdrawal request has been approved and processed.</p>
+          
+          <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #27ae60; margin-top: 0;">Withdrawal Details:</h3>
+            <p><strong>Amount:</strong> $${parseFloat(transaction.amount.toString()).toFixed(2)}</p>
+            <p><strong>Destination Address:</strong> ${transaction.address}</p>
+            <p><strong>Network:</strong> ${transaction.network || 'BSC'}</p>
+            <p><strong>Transaction Hash:</strong> <a href="https://testnet.bscscan.com/tx/${txHash}" style="color: #3498db; text-decoration: none;">${txHash}</a></p>
+            <p><strong>Status:</strong> <span style="color: #27ae60; font-weight: bold;">Completed</span></p>
+          </div>
+          
+          <p style="color: #333; font-size: 16px;">Your funds have been successfully transferred to your wallet. You can verify the transaction on the blockchain using the transaction hash above.</p>
+          
+          <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
+            <p style="margin: 0; color: #856404;"><strong>Note:</strong> It may take a few minutes for the transaction to be confirmed on the blockchain network.</p>
+          </div>
+          
+          <p style="color: #333; font-size: 16px;">Thank you for using Nebrix AI Trading!</p>
+          
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <p style="color: #666; font-size: 14px;">Best regards,<br>The Nebrix Team</p>
+          </div>
+        </div>
+      `,
+    });
+
+    console.log(`Withdrawal approval email sent to ${user.email}`);
+  } catch (error) {
+    console.error("Failed to send withdrawal approval email:", error);
+  }
+}
 
 function isAdmin(
   req: Express.Request,
@@ -335,6 +399,11 @@ export function registerAdminRoutes(app: Express) {
             address: walletAddress,
             txHash: transferHashes.withdrawalTxHash
           });
+
+          // Send email notification to user
+          if (user.email) {
+            await sendWithdrawalApprovalEmail(user, transaction, transferHashes.withdrawalTxHash);
+          }
 
         } catch (blockchainError) {
           console.error("Blockchain withdrawal failed:", blockchainError);

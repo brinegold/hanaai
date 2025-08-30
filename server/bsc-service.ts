@@ -22,7 +22,7 @@ class BSCService {
     this.config = config;
     
     // Use BSC testnet RPC URL specifically
-    const rpcUrl = "https://bsc-dataseed1.binance.org/";
+    const rpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/";
     console.log("BSC Service initialized with RPC:", rpcUrl);
     
     this.web3 = new Web3(rpcUrl);
@@ -45,8 +45,8 @@ class BSCService {
       const blockNumber = await this.web3.eth.getBlockNumber();
       console.log(`Connected to BSC network - Chain ID: ${chainId}, Block: ${blockNumber}`);
       
-      if (chainId !== BigInt(56)) { // BSC testnet chain ID
-        console.warn(`Warning: Expected BSC testnet (56) but connected to chain ${chainId}`);
+      if (chainId !== BigInt(97)) { // BSC testnet chain ID
+        console.warn(`Warning: Expected BSC testnet (97) but connected to chain ${chainId}`);
       }
     } catch (error) {
       console.error("Failed to connect to BSC network:", error);
