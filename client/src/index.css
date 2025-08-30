@@ -55,13 +55,110 @@
   animation: fadeIn 0.5s ease-in-out;
 }
 
+/* Gradient Background Classes */
+.gradient-bg {
+  background: url('./trading-chart-bg.jpg') center/cover no-repeat, linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #533483 75%, #7209b7 100%);
+  min-height: 100vh;
+}
+
+.trading-chart-bg {
+  background: url('./trading-chart-bg.jpg') center/cover no-repeat;
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+.gradient-bg-auth {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #533483 75%, #7209b7 100%);
+  min-height: 100vh;
+}
+
+.auth-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.gradient-input {
+  background: rgba(2, 10, 77, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  backdrop-filter: blur(5px);
+}
+
+.gradient-input::placeholder {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.gradient-input:focus {
+  background: rgba(2, 10, 77, 1);
+  border-color: rgba(2, 10, 77, 0.37);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+}
+
+.gradient-button {
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  color: white;
+  font-weight: 600;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.gradient-button:hover {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(34, 197, 94, 0.3);
+}
+
+.tab-button {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+.tab-button.active {
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  color: white;
+  border-color: transparent;
+}
+
+.social-link {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.social-link:hover {
+  transform: scale(1.1);
+}
+
+.social-google {
+  background: #db4437;
+}
+
+.social-facebook {
+  background: #4267B2;
+}
+
+.social-linkedin {
+  background: #0077B5;
+}
+
+.social-github {
+  background: #333;
+}
+
 @layer base {
   * {
     @apply border-border;
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased text-foreground;
   }
 }
 

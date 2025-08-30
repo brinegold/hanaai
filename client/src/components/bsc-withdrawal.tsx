@@ -93,8 +93,8 @@ export const BSCWithdrawal: React.FC = () => {
   const calculateFee = () => {
     const withdrawAmount = parseFloat(amount || '0');
     return {
-      fee: withdrawAmount * 0.1,
-      netAmount: withdrawAmount * 0.9
+      fee: withdrawAmount * 0.05,
+      netAmount: withdrawAmount * 0.95
     };
   };
 
@@ -154,7 +154,7 @@ export const BSCWithdrawal: React.FC = () => {
               <span>${parseFloat(amount).toFixed(2)} USDT</span>
             </div>
             <div className="flex justify-between text-sm text-red-600">
-              <span>Processing Fee (10%):</span>
+              <span>Processing Fee (5%):</span>
               <span>-${fee.toFixed(2)} USDT</span>
             </div>
             <div className="border-t pt-2 flex justify-between font-medium">
@@ -175,7 +175,7 @@ export const BSCWithdrawal: React.FC = () => {
         <div className="bg-yellow-50 p-4 rounded-lg">
           <h4 className="font-medium text-yellow-900 mb-2">Important Notes:</h4>
           <ul className="text-sm text-yellow-800 space-y-1">
-            <li>• 10% processing fee will be deducted</li>
+            <li>• 5% processing fee will be deducted</li>
             <li>• Minimum withdrawal: $1 USDT</li>
             <li>• Funds sent to BSC network (BEP-20)</li>
             <li>• Processing time: 5-15 minutes</li>

@@ -44,7 +44,7 @@ const translations: Record<string, Record<string, string>> = {
     'dashboard.deposit': 'Deposit',
     'dashboard.withdraw': 'Withdraw',
     'dashboard.aiTrading': 'AI Trading',
-    'dashboard.marketBanner': 'Market trading is in USDT, and the minimum withdrawal amount is 5 USDT. The withdrawal fee is 10%. Minimum Deposit is $5, Daily Returns is 1.5% and Withdrawal is available every day. Please note Trading Signals is once Per Day',
+    'dashboard.marketBanner': 'Market trading is in USDT, and the minimum withdrawal amount is 5 USDT. The withdrawal fee is 5%. Minimum Deposit is $5, Daily Returns is 1.5% and Withdrawal is available every day. Please note Trading Signals is once Per Day',
     
     // Invite Page
     'invite.title': 'Invite Friends',

@@ -6,7 +6,7 @@ import { transactions, users } from "@shared/schema";
 import { sendDepositNotification, sendWithdrawalNotification } from "./auth";
 
 const BSC_CONFIG = {
-  rpcUrl: process.env.BSC_TESTNET_RPC_URL || "https://bsc-dataseed1.binance.org/",
+  rpcUrl: process.env.BSC_TESTNET_RPC_URL || "https://data-seed-prebsc-1-s1.binance.org:8545/",
   contractAddress: process.env.PAYMENT_CONTRACT_ADDRESS || "",
   usdtContractAddress: process.env.USDT_CONTRACT_ADDRESS || "0x7C5FCE4f6aF59eCd7a557Fa9a7812Eaf0A4E42cb",
   adminFeeWallet: process.env.ADMIN_FEE_WALLET || "",
@@ -91,10 +91,10 @@ export function registerBSCRoutes(app: Express) {
         return res.status(400).json({ error: "Transaction already processed" });
       }
 
-      // Calculate amounts (5% fee, 95% to user)
+      // Calculate amounts (2% fee, 98% to user)
       const depositAmount = parseFloat(amount);
-      const adminFee = depositAmount * 0.05;
-      const userAmount = depositAmount * 0.95;
+      const adminFee = depositAmount * 0.02;
+      const userAmount = depositAmount * 0.98;
 
       console.log("Processing deposit:", {
         originalAmount: depositAmount,
@@ -209,12 +209,24 @@ export function registerBSCRoutes(app: Express) {
     }
   });
 
-  // Process withdrawal to user's specified wallet
+  // Create withdrawal request (requires admin approval)
   app.post("/api/bsc/withdraw", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
 
     try {
-      const { amount, walletAddress } = req.body;
+      const { amount, walletAddress, securityPassword } = req.body;
+      
+      console.log("Withdrawal request received:", {
+        amount,
+        walletAddress,
+        hasSecurityPassword: !!securityPassword,
+        requestBody: req.body
+      });
+      
+      if (!walletAddress) {
+        return res.status(400).json({ error: "Wallet address is required" });
+      }
+      
       const user = await storage.getUser(req.user!.id);
       
       if (!user) return res.status(404).send("User not found");
@@ -227,112 +239,77 @@ export function registerBSCRoutes(app: Express) {
         return res.status(400).json({ error: "Insufficient balance" });
       }
 
-      // Calculate amounts: 10% withdrawal fee + $1 gas fee deducted from requested amount
-      const gasFee = 1.0; // Fixed $1 gas fee (deducted from requested amount)
-      const withdrawalFee = withdrawAmount * 0.1;
-      const netAmount = withdrawAmount - withdrawalFee - gasFee; // Deduct both fees from requested amount
-      const totalDeducted = withdrawAmount; // Only deduct requested amount from user balance
+      // Verify security password (if implemented)
+      // TODO: Add security password verification if needed
 
-      console.log("Processing withdrawal:", {
+      // Calculate amounts: 5% withdrawal fee + $1 gas fee deducted from requested amount
+      const gasFee = 1.0; // Fixed $1 gas fee (deducted from requested amount)
+      const withdrawalFee = withdrawAmount * 0.05;
+      const netAmount = withdrawAmount - withdrawalFee - gasFee; // Deduct both fees from requested amount
+
+      console.log("Creating withdrawal request:", {
         requestedAmount: withdrawAmount,
         withdrawalFee,
         gasFee,
         netAmount,
-        totalDeducted,
         userId: user.id,
         toAddress: walletAddress
       });
 
-      // Process actual token transfers from global admin to user
-      let transferHashes;
-      try {
-        transferHashes = await bscService.processWithdrawal(
-          walletAddress,
-          netAmount.toString(),
-          withdrawalFee.toString()
-        );
-        console.log("Withdrawal transfers completed:", transferHashes);
-      } catch (transferError) {
-        console.error("Error processing withdrawal transfers:", transferError);
-        return res.status(500).json({ 
-          error: "Failed to process withdrawal transfers",
-          details: transferError instanceof Error ? transferError.message : String(transferError)
-        });
-      }
-
-      // Create withdrawal transaction record
-      await storage.createTransaction({
+      // Create pending withdrawal transaction record
+      const withdrawalTransaction = await storage.createTransaction({
         userId: user.id,
         type: "Withdrawal",
         amount: netAmount.toString(),
-        status: "Completed",
-        txHash: transferHashes.withdrawalTxHash,
-        fromAddress: BSC_CONFIG.globalAdminWallet,
-        toAddress: walletAddress,
-        confirmationStatus: "confirmed",
-        reason: `BSC withdrawal to ${walletAddress}`
+        status: "Pending",
+        txHash: null,
+        address: walletAddress,
+        reason: `BSC withdrawal request to ${walletAddress} - Awaiting admin approval`
+      });
+      
+      console.log("Created withdrawal transaction:", {
+        id: withdrawalTransaction.id,
+        address: withdrawalTransaction.address,
+        amount: withdrawalTransaction.amount
       });
 
-      // Create withdrawal fee transaction record
+      // Create withdrawal fee transaction record (also pending)
       await storage.createTransaction({
         userId: user.id,
         type: "Withdrawal Fee",
         amount: withdrawalFee.toString(),
-        status: "Completed",
-        txHash: transferHashes.feeTxHash,
-        fromAddress: BSC_CONFIG.globalAdminWallet,
-        toAddress: BSC_CONFIG.adminFeeWallet,
-        confirmationStatus: "confirmed",
-        reason: `10% withdrawal fee`
+        status: "Pending",
+        txHash: null,
+        address: BSC_CONFIG.adminFeeWallet,
+        reason: `5% withdrawal fee - Awaiting admin approval`
       });
 
-      // Create gas fee transaction record
+      // Create gas fee transaction record (also pending)
       await storage.createTransaction({
         userId: user.id,
         type: "Gas Fee",
         amount: gasFee.toString(),
-        status: "Completed",
-        txHash: transferHashes.withdrawalTxHash, // Same tx hash as main withdrawal
-        fromAddress: "System",
-        toAddress: "Network",
-        confirmationStatus: "confirmed",
-        reason: `BSC network gas fee`
+        status: "Pending",
+        txHash: null,
+        address: "Network",
+        reason: `BSC network gas fee - Awaiting admin approval`
       });
 
-      // Update user balance (deduct only requested amount)
-      await storage.updateUser(user.id, {
-        withdrawableAmount: (userBalance - totalDeducted).toString(),
-        totalAssets: (parseFloat(user.totalAssets.toString()) - totalDeducted).toString()
-      });
-
-      console.log("Withdrawal request created successfully:", {
-        newWithdrawableAmount: userBalance - totalDeducted,
-        newTotalAssets: parseFloat(user.totalAssets.toString()) - totalDeducted
-      });
-
-      // Send withdrawal notification email
-      try {
-        await sendWithdrawalNotification(user, netAmount.toString(), walletAddress, transferHashes.withdrawalTxHash);
-      } catch (emailError) {
-        console.error('Failed to send withdrawal notification email:', emailError);
-        // Don't fail the withdrawal if email fails
-      }
+      console.log("Withdrawal request created successfully - awaiting admin approval");
 
       res.json({
         success: true,
-        message: "Withdrawal processed successfully.",
+        message: "Withdrawal request submitted successfully. Please wait for admin approval.",
         requestedAmount: withdrawAmount,
         netAmount,
         withdrawalFee,
         gasFee,
-        totalDeducted,
-        txHash: transferHashes.withdrawalTxHash,
-        status: "completed"
+        status: "pending"
       });
 
     } catch (error) {
-      console.error("Error processing BSC withdrawal:", error);
-      res.status(500).json({ error: "Failed to process withdrawal" });
+      console.error("Error creating withdrawal request:", error);
+      res.status(500).json({ error: "Failed to create withdrawal request" });
     }
   });
 
@@ -378,6 +355,68 @@ export function registerBSCRoutes(app: Express) {
     } catch (error) {
       console.error("Error starting deposit monitoring:", error);
       res.status(500).json({ error: "Failed to start monitoring" });
+    }
+  });
+
+  // Collect USDT from user wallets (Admin only)
+  app.post("/api/bsc/collect-usdt", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    try {
+      const { userIds } = req.body;
+      
+      if (userIds && Array.isArray(userIds)) {
+        // Collect from specific users
+        const results = await bscService.batchCollectUSDT(userIds);
+        res.json({ 
+          success: true, 
+          message: `Collection completed for ${userIds.length} users`,
+          results 
+        });
+      } else {
+        // Collect from all users with BSC wallets
+        const users = await storage.getAllUsers();
+        const allUserIds = users
+          .filter(user => user.bscWalletAddress)
+          .map(user => user.id);
+        
+        const results = await bscService.batchCollectUSDT(allUserIds);
+        res.json({ 
+          success: true, 
+          message: `Collection completed for ${allUserIds.length} users`,
+          results 
+        });
+      }
+    } catch (error) {
+      console.error("Error collecting USDT:", error);
+      res.status(500).json({ error: "Failed to collect USDT" });
+    }
+  });
+
+  // Collect USDT from single user wallet
+  app.post("/api/bsc/collect-usdt/:userId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    try {
+      const userId = parseInt(req.params.userId);
+      const result = await bscService.collectAllUSDTFromUser(userId);
+      
+      if (result) {
+        res.json({ 
+          success: true, 
+          message: `Collected ${result.amount} USDT from user ${userId}`,
+          txHash: result.txHash,
+          amount: result.amount
+        });
+      } else {
+        res.json({ 
+          success: false, 
+          message: `No USDT found in user ${userId} wallet`
+        });
+      }
+    } catch (error) {
+      console.error("Error collecting USDT from user:", error);
+      res.status(500).json({ error: "Failed to collect USDT" });
     }
   });
 }

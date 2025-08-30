@@ -1282,9 +1282,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Calculate deposit fee (5% platform fee)
+        // Calculate deposit fee (2% platform fee)
         const depositAmount = transactionData.amount;
-        const platformFee = depositAmount * 0.05; // 5% fee
+        const platformFee = depositAmount * 0.02; // 2% fee
         const netDepositAmount = depositAmount - platformFee; // Amount after fee deduction
         
         // Update user's rechargeAmount (deposit amount) with net amount
@@ -1333,8 +1333,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const maxFromTradingCapital = totalDeposits * 3; // 300% of deposits
         const maxWithdrawableAmount = maxFromTradingCapital + totalCommissions + totalReferralBonuses + totalRankingBonuses;
 
-        // Calculate 10% withdrawal fee
-        const withdrawalFee = transactionData.amount * 0.1;
+        // Calculate 5% withdrawal fee
+        const withdrawalFee = transactionData.amount * 0.05;
         const totalAmount = transactionData.amount + withdrawalFee;
         
         if (totalAmount > maxWithdrawableAmount) {
@@ -1343,11 +1343,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // Check sufficient funds for withdrawal (including 10% fee)
+        // Check sufficient funds for withdrawal (including 5% fee)
         if (parseFloat(user.totalAssets.toString()) < totalAmount) {
           return res
             .status(400)
-            .json({ message: "Insufficient funds for withdrawal (including 10% fee)" });
+            .json({ message: "Insufficient funds for withdrawal (including 5% fee)" });
         }
 
         // For withdrawals, we only check the balance but don't deduct it yet

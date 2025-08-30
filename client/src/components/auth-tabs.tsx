@@ -250,16 +250,16 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
         className="w-full"
         onValueChange={(value) => onModeChange(value as any)}
       >
-        <TabsList className="grid w-full grid-cols-2 bg-white rounded-lg">
+        <TabsList className="grid w-full grid-cols-2 bg-transparent rounded-lg p-1">
           <TabsTrigger
             value="login"
-            className={`rounded-lg py-3 ${mode === "login" ? "text-black bg-[#4F9CF9]" : "text-gray-400"}`}
+            className={`tab-button rounded-lg py-3 ${mode === "login" ? "active" : ""}`}
           >
             Login
           </TabsTrigger>
           <TabsTrigger
             value="register"
-            className={`rounded-lg py-3 ${mode === "register" ? "text-black bg-[#4F9CF9]" : "text-gray-400"}`}
+            className={`tab-button rounded-lg py-3 ${mode === "register" ? "active" : ""}`}
           >
             Register
           </TabsTrigger>
@@ -275,14 +275,14 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <button
                   type="button"
-                  className={`py-2 rounded-lg ${loginMethod === "username" ? "bg-[#4F9CF9] text-black" : "bg-white text-gray-400"}`}
+                  className={`tab-button py-2 rounded-lg ${loginMethod === "username" ? "active" : ""}`}
                   onClick={() => handleLoginMethodChange("username")}
                 >
                   Username
                 </button>
                 <button
                   type="button"
-                  className={`py-2 rounded-lg ${loginMethod === "email" ? "bg-[#4F9CF9] text-black" : "bg-white text-gray-400"}`}
+                  className={`tab-button py-2 rounded-lg ${loginMethod === "email" ? "active" : ""}`}
                   onClick={() => handleLoginMethodChange("email")}
                 >
                   Email
@@ -297,10 +297,10 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
                     <FormItem>
                       <FormControl>
                         <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70 h-5 w-5" />
                           <Input
                             placeholder="Username"
-                            className="bg-white border-[#333333] pl-10 py-6 text-black focus:ring-[#4F9CF9]"
+                            className="gradient-input pl-10 py-6 focus:ring-0 focus:outline-none"
                             {...field}
                           />
                         </div>
@@ -319,11 +319,11 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
                     <FormItem>
                       <FormControl>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70 h-5 w-5" />
                           <Input
                             type="email"
                             placeholder="Email"
-                            className="bg-white border-[#333333] pl-10 py-6 text-black focus:ring-[#4F9CF9]"
+                            className="gradient-input pl-10 py-6 focus:ring-0 focus:outline-none"
                             {...field}
                           />
                         </div>
@@ -342,11 +342,11 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
                     <FormItem>
                       <FormControl>
                         <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70 h-5 w-5" />
                           <Input
                             type="tel"
                             placeholder="Phone Number"
-                            className="bg-white border-[#333333] pl-10 py-6 text-black focus:ring-[#4F9CF9]"
+                            className="gradient-input pl-10 py-6 focus:ring-0 focus:outline-none"
                             {...field}
                           />
                         </div>
@@ -365,10 +365,10 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
                     <FormItem>
                       <FormControl>
                         <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70 h-5 w-5" />
                           <Input
                             placeholder="Telegram username"
-                            className="bg-white border-[#333333] pl-10 py-6 text-black focus:ring-[#4F9CF9]"
+                            className="gradient-input pl-10 py-6 focus:ring-0 focus:outline-none"
                             {...field}
                           />
                         </div>
@@ -386,16 +386,16 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
                   <FormItem>
                     <FormControl>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70 h-5 w-5" />
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="Password"
-                          className="bg-white border-[#333333] pl-10 pr-10 py-6 text-black focus:ring-[#4F9CF9]"
+                          className="gradient-input pl-10 pr-10 py-6 focus:ring-0 focus:outline-none"
                           {...field}
                         />
                         <button
                           type="button"
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? (
@@ -409,7 +409,7 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
                     <FormMessage />
                     <button
                       type="button"
-                      className="text-sm text-[#4F9CF9] hover:text-[#E0B83C] mt-2"
+                      className="text-sm text-white/80 hover:text-white mt-2"
                       onClick={() => setForgotPasswordOpen(true)}
                     >
                       Forgot Password?
@@ -420,7 +420,7 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
 
               <Button
                 type="submit"
-                className="w-full bg-[#4F9CF9] hover:bg-[#E0B83C] text-black py-6"
+                className="w-full gradient-button py-6"
                 disabled={loginMutation.isPending}
               >
                 {loginMutation.isPending ? "Logging in..." : "Login"}
@@ -443,10 +443,10 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
                   <FormItem>
                     <FormControl>
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70 h-5 w-5" />
                         <Input
                           placeholder="Username"
-                          className="bg-white border-[#333333] pl-10 py-6 text-black focus:ring-[#4F9CF9]"
+                          className="gradient-input pl-10 py-6 focus:ring-0 focus:outline-none"
                           {...field}
                         />
                       </div>
@@ -463,11 +463,11 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
                   <FormItem>
                     <FormControl>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70 h-5 w-5" />
                         <Input
                           type="email"
                           placeholder="Email"
-                          className="bg-white border-[#333333] pl-10 py-6 text-black focus:ring-[#4F9CF9]"
+                          className="gradient-input pl-10 py-6 focus:ring-0 focus:outline-none"
                           {...field}
                         />
                       </div>
@@ -484,16 +484,16 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
                   <FormItem>
                     <FormControl>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70 h-5 w-5" />
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="Password"
-                          className="bg-white border-[#333333] pl-10 pr-10 py-6 text-black focus:ring-[#4F9CF9]"
+                          className="gradient-input pl-10 pr-10 py-6 focus:ring-0 focus:outline-none"
                           {...field}
                         />
                         <button
                           type="button"
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? (
@@ -515,23 +515,23 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-white/70">
                         Security Password (used for transactions)
                       </span>
-                      <span className="text-xs text-[#4F9CF9]">Important</span>
+                      <span className="text-xs text-green-400">Important</span>
                     </div>
                     <FormControl>
                       <div className="relative">
-                        <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
+                        <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70 h-5 w-5" />
                         <Input
                           type={showSecurityPassword ? "text" : "password"}
                           placeholder="Security Password"
-                          className="bg-white border-[#333333] pl-10 pr-10 py-6 text-black focus:ring-[#4F9CF9]"
+                          className="gradient-input pl-10 pr-10 py-6 focus:ring-0 focus:outline-none"
                           {...field}
                         />
                         <button
                           type="button"
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
                           onClick={() =>
                             setShowSecurityPassword(!showSecurityPassword)
                           }
@@ -544,7 +544,7 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
                         </button>
                       </div>
                     </FormControl>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-white/60 mt-1">
                       This is your transaction security code. Required for
                       withdrawals and financial operations.
                     </p>
@@ -560,15 +560,15 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
                   <FormItem>
                     <FormControl>
                       <div className="relative">
-                        <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
+                        <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70 h-5 w-5" />
                         <Input
                           placeholder="Invite Code (Optional)"
-                          className="bg-white border-[#333333] pl-10 py-6 text-black focus:ring-[#4F9CF9]"
+                          className="gradient-input pl-10 py-6 focus:ring-0 focus:outline-none"
                           {...field}
                         />
                       </div>
                     </FormControl>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-white/60 mt-1">
                       {welcomeCode
                         ? `Using invite code: ${welcomeCode}`
                         : "Enter invite code (optional) - Leave empty to use default referral"}
@@ -580,7 +580,7 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
 
               <Button
                 type="submit"
-                className="w-full bg-[#4F9CF9] hover:bg-[#E0B83C] text-black py-6"
+                className="w-full gradient-button py-6"
                 disabled={registerMutation.isPending}
               >
                 {registerMutation.isPending ? "Registering..." : "Register"}

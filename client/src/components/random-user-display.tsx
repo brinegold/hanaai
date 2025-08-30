@@ -127,7 +127,7 @@ export const RandomUserDisplay = () => {
   }, []);
 
   return (
-    <div className="bg-white border border-gray-200 p-2 text-sm animate-fade-in">
+    <div className="border border-gray-200 p-2 text-sm animate-fade-in bg-black/20 backdrop-blur-md">
       <div className="flex justify-between items-center px-4">
         <div className="text-[#4F9CF9]">{currentUser.email}</div>
         <div className="text-gray-400">{currentUser.amount}Usd</div>

@@ -380,8 +380,8 @@ export default function BSCPage() {
                 <h4 className="font-medium mb-2">Withdrawal Process:</h4>
                 <ol className="text-sm space-y-1 list-decimal list-inside">
                   <li>Enter amount and destination wallet</li>
-                  <li>10% fee will be deducted automatically</li>
-                  <li>90% will be sent to destination wallet</li>
+                  <li>5% fee will be deducted automatically</li>
+                  <li>95% will be sent to destination wallet</li>
                   <li>Transaction will be processed immediately</li>
                 </ol>
               </div>

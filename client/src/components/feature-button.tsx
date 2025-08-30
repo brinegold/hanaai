@@ -10,13 +10,14 @@ interface FeatureButtonProps {
 const FeatureButton: React.FC<FeatureButtonProps> = ({ icon: Icon, label, onClick }) => {
   return (
     <button
-      className="feature-button flex flex-col items-center p-3 bg-white rounded-lg transition-all hover:transform hover:-translate-y-1"
+      className="feature-button flex flex-col items-center p-3 rounded-lg transition-all hover:transform hover:-translate-y-1"
+      style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}
       onClick={onClick}
     >
-      <div className="w-10 h-10 rounded-lg bg-blue flex items-center justify-center mb-2 text-blue">
+      <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mb-2 text-white">
         <Icon size={18} />
       </div>
-      <span className="text-xs text-black">{label}</span>
+      <span className="text-xs text-white">{label}</span>
     </button>
   );
 };

@@ -10,8 +10,6 @@ import {
   Gift,
   MessageCircle,
   TrendingUp,
-  Mail,
-  Twitter,
   Plus,
   X,
 } from "lucide-react";
@@ -26,7 +24,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import { useQuery } from "@tanstack/react-query";
-import { Crown, Star, Award } from "lucide-react";
+import { Crown, Star, Award, Mail, Twitter } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -252,9 +250,9 @@ const DashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen pb-24">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 p-4 mb-4">
+      <header className="bg-black/20 backdrop-blur-md border-b border-white/10 p-4 mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Logo size="small" />
@@ -263,8 +261,8 @@ const DashboardPage: React.FC = () => {
       </header>
 
       {/* Market Status Banner */}
-      <div className="bg-white border border-gray-200 rounded-lg mx-4 mb-6 p-3 text-xs overflow-hidden">
-        <div className="flex items-center text-gray-700">
+      <div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-lg mx-4 mb-6 p-3 text-xs overflow-hidden">
+        <div className="flex items-center text-white">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
@@ -406,7 +404,8 @@ const DashboardPage: React.FC = () => {
               <button
                 onClick={handleCountryRepApplication}
                 disabled={isApplyingCountryRep}
-                className="bg-white text-purple-600 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-purple-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}
               >
                 {isApplyingCountryRep ? "Applying..." : "Apply Now"}
               </button>
@@ -466,7 +465,7 @@ const DashboardPage: React.FC = () => {
       {/* Asset Summary */}
       <div className="flex space-x-4 mx-4 mb-6">
         {/* USDT Balance */}
-        <div className="flex-1 bg-white border border-gray-200 rounded-lg p-4 relative overflow-hidden">
+        <div className="flex-1 bg-black/20 backdrop-blur-md border border-white/10 rounded-lg p-4 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#4CAF50] to-[#4CAF50]/50"></div>
           <div className="flex items-center mb-1">
             <svg
@@ -485,7 +484,7 @@ const DashboardPage: React.FC = () => {
             </svg>
             <span className="text-xs text-gray-400">USDT</span>
           </div>
-          <div className="font-mono font-medium text-gray-900 text-xl">
+          <div className="font-mono font-medium text-white text-xl">
             ${parseFloat(user?.totalAssets?.toString() || "0").toLocaleString('en-US', {
               minimumFractionDigits: 0,
               maximumFractionDigits: 2
@@ -498,7 +497,7 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* ETH Balance */}
-        <div className="flex-1 bg-white border border-gray-200 rounded-lg p-4 relative overflow-hidden">
+        <div className="flex-1 bg-black/20 backdrop-blur-md border border-white/10 rounded-lg p-4 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#2196F3] to-[#2196F3]/50"></div>
           <div className="flex items-center mb-1">
             <svg
@@ -515,7 +514,7 @@ const DashboardPage: React.FC = () => {
             </svg>
             <span className="text-xs text-gray-400">ETH</span>
           </div>
-          <div className="font-mono font-medium text-gray-900 text-xl">$0.00</div>
+          <div className="font-mono font-medium text-white text-xl">$0.00</div>
           <div className="text-xs flex items-center">
             <span className="text-[#4CAF50]">+3.2%</span>
             <span className="text-gray-400 ml-1">24h</span>
@@ -531,7 +530,8 @@ const DashboardPage: React.FC = () => {
             <p className="text-[#121212]/80 text-xs">Earn Income now!</p>
           </div>
           <button
-            className="px-3 py-1.5 rounded-lg bg-white text-black text-xs"
+            className="px-3 py-1.5 rounded-lg text-white text-xs hover:bg-white/10 transition-colors"
+            style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}
             onClick={handleInviteClick}
           >
             {t('nav.invite')}
@@ -659,9 +659,9 @@ const DashboardPage: React.FC = () => {
       {/* Random User Display */}
 
       {/* Random Text Section */}
-      <div className="mx-4 mb-6 p-4 bg-white border border-gray-200 rounded-lg text-sm">
-        <h3 className="text-gray-900 font-medium mb-2">Additional Information</h3>
-        <div className="text-gray-700">
+      <div className="mx-4 mb-6 p-4 rounded-lg text-sm" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
+        <h3 className="text-white font-medium mb-2">Additional Information</h3>
+        <div className="text-white/80">
         The Minimum deposit amount for Nebrix AI Trading is 5USDT , and the minimum withdrawal amount is 5USDT .
         The funds will be credited to your account within three minutes.<br></br>
           <br></br>
@@ -697,9 +697,9 @@ Trade Time : Once Per day
 
       {/* Support Dialog */}
       <Dialog open={supportDialogOpen} onOpenChange={setSupportDialogOpen}>
-        <DialogContent className="bg-white text-gray-900 border-gray-200">
+        <DialogContent className="bg-black/90 backdrop-blur-md text-white border-white/10">
           <DialogHeader>
-            <DialogTitle className="text-gray-900">
+            <DialogTitle className="text-white">
               Nebrix Trading Info
             </DialogTitle>
           </DialogHeader>
@@ -712,10 +712,10 @@ Trade Time : Once Per day
                 The Maximum deposit is 500,000USDT.
               </p>
               <p>
-                The Deposit Fee is 5%(Fees used for Maintenance of the Nebrix AI Ecosystem)
+                The Deposit Fee is 2%(Fees used for Maintenance of the Nebrix AI Ecosystem)
               </p>
               <p>
-                The withdrawal fee is 10% and the funds will be credited to your account within few minutes.
+                The withdrawal fee is 5% and the funds will be credited to your account within few minutes.
               </p>
               <p>
                 Please if you have any enquiries send us an email at: <span style={{color: '#2563eb', fontWeight: 'bold'}}>Support@nebrix.dev</span>

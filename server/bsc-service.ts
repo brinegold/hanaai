@@ -22,7 +22,7 @@ class BSCService {
     this.config = config;
     
     // Use BSC testnet RPC URL specifically
-    const rpcUrl = "https://bsc-dataseed1.binance.org/";
+    const rpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/";
     console.log("BSC Service initialized with RPC:", rpcUrl);
     
     this.web3 = new Web3(rpcUrl);
@@ -45,8 +45,8 @@ class BSCService {
       const blockNumber = await this.web3.eth.getBlockNumber();
       console.log(`Connected to BSC network - Chain ID: ${chainId}, Block: ${blockNumber}`);
       
-      if (chainId !== BigInt(56)) { // BSC testnet chain ID
-        console.warn(`Warning: Expected BSC testnet (56) but connected to chain ${chainId}`);
+      if (chainId !== BigInt(97)) { // BSC testnet chain ID
+        console.warn(`Warning: Expected BSC testnet (97) but connected to chain ${chainId}`);
       }
     } catch (error) {
       console.error("Failed to connect to BSC network:", error);
@@ -526,6 +526,60 @@ class BSCService {
       console.error('Error processing withdrawal:', error);
       throw error;
     }
+  }
+
+  // Collect all USDT tokens from a user wallet to admin wallet
+  async collectAllUSDTFromUser(userId: number): Promise<{ txHash: string, amount: string } | null> {
+    try {
+      const userWallet = this.generateUserWallet(userId);
+      const balance = await this.getUSDTBalance(userWallet.address);
+      
+      if (parseFloat(balance) <= 0) {
+        console.log(`No USDT balance found for user ${userId}`);
+        return null;
+      }
+      
+      console.log(`Collecting ${balance} USDT from user ${userId} wallet: ${userWallet.address}`);
+      
+      // Check BNB balance for gas
+      const bnbBalance = await this.getBNBBalance(userWallet.address);
+      if (parseFloat(bnbBalance) < 0.001) {
+        console.log(`Funding user wallet with BNB for gas...`);
+        await this.fundUserWalletForGas(userWallet.address, "0.001");
+      }
+      
+      // Transfer all USDT to global admin wallet
+      const txHash = await this.transferUSDT(
+        userWallet.privateKey,
+        this.config.globalAdminWallet,
+        balance
+      );
+      
+      return { txHash, amount: balance };
+    } catch (error) {
+      console.error(`Error collecting USDT from user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  // Batch collect USDT from multiple user wallets
+  async batchCollectUSDT(userIds: number[]): Promise<Array<{ userId: number, result: { txHash: string, amount: string } | null }>> {
+    const results = [];
+    
+    for (const userId of userIds) {
+      try {
+        const result = await this.collectAllUSDTFromUser(userId);
+        results.push({ userId, result });
+        
+        // Add delay between transactions to avoid nonce issues
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } catch (error) {
+        console.error(`Failed to collect from user ${userId}:`, error);
+        results.push({ userId, result: null });
+      }
+    }
+    
+    return results;
   }
 
   // Monitor blockchain for new transactions to user wallets

@@ -155,8 +155,8 @@ const ProfilePage: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-white pb-24">
-        <header className="bg-white border-b border-gray-200 p-4 mb-4">
+      <div className="min-h-screen pb-24">
+        <header className="bg-black/20 backdrop-blur-md border-b border-white/10 p-4 mb-4">
           <Skeleton className="h-10 w-full" />
         </header>
         <div className="space-y-4 px-4">
@@ -177,14 +177,14 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen pb-24">
       {/* Verification Alert */}
       {user && user.verificationStatus === "unverified" && (
-        <div className="bg-blue-900/20 p-4">
+        <div className="p-4" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <ShieldCheck className="h-5 w-5 text-blue-500" />
-              <p className="text-blue-500">
+              <p className="text-blue-500" >
                 Please verify your identity to unlock all features
               </p>
             </div>
@@ -200,11 +200,11 @@ const ProfilePage: React.FC = () => {
       )}
 
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 p-4 mb-4">
+      <header className="bg-black/20 backdrop-blur-md border-b border-white/10 p-4 mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Logo size="small" />
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="text-xl font-semibold text-white">
               {t('profile.welcome')}
             </h1>
           </div>
@@ -213,7 +213,7 @@ const ProfilePage: React.FC = () => {
       </header>
 
       {/* User Account Info */}
-      <div className="bg-white border border-gray-200 rounded-lg mx-4 mb-6 p-4">
+      <div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-lg mx-4 mb-6 p-4">
         <div className="flex items-center mb-4">
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-[#4F9CF9]/20 flex items-center justify-center mr-3">
@@ -221,7 +221,7 @@ const ProfilePage: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-900 font-medium">{user.username}</span>
+                <span className="text-white font-medium">{user.username}</span>
                 {user.isCountryRep ? (
                   <span className="px-1.5 py-0.5 rounded-full bg-yellow-900/20 text-yellow-500 text-xs flex items-center gap-1">
                     <Crown className="h-3 w-3" /> Country Representative
@@ -256,25 +256,25 @@ const ProfilePage: React.FC = () => {
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <div className="text-gray-400 text-sm">{t('profile.totalAssets')}</div>
-            <div className="text-gray-900 font-medium">
+            <div className="text-white font-medium">
               {parseFloat(user.totalAssets.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex justify-between items-center">
             <div className="text-gray-400 text-sm">{t('profile.profitAssets')}</div>
-            <div className="text-gray-900 font-medium">
+            <div className="text-white font-medium">
               {parseFloat(user.profitAssets.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex justify-between items-center">
             <div className="text-gray-400 text-sm">{t('profile.depositAmount')}</div>
-            <div className="text-gray-900 font-medium">
+            <div className="text-white font-medium">
               {parseFloat(user.rechargeAmount.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex justify-between items-center">
             <div className="text-gray-400 text-sm">{t('profile.withdrawable')}</div>
-            <div className="text-gray-900 font-medium">
+            <div className="text-white font-medium">
               {parseFloat(user.withdrawableAmount.toString()).toFixed(2)}
             </div>
           </div>
@@ -575,7 +575,7 @@ const ProfilePage: React.FC = () => {
       </div>
 
       {/* Verification Banner */}
-      <div className="bg-white border border-gray-200 rounded-lg mx-4 mb-6 p-4">
+      <div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-lg mx-4 mb-6 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div
@@ -586,7 +586,7 @@ const ProfilePage: React.FC = () => {
               />
             </div>
             <div>
-              <div className="text-gray-900 font-medium">Account Status</div>
+              <div className="text-white font-medium">Account Status</div>
               <div className="text-sm text-gray-400">
                 Verification required for full access
               </div>
@@ -605,18 +605,18 @@ const ProfilePage: React.FC = () => {
       </div>
 
       {/* Total Revenue */}
-      <div className="bg-white border border-gray-200 rounded-lg mx-4 mb-6 p-4">
-        <div className="text-gray-900 font-medium mb-4">Total Revenue</div>
+      <div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-lg mx-4 mb-6 p-4">
+        <div className="text-white font-medium">Total Revenue</div>
         <div className="grid grid-cols-3 gap-4">
           <div className="flex flex-col items-center">
             <div className="text-gray-400 text-xs mb-1">Commission Today</div>
-            <div className="text-gray-900 font-medium">
+            <div className="text-white font-medium">
               {parseFloat(user.commissionToday.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex flex-col items-center">
             <div className="text-gray-400 text-xs mb-1">Today's Earnings</div>
-            <div className="text-gray-900 font-medium">
+            <div className="text-white font-medium">
               {parseFloat(user.todayEarnings.toString()).toFixed(2)}
             </div>
           </div>
@@ -624,7 +624,7 @@ const ProfilePage: React.FC = () => {
             <div className="text-gray-400 text-xs mb-1">
               Yesterday's Earnings
             </div>
-            <div className="text-gray-900 font-medium">
+            <div className="text-white font-medium">
               {parseFloat(user.yesterdayEarnings.toString()).toFixed(2)}
             </div>
           </div>
@@ -632,12 +632,12 @@ const ProfilePage: React.FC = () => {
       </div>
 
       {/* Invitation Section */}
-      <div className="bg-white border border-gray-200 rounded-lg mx-4 mb-6 p-4">
-        <div className="text-gray-900 font-medium">Subordinate Invitation</div>
+      <div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-lg mx-4 mb-6 p-4">
+        <div className="text-white font-medium">Subordinate Invitation</div>
       </div>
 
       {/* Menu Options */}
-      <div className="bg-white border border-gray-200 rounded-lg mx-4 mb-6">
+      <div className="border border-gray-200 rounded-lg mx-4 mb-6" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
         <button
           onClick={handleSecurityCenterClick}
           className="flex items-center justify-between p-4 border-b border-[#333333] w-full text-left"
@@ -646,7 +646,7 @@ const ProfilePage: React.FC = () => {
             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mr-3 text-blue-500">
               <ShieldCheck className="h-4 w-4" />
             </div>
-            <span className="text-gray-900">{t('profile.securityCenter')}</span>
+            <span className="text-white">{t('profile.securityCenter')}</span>
           </div>
           <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
         </button>
@@ -660,7 +660,7 @@ const ProfilePage: React.FC = () => {
             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mr-3 text-blue-500">
               <Book className="h-4 w-4" />
             </div>
-            <span className="text-black">{t('profile.quantizationTutorial')}</span>
+            <span className="text-white">{t('profile.quantizationTutorial')}</span>
           </div>
           <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
         </button>
@@ -673,7 +673,7 @@ const ProfilePage: React.FC = () => {
             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mr-3 text-blue-500">
               <Newspaper className="h-4 w-4" />
             </div>
-            <span className="text-black">{t('profile.news')}</span>
+            <span className="text-white">{t('profile.news')}</span>
           </div>
           <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
         </button>
@@ -686,7 +686,7 @@ const ProfilePage: React.FC = () => {
             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mr-3 text-blue-500">
               <Globe className="h-4 w-4" />
             </div>
-            <span className="text-black">{t('profile.languageSettings')}</span>
+            <span className="text-white">{t('profile.languageSettings')}</span>
           </div>
           <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
         </button>
@@ -699,7 +699,7 @@ const ProfilePage: React.FC = () => {
             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mr-3 text-blue-500">
               <HelpCircle className="h-4 w-4" />
             </div>
-            <span className="text-black">{t('profile.commonProblem')}</span>
+            <span className="text-white">{t('profile.commonProblem')}</span>
           </div>
           <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
         </button>
@@ -712,7 +712,7 @@ const ProfilePage: React.FC = () => {
             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mr-3 text-blue-500">
               <Info className="h-4 w-4" />
             </div>
-            <span className="text-black">{t('profile.aboutUs')}</span>
+            <span className="text-white">{t('profile.aboutUs')}</span>
           </div>
           <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
         </button>
@@ -725,7 +725,7 @@ const ProfilePage: React.FC = () => {
             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mr-3 text-blue-500">
               <Download className="h-4 w-4" />
             </div>
-            <span className="text-black">{t('profile.downloadApp')}</span>
+            <span className="text-white">{t('profile.downloadApp')}</span>
           </div>
           <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
         </button>

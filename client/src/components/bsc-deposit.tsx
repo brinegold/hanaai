@@ -202,7 +202,7 @@ export const BSCDeposit: React.FC = () => {
 
           <div className="text-xs text-gray-600">
             <p>• Deposits are processed automatically after verification</p>
-            <p>• Processing fee: 5% of deposit amount</p>
+            <p>• Processing fee: 2% of deposit amount</p>
             <p>• Funds will appear in your account within 5-10 minutes</p>
           </div>
         </CardContent>

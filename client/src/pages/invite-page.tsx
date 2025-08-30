@@ -324,9 +324,9 @@ const InvitePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen pb-24">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 p-4 mb-4">
+      <header className="bg-black/20 backdrop-blur-md border-b border-white/10 p-4 mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Logo size="small" />
@@ -336,9 +336,9 @@ const InvitePage: React.FC = () => {
 
       <div className="px-4 space-y-6">
         {/* Upline Information Card */}
-        <Card className="bg-white border-gray-200">
+        <Card className="bg-black/20 backdrop-blur-md border-white/10">
           <CardHeader>
-            <CardTitle className="text-black flex items-center gap-2">
+            <CardTitle className="text-white flex items-center gap-2">
               <User className="h-5 w-5" />
               My Upline
             </CardTitle>
@@ -372,9 +372,9 @@ const InvitePage: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-gray-200">
+        <Card className="border-gray-200" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
           <CardHeader>
-            <CardTitle className="text-black">{t('invite.totalEarnings')}</CardTitle>
+            <CardTitle className="text-white">{t('invite.totalEarnings')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-5">
@@ -388,7 +388,7 @@ const InvitePage: React.FC = () => {
                   <div className="w-8 h-8 rounded-full bg-[#4F9CF9]/10 flex items-center justify-center mr-3">
                     <span className="text-[#4F9CF9] font-bold">1</span>
                   </div>
-                  <span className="text-black">Commission Rate</span>
+                  <span className="text-white">Commission Rate</span>
                 </div>
                 <span className="text-[#4F9CF9] font-bold">
                   5%
@@ -399,7 +399,7 @@ const InvitePage: React.FC = () => {
                 <p className="text-[#4F9CF9] font-semibold mb-2">
                   Uni-Level Referral System
                 </p>
-                <div className="space-y-1 text-sm text-black">
+                <div className="space-y-1 text-sm text-white">
                   <div className="flex justify-between">
                     <span>Level 1 (Direct):</span>
                     <span className="text-[#4F9CF9] font-medium">5%</span>
@@ -431,9 +431,9 @@ const InvitePage: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-gray-200">
+        <Card className="border-gray-200" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-black">Your Referral Link</CardTitle>
+            <CardTitle className="text-white">Your Referral Link</CardTitle>
             <Button
               onClick={generateInviteCode}
               disabled={isGeneratingCode}
@@ -457,8 +457,8 @@ const InvitePage: React.FC = () => {
               <p className="text-gray-400 text-sm mb-2">
                 {t('invite.step1')}
               </p>
-              <div className="bg-white border border-gray-200 p-4 rounded-lg space-y-4">
-                <div className="flex items-center justify-between bg-white border border-gray-200 p-3 rounded">
+              <div className="bg-black/10 border border-white/20 p-4 rounded-lg space-y-4">
+                <div className="flex items-center justify-between bg-black/10 border border-white/20 p-3 rounded">
                   <input
                     type="text"
                     value={referralLink}
@@ -485,17 +485,17 @@ const InvitePage: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-gray-200">
+        <Card className="bg-black/20 backdrop-blur-md border-white/10">
           <CardHeader>
-            <CardTitle className="text-black flex items-center gap-2">
+            <CardTitle className="text-white flex items-center gap-2">
               <Users className="h-5 w-5" />
               My Team
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs value={selectedLevel} onValueChange={handleLevelChange} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 mb-4">
-                <TabsTrigger value="1" className="flex flex-col items-center gap-1 py-3">
+            <Tabs value={selectedLevel} onValueChange={handleLevelChange} className="w-full" >
+              <TabsList className="grid w-full grid-cols-4 mb-4" style={{ backgroundColor: 'rgba(14, 26, 129, 0.9)' }}>
+                <TabsTrigger value="1" className="flex flex-col items-center gap-1 py-3" >
                   <span className="font-medium">Level 1</span>
                   <Badge variant="secondary" className="text-xs">
                     {referralSummary.tier1}
@@ -593,7 +593,7 @@ const LevelReferralList: React.FC<{
         const commissionAmount = totalDeposits * (levelPercentages[level] / 100);
         
         return (
-          <div key={referral.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <div key={referral.id} className="bg-black/10 rounded-lg p-4 border border-white/20">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="bg-[#4F9CF9] text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium">
@@ -601,14 +601,14 @@ const LevelReferralList: React.FC<{
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-white">
                       {referral.displayName || referral.username || `User${referral.referredId}`}
                     </p>
                     <Badge variant="outline" className="text-xs">
                       Level {level}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-white/80 mt-1">
                     Joined: {new Date(referral.createdAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -621,7 +621,7 @@ const LevelReferralList: React.FC<{
                     ${commissionAmount.toFixed(2)}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-white/60">
                   Deposited: ${totalDeposits.toFixed(2)}
                 </p>
               </div>

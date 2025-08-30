@@ -438,18 +438,18 @@ export default function AdminPage() {
       {/* Pending Transactions */}
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Pending Transactions</CardTitle>
+          <CardTitle>Pending Withdrawal Requests</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>User ID</TableHead>
+                <TableHead>Username</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>From Address</TableHead>
-                <TableHead>Transaction Hash</TableHead>
+                <TableHead>Destination Address</TableHead>
+                <TableHead>Requested At</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -457,31 +457,50 @@ export default function AdminPage() {
               {!pendingTransactions || pendingTransactions.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center">
-                    No pending transactions
+                    No pending withdrawal requests
                   </TableCell>
                 </TableRow>
               ) : (
                 pendingTransactions.map((tx: any) => (
                   <TableRow key={tx.id}>
                     <TableCell>{tx.userId}</TableCell>
-                    <TableCell>{tx.type}</TableCell>
-                    <TableCell>{formatCurrency(tx.amount)}</TableCell>
-                    <TableCell>{tx.status}</TableCell>
-                    <TableCell>{tx.address || '-'}</TableCell>
-                    <TableCell>{tx.txHash || '-'}</TableCell>
+                    <TableCell>{tx.username || tx.userEmail || `User${tx.userId}`}</TableCell>
                     <TableCell>
-                      <button 
-                        className="bg-green-500 text-white px-2 py-1 rounded mr-2"
-                        onClick={() => handleApprove(tx.id)}
-                      >
-                        Approve
-                      </button>
-                      <button 
-                        className="bg-red-500 text-white px-2 py-1 rounded"
-                        onClick={() => handleReject(tx.id)}
-                      >
-                        Reject
-                      </button>
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        tx.type === 'Withdrawal' ? 'bg-blue-100 text-blue-800' :
+                        tx.type === 'Withdrawal Fee' ? 'bg-orange-100 text-orange-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {tx.type}
+                      </span>
+                    </TableCell>
+                    <TableCell>{formatCurrency(tx.amount)}</TableCell>
+                    <TableCell>
+                      <span className="font-mono text-xs">
+                        {tx.toAddress ? `${tx.toAddress.slice(0, 6)}...${tx.toAddress.slice(-4)}` : '-'}
+                      </span>
+                    </TableCell>
+                    <TableCell>{new Date(tx.createdAt).toLocaleString()}</TableCell>
+                    <TableCell>
+                      {tx.type === 'Withdrawal' && (
+                        <div className="flex gap-2">
+                          <button 
+                            className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
+                            onClick={() => handleApprove(tx.id)}
+                          >
+                            ✓ Approve
+                          </button>
+                          <button 
+                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
+                            onClick={() => handleReject(tx.id)}
+                          >
+                            ✗ Reject
+                          </button>
+                        </div>
+                      )}
+                      {tx.type !== 'Withdrawal' && (
+                        <span className="text-gray-500 text-sm">Auto-processed with main withdrawal</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))

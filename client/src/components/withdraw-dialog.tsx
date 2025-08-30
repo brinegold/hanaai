@@ -33,7 +33,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
 
   // Calculate available balance and fees
   const availableBalance = user ? parseFloat(user.withdrawableAmount?.toString() || "0") : 0;
-  const withdrawalFee = 0.1; // 10% fee
+  const withdrawalFee = 0.05; // 5% fee
   const maxWithdrawable = Math.max(0, availableBalance * (1 - withdrawalFee));
 
   const handleWithdraw = async () => {
@@ -89,7 +89,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
     setWithdrawStatus("processing");
 
     try {
-      // Process automatic withdrawal through BSC service
+      // Submit withdrawal request for admin approval
       const response = await apiRequest("POST", "/api/bsc/withdraw", {
         amount: amountNum,
         walletAddress: address,
@@ -98,18 +98,18 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Withdrawal failed");
+        throw new Error(errorData.message || "Withdrawal request failed");
       }
 
       const data = await response.json();
       setWithdrawStatus("completed");
 
       toast({
-        title: "Withdrawal Successful!",
-        description: `${data.netAmount} USDT sent to your wallet. Transaction: ${data.txHash}`,
+        title: "Withdrawal Request Submitted!",
+        description: `Your withdrawal request for ${data.netAmount} USDT has been submitted and is awaiting admin approval.`,
       });
 
-      // Invalidate queries to refresh user balance
+      // Invalidate queries to refresh user balance and transactions
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
 
@@ -122,7 +122,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
     } catch (error) {
       setWithdrawStatus("failed");
       toast({
-        title: "Withdrawal Failed",
+        title: "Withdrawal Request Failed",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
@@ -155,10 +155,10 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="text-black flex items-center gap-2">
             <ArrowDownLeft className="h-5 w-5" />
-            Automatic Withdrawal
+            Withdrawal Request
           </DialogTitle>
           <DialogDescription className="text-gray-600">
-            Instant withdrawal to your BSC wallet address
+            Submit withdrawal request for admin approval
           </DialogDescription>
         </DialogHeader>
 
@@ -173,7 +173,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
               </div>
               <div className="flex justify-between">
                 <span>Withdrawal Fee:</span>
-                <span className="font-medium text-red-600">10%</span>
+                <span className="font-medium text-red-600">5%</span>
               </div>
               <div className="flex justify-between">
                 <span>Network:</span>
@@ -181,7 +181,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
               </div>
               <div className="flex justify-between">
                 <span>Processing:</span>
-                <span className="font-medium text-green-600">Instant</span>
+                <span className="font-medium text-orange-600">Admin Approval Required</span>
               </div>
               <div className="flex justify-between">
                 <span>Gas Fee:</span>
@@ -218,8 +218,8 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
               <div className="bg-red-50 p-3 rounded-lg border border-red-200">
                 <div className="text-xs text-red-600 space-y-1">
                   <div className="flex justify-between">
-                    <span>Withdrawal Fee (10%):</span>
-                    <span className="font-medium">{(parseFloat(amount) * 0.1).toFixed(2)} USDT</span>
+                    <span>Withdrawal Fee (5%):</span>
+                    <span className="font-medium">{(parseFloat(amount) * 0.05).toFixed(2)} USDT</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Gas Fee:</span>
@@ -227,7 +227,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
                   </div>
                   <div className="flex justify-between border-t border-red-200 pt-1">
                     <span className="font-medium text-green-600">You'll receive:</span>
-                    <span className="font-bold">{Math.max(0, parseFloat(amount) - (parseFloat(amount) * 0.1) - 1).toFixed(2)} USDT</span>
+                    <span className="font-bold">{Math.max(0, parseFloat(amount) - (parseFloat(amount) * 0.05) - 1).toFixed(2)} USDT</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">Deducted from balance:</span>
@@ -298,7 +298,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
             onClick={handleWithdraw}
             disabled={submitting || !amount || !address || !securityPassword}
           >
-            {submitting ? "Processing..." : "Withdraw Now"}
+            {submitting ? "Submitting Request..." : "Submit Withdrawal Request"}
           </Button>
 
           {/* Warning */}
@@ -307,8 +307,8 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
             <div className="space-y-1">
               <p className="text-xs text-red-800 font-medium">Important Warning:</p>
               <p className="text-xs text-red-700">
-                Double-check your BSC wallet address. Incorrect addresses will result in permanent loss of funds. 
-                This transaction cannot be reversed.
+                Double-check your BSC wallet address. Your withdrawal request will be reviewed by an admin before processing. 
+                Incorrect addresses will result in permanent loss of funds once approved.
               </p>
             </div>
           </div>

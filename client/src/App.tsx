@@ -43,7 +43,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <LanguageProvider>
-          <div className="min-h-screen bg-white text-gray-800">
+          <div className="trading-chart-bg text-white">
             <Router />
             <Toaster />
             <GoogleTranslate />

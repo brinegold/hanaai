@@ -14,7 +14,7 @@ export default function BottomNav() {
   const isActive = (path: string) => location === path;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-background">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-black/20 backdrop-blur-md border-white/10">
       <div className="mx-auto flex h-full max-w-md items-center justify-around">
         <Link href="/">
           <div
@@ -39,7 +39,17 @@ export default function BottomNav() {
           </div>
         </Link>
 
-      
+        <Link href="/bsc">
+          <div
+            className={cn(
+              "flex cursor-pointer flex-col items-center justify-center",
+              isActive("/bsc") && "text-primary",
+            )}
+          >
+            <Wallet className="h-6 w-6" />
+            <span className="text-xs">{t('nav.wallet') || 'Wallet'}</span>
+          </div>
+        </Link>
 
         <Link href="/invite">
           <div

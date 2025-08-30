@@ -246,8 +246,8 @@ const QuantitativePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white pb-24">
-        <header className="bg-white border-b border-gray-200 p-4 mb-4">
+      <div className="min-h-screen pb-24">
+        <header className="bg-black/20 backdrop-blur-md border-b border-white/10 p-4 mb-4">
           <Skeleton className="h-10 w-full" />
         </header>
         <div className="px-4 space-y-6">
@@ -261,9 +261,9 @@ const QuantitativePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen pb-24">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 p-4 mb-4">
+      <header className="bg-black/20 backdrop-blur-md border-b border-white/10 p-4 mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Logo size="small" />
@@ -273,7 +273,7 @@ const QuantitativePage: React.FC = () => {
 
       {/* Trading Dashboard Card */}
       <div className="px-4 mb-4">
-        <Card className="bg-white border-gray-200 overflow-hidden">
+        <Card className="border-white/10 overflow-hidden" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
           <CardContent className="p-4">
             {/* Balance and Today Profit */}
             <div className="flex items-start justify-between">
@@ -286,7 +286,7 @@ const QuantitativePage: React.FC = () => {
                       <path d="M5 12v4m14-4v4" />
                     </svg>
                   </div>
-                  <div className="text-black text-2xl font-semibold">
+                  <div className="text-white text-2xl font-semibold">
                     ${user?.totalAssets ? parseFloat(user.totalAssets.toString()).toFixed(2) : '0.00'}
                   </div>
                 </div>
@@ -340,7 +340,7 @@ const QuantitativePage: React.FC = () => {
                   <path d="M12 17l4-4-4-4" />
                 </svg>
               </div>
-              <p className="text-black font-medium">Start Trading</p>
+              <p className="text-white font-medium">Start Trading</p>
               <p className="text-xs text-gray-500 mb-3">Enable trading now, and let our system execute trades seamlessly</p>
               <Button
                 className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-5"
@@ -379,12 +379,12 @@ const QuantitativePage: React.FC = () => {
 
       {/* Introduction to Quantitative Trading */}
       <div className="px-4 mb-6">
-        <Card className="bg-white border-gray-200 overflow-hidden">
+        <Card className="bg-black/20 backdrop-blur-md border-white/10 overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-blue-500 h-1" />
           <CardHeader className="pb-2">
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle className="text-black text-lg">
+                <CardTitle className="text-white text-lg">
                   Artificial Intelligence Trading
                 </CardTitle>
                 <CardDescription className="text-gray-400 text-xs">
@@ -400,10 +400,10 @@ const QuantitativePage: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-4 gap-2 text-center mb-4 bg-gray-50 rounded-lg p-2">
+            <div className="grid grid-cols-4 gap-2 text-center mb-4 rounded-lg p-2" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
               <div className="space-y-1">
                 <p className="text-xs text-gray-400">{t('quantitative.investmentAmount')}</p>
-                <p className="font-medium text-black">
+                <p className="font-medium text-white">
                   {user?.totalAssets
                     ? parseFloat(user.totalAssets.toString()).toFixed(2)
                     : "0.00"}
@@ -412,7 +412,7 @@ const QuantitativePage: React.FC = () => {
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-gray-400">{t('dashboard.todayEarnings')}</p>
-                <p className="font-medium text-black">
+                <p className="font-medium text-white">
                   {user?.todayEarnings
                     ? parseFloat(user.todayEarnings.toString()).toFixed(2)
                     : "0.00"}
@@ -421,7 +421,7 @@ const QuantitativePage: React.FC = () => {
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-gray-400">Total Revenue</p>
-                <p className="font-medium text-black">
+                <p className="font-medium text-white">
                   {user?.profitAssets
                     ? parseFloat(user.profitAssets.toString()).toFixed(2)
                     : "0.00"}
@@ -430,7 +430,7 @@ const QuantitativePage: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-2 mb-2">
+            <div className="rounded-lg p-2 mb-2" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center space-x-2">
                   <div className="bg-[#4F9CF9]/10 p-1 rounded-md">
@@ -518,11 +518,11 @@ const QuantitativePage: React.FC = () => {
 
       {/* Investment Status */}
       <div className="px-4 mb-6">
-        <h2 className="text-black text-lg font-medium mb-4">
+        <h2 className="text-white text-lg font-medium mb-4">
           Investment Status
         </h2>
         <div className="space-y-4">
-          <Card className="bg-gray-50 border-gray-200 mb-4 overflow-hidden">
+          <Card className="mb-4 overflow-hidden" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
             <div className="bg-gradient-to-r from-blue-600 to-blue-500 h-1.5" />
             <CardContent className="p-4">
               <div className="flex justify-between items-center mb-2">
@@ -533,7 +533,7 @@ const QuantitativePage: React.FC = () => {
                   $5 - $500,000
                 </span>
               </div>
-              <h3 className="text-black font-medium text-lg mb-3">AI Trading System</h3>
+              <h3 className="text-white font-medium text-lg mb-3">AI Trading System</h3>
               
               {/* Enhanced Progress Section */}
               <div className="space-y-3">
@@ -559,14 +559,14 @@ const QuantitativePage: React.FC = () => {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-500">Today's earnings:</span>
-                          <span className="text-black font-medium">
+                          <span className="text-white font-medium">
                             ${todayEarnings.toFixed(2)} / Expected: ${expectedDailyReturn.toFixed(2)} (1.5% daily)
                           </span>
                         </div>
                         
                         <div className="flex justify-between">
                           <span className="text-gray-500">Withdrawal limit:</span>
-                          <span className="text-black font-medium">
+                          <span className="text-white font-medium">
                             ${Math.min(tradingEarnings, maxTradingWithdrawal - Math.max(0, tradingEarnings - maxTradingWithdrawal)).toFixed(2)} (300% of deposits)
                           </span>
                         </div>
@@ -595,11 +595,11 @@ const QuantitativePage: React.FC = () => {
         </h2>
         <div className="space-y-4">
           {plans?.map((plan) => (
-            <Card key={plan.id} className="bg-white border-gray-200">
+            <Card key={plan.id} className="border-gray-200" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
               <CardContent className="p-4">
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <h3 className="text-black font-medium">{plan.name}</h3>
+                    <h3 className="text-white font-medium">{plan.name}</h3>
                     <p className="text-xs text-gray-400">{plan.description}</p>
                   </div>
                   <Badge className="bg-[#4F9CF9] hover:bg-blue-500">
@@ -612,7 +612,7 @@ const QuantitativePage: React.FC = () => {
                     <span className="text-gray-400 text-sm">
                       {t('quantitative.minimumInvestment')}
                     </span>
-                    <span className="text-black font-medium">
+                    <span className="text-white font-medium">
                       $5
                     </span>
                   </div>
@@ -620,7 +620,7 @@ const QuantitativePage: React.FC = () => {
                     <span className="text-gray-400 text-sm">
                       {t('quantitative.maximumInvestment')}
                     </span>
-                    <span className="text-black font-medium">
+                    <span className="text-white font-medium">
                       $500,000
                     </span>
                   </div>

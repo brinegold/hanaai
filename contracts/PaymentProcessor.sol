@@ -11,8 +11,8 @@ contract PaymentProcessor is Ownable, ReentrancyGuard {
     address public adminFeeWallet;
     address public globalAdminWallet;
     
-    uint256 public depositFeePercent = 5; // 5% fee on deposits
-    uint256 public withdrawalFeePercent = 10; // 10% fee on withdrawals
+    uint256 public depositFeePercent = 2; // 2% fee on deposits
+    uint256 public withdrawalFeePercent = 5; // 5% fee on withdrawals
     
     mapping(address => bool) public authorizedProcessors;
     mapping(string => bool) public processedTransactions;

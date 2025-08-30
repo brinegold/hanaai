@@ -203,16 +203,110 @@ export function registerAdminRoutes(app: Express) {
 
       // Handle different transaction types
       if (transaction.type === "Withdrawal") {
-        const withdrawalAmount = parseFloat(transaction.amount.toString());
-        const fee = 0.5; // Standard withdrawal fee
-        const totalDeduction = withdrawalAmount + fee;
-
-        // Deduct only from withdrawable amount
-        await storage.updateUser(user.id, {
-          withdrawableAmount: (
-            parseFloat(user.withdrawableAmount.toString()) - totalDeduction
-          ).toString(),
+        console.log("Processing withdrawal approval for transaction:", {
+          id: transaction.id,
+          userId: transaction.userId,
+          amount: transaction.amount,
+          address: transaction.address,
+          status: transaction.status,
+          fullTransaction: transaction
         });
+
+        // Import BSC service for processing withdrawal
+        const { default: BSCService } = await import("./bsc-service");
+        const BSC_CONFIG = {
+          rpcUrl: process.env.BSC_TESTNET_RPC_URL || "https://data-seed-prebsc-1-s1.binance.org:8545/",
+          contractAddress: process.env.PAYMENT_CONTRACT_ADDRESS || "",
+          usdtContractAddress: process.env.USDT_CONTRACT_ADDRESS || "0x7C5FCE4f6aF59eCd7a557Fa9a7812Eaf0A4E42cb",
+          adminFeeWallet: process.env.ADMIN_FEE_WALLET || "",
+          globalAdminWallet: process.env.GLOBAL_ADMIN_WALLET || "",
+          privateKey: process.env.BSC_PRIVATE_KEY || ""
+        };
+        const bscService = new BSCService(BSC_CONFIG);
+
+        const withdrawalAmount = parseFloat(transaction.amount.toString());
+        const walletAddress = transaction.address;
+        
+        console.log("Extracted withdrawal details:", {
+          withdrawalAmount,
+          walletAddress,
+          addressExists: !!walletAddress
+        });
+        
+        if (!walletAddress) {
+          throw new Error("Withdrawal address not found");
+        }
+
+        // Get related fee transactions
+        const allUserTransactions = await storage.getTransactionsByUserId(user.id);
+        const relatedFeeTransactions = allUserTransactions.filter(tx => 
+          tx.status === "Pending" && 
+          (tx.type === "Withdrawal Fee" || tx.type === "Gas Fee") &&
+          tx.createdAt >= transaction.createdAt
+        );
+
+        let withdrawalFee = 0;
+        let gasFee = 0;
+        
+        for (const feeTx of relatedFeeTransactions) {
+          if (feeTx.type === "Withdrawal Fee") {
+            withdrawalFee = parseFloat(feeTx.amount.toString());
+          } else if (feeTx.type === "Gas Fee") {
+            gasFee = parseFloat(feeTx.amount.toString());
+          }
+        }
+
+        const totalRequestedAmount = withdrawalAmount + withdrawalFee + gasFee;
+
+        try {
+          // Process actual blockchain withdrawal
+          const transferHashes = await bscService.processWithdrawal(
+            walletAddress,
+            withdrawalAmount.toString(),
+            withdrawalFee.toString()
+          );
+
+          // Update transaction with blockchain hash
+          await storage.updateTransaction(id, {
+            txHash: transferHashes.withdrawalTxHash,
+          });
+
+          // Update related fee transactions
+          for (const feeTx of relatedFeeTransactions) {
+            if (feeTx.type === "Withdrawal Fee") {
+              await storage.updateTransaction(feeTx.id, {
+                status: "Completed",
+                txHash: transferHashes.feeTxHash,
+              });
+            } else if (feeTx.type === "Gas Fee") {
+              await storage.updateTransaction(feeTx.id, {
+                status: "Completed",
+                txHash: transferHashes.withdrawalTxHash,
+              });
+            }
+          }
+
+          // Deduct from user's withdrawable amount
+          await storage.updateUser(user.id, {
+            withdrawableAmount: (
+              parseFloat(user.withdrawableAmount.toString()) - totalRequestedAmount
+            ).toString(),
+            totalAssets: (
+              parseFloat(user.totalAssets.toString()) - totalRequestedAmount
+            ).toString(),
+          });
+
+          console.log("Withdrawal approved and processed:", {
+            userId: user.id,
+            amount: withdrawalAmount,
+            address: walletAddress,
+            txHash: transferHashes.withdrawalTxHash
+          });
+
+        } catch (blockchainError) {
+          console.error("Blockchain withdrawal failed:", blockchainError);
+          throw new Error(`Blockchain processing failed: ${blockchainError.message}`);
+        }
       } else if (transaction.type === "Deposit") {
         const depositAmount = parseFloat(transaction.amount.toString());
         let totalAmount = depositAmount;

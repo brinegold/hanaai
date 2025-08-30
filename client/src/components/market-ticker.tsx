@@ -54,14 +54,14 @@ const MarketTicker: React.FC = () => {
   }
 
   return (
-    <div className="mx-4">
+    <div className="mx-4 p-4 rounded-lg" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
       <Tabs defaultValue="COINBASE" onValueChange={setSelectedExchange}>
         <TabsList className="flex space-x-4 mb-2 bg-transparent h-auto p-0">
           {exchanges.map((exchange) => (
             <TabsTrigger
               key={exchange}
               value={exchange}
-              className="py-1 text-gray-400 data-[state=active]:text-black data-[state=active]:font-medium data-[state=active]:relative data-[state=active]:after:content-[''] data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:h-0.5 data-[state=active]:after:w-full data-[state=active]:after:bg-[#4F9CF9] bg-transparent px-0"
+              className="py-1 text-gray-400 data-[state=active]:text-white data-[state=active]:font-medium data-[state=active]:relative data-[state=active]:after:content-[''] data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:h-0.5 data-[state=active]:after:w-full data-[state=active]:after:bg-[#4F9CF9] bg-transparent px-0"
             >
               {exchange === "COINBASE" ? "BINANCE" : exchange}
             </TabsTrigger>
@@ -70,7 +70,7 @@ const MarketTicker: React.FC = () => {
 
         {exchanges.map((exchange) => (
           <TabsContent key={exchange} value={exchange} className="pb-24">
-            <div className="flex justify-between text-xs text-gray-400 px-2 py-3 border-b border-[#333333]">
+            <div className="flex justify-between text-xs text-white/80 px-2 py-3 border-b border-white/20">
               <div className="w-1/4">Currency</div>
               <div className="w-1/4 text-right">Latest Price</div>
               <div className="flex justify-end w-1/2">24h Rise & Down</div>
@@ -82,23 +82,23 @@ const MarketTicker: React.FC = () => {
                 .map((crypto) => (
                   <div
                     key={crypto.symbol}
-                    className="flex items-center justify-between py-3 border-b border-[#333333] hover:bg-[#252525]/30 transition-colors"
+                    className="flex items-center justify-between py-3 border-b border-white/20 hover:bg-white/10 transition-colors"
                   >
                     <div className="flex items-center w-1/4">
                       <div className="w-6 h-6 mr-2 flex items-center justify-center text-xs font-bold bg-gray-50 rounded-full text-blue-500">
                         {crypto.symbol.substring(0, 1)}
                       </div>
                       <div>
-                        <div className="text-black font-medium">
+                        <div className="text-white font-medium">
                           {crypto.symbol}
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-white/60">
                           {crypto.name}
                         </div>
                       </div>
                     </div>
                     <div className="w-1/4 text-right">
-                      <div className="text-black font-mono">
+                      <div className="text-white font-mono">
                         $
                         {(crypto.price ?? 0).toLocaleString("en-US", {
                           minimumFractionDigits: 2,
