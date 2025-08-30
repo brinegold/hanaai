@@ -61,7 +61,7 @@ const MarketTicker: React.FC = () => {
             <TabsTrigger
               key={exchange}
               value={exchange}
-              className="py-1 text-gray-400 data-[state=active]:text-white data-[state=active]:font-medium data-[state=active]:relative data-[state=active]:after:content-[''] data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:h-0.5 data-[state=active]:after:w-full data-[state=active]:after:bg-[#4F9CF9] bg-transparent px-0"
+              className="py-2 px-3 text-gray-400 data-[state=active]:text-white data-[state=active]:bg-yellow-500 data-[state=active]:font-medium rounded-md transition-colors bg-transparent"
             >
               {exchange === "COINBASE" ? "BINANCE" : exchange}
             </TabsTrigger>

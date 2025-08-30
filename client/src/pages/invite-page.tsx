@@ -582,12 +582,6 @@ const LevelReferralList: React.FC<{
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-600">
-          Level {level} Referrals ({referrals.length}) - {levelPercentages[level]}% Commission
-        </p>
-      </div>
-      
       {referrals.map((referral, index) => {
         const totalDeposits = Number(referral.totalDeposits || 0);
         const commissionAmount = totalDeposits * (levelPercentages[level] / 100);
@@ -604,7 +598,7 @@ const LevelReferralList: React.FC<{
                     <p className="font-medium text-white">
                       {referral.displayName || referral.username || `User${referral.referredId}`}
                     </p>
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs bg-yellow-500/20 border-yellow-500 text-yellow-400">
                       Level {level}
                     </Badge>
                   </div>
