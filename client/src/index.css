@@ -57,13 +57,12 @@
 
 /* Gradient Background Classes */
 .gradient-bg {
-  background: url('./trading-chart-bg.jpg') center/cover no-repeat, linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #533483 75%, #7209b7 100%);
+  background: #7209b7;
   min-height: 100vh;
 }
 
 .trading-chart-bg {
-  background: url('./trading-chart-bg.jpg') center/cover no-repeat;
-  background-attachment: fixed;
+  background: #7209b7;
   min-height: 100vh;
 }
 
