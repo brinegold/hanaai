@@ -357,7 +357,7 @@ const InvitePage: React.FC = () => {
                   <p className="font-semibold text-[#4F9CF9] text-lg">
                     {upline.username}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-yellow-600">
                     Your referrer • Joined {new Date(upline.createdAt).toLocaleDateString()}
                   </p>
                 </div>

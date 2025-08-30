@@ -244,9 +244,34 @@ export default function AdminPage() {
                               });
                           }
                         }}
-                        className="bg-green-500 text-white px-2 py-1 rounded text-sm"
+                        className="bg-green-500 text-white px-2 py-1 rounded text-sm mr-2"
                       >
                         Add Deposit
+                      </button>
+                      <button
+                        onClick={() => {
+                          const amount = prompt("Enter withdrawable amount to add:");
+                          if (amount && !isNaN(parseFloat(amount))) {
+                            apiRequest("POST", `/api/admin/users/${user.id}/add-withdrawable`, { amount: parseFloat(amount) })
+                              .then(() => {
+                                queryClient.invalidateQueries({ queryKey: ["admin"] });
+                                toast({
+                                  title: "Success",
+                                  description: "Withdrawable amount added successfully",
+                                });
+                              })
+                              .catch(() => {
+                                toast({
+                                  title: "Error",
+                                  description: "Failed to add withdrawable amount",
+                                  variant: "destructive",
+                                });
+                              });
+                          }
+                        }}
+                        className="bg-purple-500 text-white px-2 py-1 rounded text-sm mr-2"
+                      >
+                        Add Withdrawable
                       </button>
                       {!user.isCountryRep && (
                         <button

@@ -287,6 +287,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Investment data received:", req.body);
 
+      // Check if it's weekend (Saturday = 6, Sunday = 0)
+      const currentDate = new Date();
+      const dayOfWeek = currentDate.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        return res.status(400).json({
+          error: "Trading is not available on weekends. Please try again on Monday-Friday."
+        });
+      }
+
       // Validate request data
       const { amount, plan, dailyRate } = req.body;
       const user = await storage.getUser(req.user!.id);

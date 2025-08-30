@@ -82,6 +82,39 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  // Add withdrawable amount
+  app.post("/api/admin/users/:id/add-withdrawable", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { amount } = req.body;
+
+      const user = await storage.getUser(parseInt(id));
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Create a bonus transaction record
+      const transaction = await storage.createTransaction({
+        userId: parseInt(id),
+        type: "Bonus",
+        amount: amount.toString(),
+        status: "Completed",
+        reason: "Admin added withdrawable amount",
+        txHash: null,
+      });
+
+      // Update user's withdrawable amount
+      await storage.updateUser(parseInt(id), {
+        withdrawableAmount: (parseFloat(user.withdrawableAmount.toString()) + parseFloat(amount.toString())).toString(),
+      });
+
+      res.json(transaction);
+    } catch (err) {
+      console.error("Error adding withdrawable amount:", err);
+      res.status(500).json({ message: "Failed to add withdrawable amount" });
+    }
+  });
+
   // Ban user route
   app.post("/api/admin/users/:id/ban", async (req, res) => {
     try {

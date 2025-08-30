@@ -59,6 +59,13 @@ const QuantitativePage: React.FC = () => {
   // Local UI state for the top trading card
   const [selectedRange, setSelectedRange] = useState<'1d' | '7d' | '30d' | '90d' | 'all'>('1d');
   const [strategy, setStrategy] = useState<string>('Hermatic');
+  
+  // Check if it's weekend
+  const isWeekend = () => {
+    const currentDate = new Date();
+    const dayOfWeek = currentDate.getDay();
+    return dayOfWeek === 0 || dayOfWeek === 6;
+  };
 
   // Fetch investment plans
   const { data: plans, isLoading } = useQuery<InvestmentPlan[]>({
@@ -203,6 +210,18 @@ const QuantitativePage: React.FC = () => {
   }, []);
 
   const handleStartInvestment = async (plan: InvestmentPlan) => {
+    // Check if it's weekend
+    const currentDate = new Date();
+    const dayOfWeek = currentDate.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      toast({
+        title: "Weekend Trading Restriction",
+        description: "Trading is not available on weekends. Please try again on Monday-Friday.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Check if user is in cooldown period
     if (timeRemaining !== null) {
       toast({
@@ -360,8 +379,24 @@ const QuantitativePage: React.FC = () => {
         </Card>
       </div>
 
+      {/* Weekend Trading Restriction Alert */}
+      {isWeekend() && (
+        <div className="px-4 mb-4">
+          <Alert className="bg-red-900 border-red-700 text-red-200">
+            <Clock className="h-5 w-5 text-red" />
+            <AlertTitle className="ml-2 font-semibold text-white">
+              Weekend Trading Restriction
+            </AlertTitle>
+            <AlertDescription className="ml-2 text-grey-500">
+              Trading is not available on weekends. Markets are closed Saturday and Sunday. 
+              Trading will resume on Monday.
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+
       {/* Time Remaining Alert */}
-      {timeRemaining !== null && (
+      {timeRemaining !== null && !isWeekend() && (
         <div className="px-4 mb-4">
           <Alert className="bg-blue-900/30 border-blue-700 text-blue-200">
             <Clock className="h-5 w-5 text-blue-400" />
