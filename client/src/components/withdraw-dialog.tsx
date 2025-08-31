@@ -181,7 +181,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
               </div>
               <div className="flex justify-between">
                 <span>Processing:</span>
-                <span className="font-medium text-orange-600">Admin Approval Required</span>
+                <span className="font-medium text-orange-600">Instant Approval</span>
               </div>
               <div className="flex justify-between">
                 <span>Gas Fee:</span>
