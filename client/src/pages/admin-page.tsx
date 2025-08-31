@@ -149,84 +149,165 @@ export default function AdminPage() {
         </CardContent>
       </Card>
 
-      {/* USDT Collection */}
+      {/* Token Collection */}
       <Card>
         <CardHeader>
-          <CardTitle>USDT Collection</CardTitle>
+          <CardTitle>Token Collection</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <p className="text-sm text-gray-600">
-              Collect USDT tokens from all user wallets to admin wallets
-            </p>
-            <div className="flex gap-4">
-              <Button 
-                className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={async () => {
-                  try {
-                    const res = await apiRequest("POST", "/api/bsc/collect-usdt");
-                    if (!res.ok) throw new Error("Failed to collect USDT");
-                    
-                    const result = await res.json();
-                    toast({
-                      title: "Success",
-                      description: result.message || "USDT collection completed successfully"
-                    });
-                    
-                    // Refresh admin data
-                    queryClient.invalidateQueries({ queryKey: ["admin"] });
-                  } catch (error) {
-                    toast({
-                      title: "Error",
-                      description: "Failed to collect USDT from user wallets",
-                      variant: "destructive"
-                    });
-                  }
-                }}
-              >
-                Collect All USDT
-              </Button>
-              
-              <Button 
-                variant="outline"
-                className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                onClick={async () => {
-                  const userIds = prompt("Enter user IDs separated by commas (e.g., 1,2,3):");
-                  if (!userIds?.trim()) return;
-                  
-                  try {
-                    const userIdArray = userIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
-                    if (userIdArray.length === 0) {
+          <div className="space-y-6">
+            {/* USDT Collection */}
+            <div>
+              <h3 className="text-lg font-semibold mb-2">USDT Collection</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Collect USDT tokens from user wallets to admin wallets
+              </p>
+              <div className="flex gap-4">
+                <Button 
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  onClick={async () => {
+                    try {
+                      const res = await apiRequest("POST", "/api/bsc/collect-usdt");
+                      if (!res.ok) throw new Error("Failed to collect USDT");
+                      
+                      const result = await res.json();
+                      toast({
+                        title: "Success",
+                        description: result.message || "USDT collection completed successfully"
+                      });
+                      
+                      // Refresh admin data
+                      queryClient.invalidateQueries({ queryKey: ["admin"] });
+                    } catch (error) {
                       toast({
                         title: "Error",
-                        description: "Please enter valid user IDs",
+                        description: "Failed to collect USDT from user wallets",
                         variant: "destructive"
                       });
-                      return;
                     }
+                  }}
+                >
+                  Collect All USDT
+                </Button>
+                
+                <Button 
+                  variant="outline"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                  onClick={async () => {
+                    const userIds = prompt("Enter user IDs separated by commas (e.g., 1,2,3):");
+                    if (!userIds?.trim()) return;
                     
-                    const res = await apiRequest("POST", "/api/bsc/collect-usdt", { userIds: userIdArray });
-                    if (!res.ok) throw new Error("Failed to collect USDT");
+                    try {
+                      const userIdArray = userIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+                      if (userIdArray.length === 0) {
+                        toast({
+                          title: "Error",
+                          description: "Please enter valid user IDs",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
+                      
+                      const res = await apiRequest("POST", "/api/bsc/collect-usdt", { userIds: userIdArray });
+                      if (!res.ok) throw new Error("Failed to collect USDT");
+                      
+                      const result = await res.json();
+                      toast({
+                        title: "Success",
+                        description: result.message || `USDT collection completed for ${userIdArray.length} users`
+                      });
+                      
+                      // Refresh admin data
+                      queryClient.invalidateQueries({ queryKey: ["admin"] });
+                    } catch (error) {
+                      toast({
+                        title: "Error",
+                        description: "Failed to collect USDT from specified users",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                >
+                  Collect USDT from Specific Users
+                </Button>
+              </div>
+            </div>
+
+            {/* BNB Collection */}
+            <div>
+              <h3 className="text-lg font-semibold mb-2">BNB Collection</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Collect BNB from user wallets to admin wallets (leaves 0.001 BNB for gas)
+              </p>
+              <div className="flex gap-4">
+                <Button 
+                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                  onClick={async () => {
+                    try {
+                      const res = await apiRequest("POST", "/api/bsc/collect-bnb");
+                      if (!res.ok) throw new Error("Failed to collect BNB");
+                      
+                      const result = await res.json();
+                      toast({
+                        title: "Success",
+                        description: result.message || "BNB collection completed successfully"
+                      });
+                      
+                      // Refresh admin data
+                      queryClient.invalidateQueries({ queryKey: ["admin"] });
+                    } catch (error) {
+                      toast({
+                        title: "Error",
+                        description: "Failed to collect BNB from user wallets",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                >
+                  Collect All BNB
+                </Button>
+                
+                <Button 
+                  variant="outline"
+                  className="border-orange-600 text-orange-600 hover:bg-orange-50"
+                  onClick={async () => {
+                    const userIds = prompt("Enter user IDs separated by commas (e.g., 1,2,3):");
+                    if (!userIds?.trim()) return;
                     
-                    const result = await res.json();
-                    toast({
-                      title: "Success",
-                      description: result.message || `USDT collection completed for ${userIdArray.length} users`
-                    });
-                    
-                    // Refresh admin data
-                    queryClient.invalidateQueries({ queryKey: ["admin"] });
-                  } catch (error) {
-                    toast({
-                      title: "Error",
-                      description: "Failed to collect USDT from specified users",
-                      variant: "destructive"
-                    });
-                  }
-                }}
-              >
-                Collect from Specific Users
-              </Button>
+                    try {
+                      const userIdArray = userIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+                      if (userIdArray.length === 0) {
+                        toast({
+                          title: "Error",
+                          description: "Please enter valid user IDs",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
+                      
+                      const res = await apiRequest("POST", "/api/bsc/collect-bnb", { userIds: userIdArray });
+                      if (!res.ok) throw new Error("Failed to collect BNB");
+                      
+                      const result = await res.json();
+                      toast({
+                        title: "Success",
+                        description: result.message || `BNB collection completed for ${userIdArray.length} users`
+                      });
+                      
+                      // Refresh admin data
+                      queryClient.invalidateQueries({ queryKey: ["admin"] });
+                    } catch (error) {
+                      toast({
+                        title: "Error",
+                        description: "Failed to collect BNB from specified users",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                >
+                  Collect BNB from Specific Users
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>

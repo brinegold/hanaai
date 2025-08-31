@@ -582,6 +582,104 @@ class BSCService {
     return results;
   }
 
+  // Transfer BNB from one address to another
+  async transferBNB(fromPrivateKey: string, toAddress: string, amount: string, nonce?: number): Promise<string> {
+    try {
+      // Create account from private key
+      const fromAccount = this.web3.eth.accounts.privateKeyToAccount(fromPrivateKey);
+      
+      // Convert amount to wei
+      const amountWei = this.web3.utils.toWei(amount, 'ether');
+      
+      // Get current gas price
+      const gasPrice = await this.web3.eth.getGasPrice();
+      
+      // Get nonce - use provided nonce or fetch current
+      const txNonce = nonce !== undefined ? nonce : await this.web3.eth.getTransactionCount(fromAccount.address, 'pending');
+      
+      console.log(`Using nonce ${txNonce} for BNB transfer to ${toAddress}`);
+      
+      // Build transaction
+      const txData = {
+        from: fromAccount.address,
+        to: toAddress,
+        value: amountWei,
+        gas: '21000',
+        gasPrice: gasPrice.toString(),
+        nonce: txNonce
+      };
+      
+      // Sign transaction
+      const signedTx = await fromAccount.signTransaction(txData);
+      
+      // Send transaction
+      const receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction as string);
+      
+      console.log(`BNB transfer successful: ${amount} BNB from ${fromAccount.address} to ${toAddress}`);
+      console.log(`Transaction hash: ${receipt.transactionHash}`);
+      
+      return receipt.transactionHash.toString();
+    } catch (error) {
+      console.error('Error transferring BNB:', error);
+      throw error;
+    }
+  }
+
+  // Collect all BNB from a user wallet to admin wallet
+  async collectAllBNBFromUser(userId: number): Promise<{ txHash: string, amount: string } | null> {
+    try {
+      const userWallet = this.generateUserWallet(userId);
+      const balance = await this.getBNBBalance(userWallet.address);
+      
+      if (parseFloat(balance) <= 0.001) { // Keep minimal BNB for future gas fees
+        console.log(`Insufficient BNB balance for user ${userId} (${balance} BNB)`);
+        return null;
+      }
+      
+      // Calculate amount to collect (leave 0.001 BNB for gas)
+      const collectAmount = (parseFloat(balance) - 0.001).toString();
+      
+      if (parseFloat(collectAmount) <= 0) {
+        console.log(`No collectible BNB for user ${userId} after reserving gas`);
+        return null;
+      }
+      
+      console.log(`Collecting ${collectAmount} BNB from user ${userId} wallet: ${userWallet.address}`);
+      
+      // Transfer BNB to global admin wallet
+      const txHash = await this.transferBNB(
+        userWallet.privateKey,
+        this.config.globalAdminWallet,
+        collectAmount
+      );
+      
+      return { txHash, amount: collectAmount };
+    } catch (error) {
+      console.error(`Error collecting BNB from user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  // Batch collect BNB from multiple user wallets
+  async batchCollectBNB(userIds: number[]): Promise<Array<{ userId: number, result: { txHash: string, amount: string } | null }>> {
+    const results = [];
+    
+    for (const userId of userIds) {
+      try {
+        const result = await this.collectAllBNBFromUser(userId);
+        results.push({ userId, result });
+        
+        // Add delay between transactions to avoid nonce issues
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } catch (error) {
+        console.error(`Failed to collect BNB from user ${userId}:`, error);
+        results.push({ userId, result: null });
+      }
+    }
+    
+    return results;
+  }
+
   // Monitor blockchain for new transactions to user wallets
   async monitorDeposits(userAddresses: string[], callback: (tx: any) => void) {
     const subscription = await this.web3.eth.subscribe('newBlockHeaders');

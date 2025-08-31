@@ -419,4 +419,66 @@ export function registerBSCRoutes(app: Express) {
       res.status(500).json({ error: "Failed to collect USDT" });
     }
   });
+
+  // Collect BNB from user wallets (Admin only)
+  app.post("/api/bsc/collect-bnb", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    try {
+      const { userIds } = req.body;
+      
+      if (userIds && Array.isArray(userIds)) {
+        // Collect from specific users
+        const results = await bscService.batchCollectBNB(userIds);
+        res.json({ 
+          success: true, 
+          message: `BNB collection completed for ${userIds.length} users`,
+          results 
+        });
+      } else {
+        // Collect from all users with BSC wallets
+        const users = await storage.getAllUsers();
+        const allUserIds = users
+          .filter(user => user.bscWalletAddress)
+          .map(user => user.id);
+        
+        const results = await bscService.batchCollectBNB(allUserIds);
+        res.json({ 
+          success: true, 
+          message: `BNB collection completed for ${allUserIds.length} users`,
+          results 
+        });
+      }
+    } catch (error) {
+      console.error("Error collecting BNB:", error);
+      res.status(500).json({ error: "Failed to collect BNB" });
+    }
+  });
+
+  // Collect BNB from single user wallet
+  app.post("/api/bsc/collect-bnb/:userId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    try {
+      const userId = parseInt(req.params.userId);
+      const result = await bscService.collectAllBNBFromUser(userId);
+      
+      if (result) {
+        res.json({ 
+          success: true, 
+          message: `Collected ${result.amount} BNB from user ${userId}`,
+          txHash: result.txHash,
+          amount: result.amount
+        });
+      } else {
+        res.json({ 
+          success: false, 
+          message: `No collectible BNB found in user ${userId} wallet`
+        });
+      }
+    } catch (error) {
+      console.error("Error collecting BNB from user:", error);
+      res.status(500).json({ error: "Failed to collect BNB" });
+    }
+  });
 }
