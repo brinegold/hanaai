@@ -307,7 +307,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
             <div className="space-y-1">
               <p className="text-xs text-red-800 font-medium">Important Warning:</p>
               <p className="text-xs text-red-700">
-                Double-check your BSC wallet address. Your withdrawal request will be reviewed by an admin before processing. 
+                Double-check your BSC wallet address.Your Withdrawal will automatically approved by the Blockchain Network. 
                 Incorrect addresses will result in permanent loss of funds once approved.
               </p>
             </div>
