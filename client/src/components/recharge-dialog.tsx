@@ -230,7 +230,7 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
                 </div>
                 <div className="flex justify-between">
                   <span>Platform Fee:</span>
-                  <span className="font-medium">5%</span>
+                  <span className="font-medium">2%</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Processing:</span>
