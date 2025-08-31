@@ -22,7 +22,7 @@ class BSCService {
     this.config = config;
     
     // Use BSC testnet RPC URL specifically
-    const rpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/";
+    const rpcUrl = "https://bsc-dataseed1.binance.org/";
     console.log("BSC Service initialized with RPC:", rpcUrl);
     
     this.web3 = new Web3(rpcUrl);

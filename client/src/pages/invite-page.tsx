@@ -468,13 +468,13 @@ const InvitePage: React.FC = () => {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => copyToClipboard(referralLink)}
-                      className="text-black hover:text-[#4F9CF9] transition-colors p-2 rounded"
+                      className="text-yellow-500 hover:text-yellow-500 transition-colors p-2 rounded"
                     >
                       <Copy className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => shareReferralLink()}
-                      className="text-black hover:text-[#4F9CF9] transition-colors p-2 rounded"
+                      className="text-yellow-500 hover:text-yellow-500 transition-colors p-2 rounded"
                     >
                       <Share2 className="h-4 w-4" />
                     </button>
