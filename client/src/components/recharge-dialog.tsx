@@ -108,7 +108,7 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
         
         toast({
           title: "Deposit Verified!",
-          description: `${data.amount} USDT has been added to your account (after 5% fee)`,
+          description: `${data.amount} USDT has been added to your account (after 2% fee)`,
         });
 
         // Invalidate queries to refresh user balance
