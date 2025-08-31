@@ -92,9 +92,14 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
     setDepositStatus("pending");
 
     try {
+      // Calculate total amount to send (deposit + fee)
+      const depositAmount = parseFloat(amount);
+      const fee = depositAmount * 0.02;
+      const totalToSend = fee + depositAmount;
+      
       const response = await apiRequest("POST", "/api/bsc/deposit", {
         txHash: txHash.trim(),
-        amount: amount,
+        amount: totalToSend.toString(),
       });
 
       if (response.ok) {
