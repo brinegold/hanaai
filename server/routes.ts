@@ -1162,38 +1162,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Verify security password - protected route
-  app.post("/api/verify-security-password", async (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
-
-    try {
-      const { securityPassword } = req.body;
-
-      if (!securityPassword) {
-        return res
-          .status(400)
-          .json({ message: "Security password is required" });
-      }
-
-      const user = await storage.getUser(req.user!.id);
-      if (!user) return res.status(404).json({ message: "User not found" });
-
-      // Verify security password
-      const isValid = await comparePasswords(
-        securityPassword,
-        user.securityPassword,
-      );
-
-      if (!isValid) {
-        return res.status(401).json({ message: "Invalid security password" });
-      }
-
-      res.status(200).json({ success: true });
-    } catch (err) {
-      console.error("Error verifying security password:", err);
-      res.status(500).json({ message: "Failed to verify security password" });
-    }
-  });
 
   // Update user's referral code
   app.put("/api/user/referral-code", async (req, res) => {

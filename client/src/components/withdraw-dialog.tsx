@@ -27,7 +27,6 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
   const { user } = useAuth();
   const [amount, setAmount] = useState("");
   const [address, setAddress] = useState("");
-  const [securityPassword, setSecurityPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [withdrawStatus, setWithdrawStatus] = useState<"idle" | "processing" | "completed" | "failed">("idle");
 
@@ -76,14 +75,6 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
       return;
     }
 
-    if (!securityPassword) {
-      toast({
-        title: "Security verification required",
-        description: "Please enter your security password",
-        variant: "destructive",
-      });
-      return;
-    }
 
     setSubmitting(true);
     setWithdrawStatus("processing");
@@ -93,7 +84,6 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
       const response = await apiRequest("POST", "/api/bsc/withdraw", {
         amount: amountNum,
         walletAddress: address,
-        securityPassword: securityPassword,
       });
 
       if (!response.ok) {
@@ -138,7 +128,6 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
   const resetDialog = () => {
     setAmount("");
     setAddress("");
-    setSecurityPassword("");
     setWithdrawStatus("idle");
     setSubmitting(false);
   };
@@ -252,20 +241,6 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
             />
           </div>
 
-          {/* Security Password */}
-          <div className="space-y-3">
-            <Label htmlFor="security-password" className="text-sm font-medium">
-              Security Password
-            </Label>
-            <Input
-              id="security-password"
-              type="password"
-              placeholder="Enter your security password"
-              className="bg-white border-gray-200 text-gray-900"
-              value={securityPassword}
-              onChange={(e) => setSecurityPassword(e.target.value)}
-            />
-          </div>
 
           {/* Status Display */}
           {withdrawStatus !== "idle" && (
@@ -296,7 +271,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
           <Button
             className="w-full bg-[#4F9CF9] hover:bg-[#E0B83C] text-black"
             onClick={handleWithdraw}
-            disabled={submitting || !amount || !address || !securityPassword}
+            disabled={submitting || !amount || !address}
           >
             {submitting ? "Submitting Request..." : "Submit Withdrawal Request"}
           </Button>

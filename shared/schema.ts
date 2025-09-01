@@ -18,7 +18,7 @@ export const users = pgTable("users", {
   phone: text("phone"),
   telegram: text("telegram"),
   password: text("password").notNull(),
-  securityPassword: text("security_password").notNull(),
+  securityPassword: text("security_password"),
   inviteCode: text("invite_code"),
   referralCode: text("referral_code").notNull().unique(),
   currentRank: text("current_rank").default("none").notNull(),
@@ -209,7 +209,6 @@ export const insertUserSchema = createInsertSchema(users)
     telegram: z.string().optional(),
     username: z.string().min(3).max(50),
     password: z.string().min(6),
-    securityPassword: z.string().min(6),
     inviteCode: z.string().min(6).max(10).optional(),
   });
 

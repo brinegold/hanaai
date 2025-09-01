@@ -419,11 +419,8 @@ export function setupAuth(app: Express) {
         }
       }
 
-      // Hash the passwords
+      // Hash the password
       const hashedPassword = await hashPassword(userData.password);
-      const hashedSecurityPassword = await hashPassword(
-        userData.securityPassword,
-      );
 
       // Generate a new invite code for the user
       const newInviteCode = storage.generateReferralCode();
@@ -432,7 +429,6 @@ export function setupAuth(app: Express) {
       const userCreateData = {
         ...userData,
         password: hashedPassword,
-        securityPassword: hashedSecurityPassword,
         referralCode: newInviteCode,
         inviteCode: inviteCodeToUse, // Store the invite code used (could be default NebrixAi)
       };

@@ -214,12 +214,11 @@ export function registerBSCRoutes(app: Express) {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
 
     try {
-      const { amount, walletAddress, securityPassword } = req.body;
+      const { amount, walletAddress } = req.body;
       
       console.log("Withdrawal request received:", {
         amount,
         walletAddress,
-        hasSecurityPassword: !!securityPassword,
         requestBody: req.body
       });
       
@@ -239,8 +238,6 @@ export function registerBSCRoutes(app: Express) {
         return res.status(400).json({ error: "Insufficient balance" });
       }
 
-      // Verify security password (if implemented)
-      // TODO: Add security password verification if needed
 
       // Calculate amounts: 5% withdrawal fee + $1 gas fee deducted from requested amount
       const gasFee = 1.0; // Fixed $1 gas fee (deducted from requested amount)

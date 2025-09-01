@@ -9,7 +9,6 @@ import {
   Lock,
   Mail,
   Phone,
-  ShieldCheck,
   Ticket,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -49,9 +48,6 @@ const registerSchema = z.object({
   phone: z.string().optional(),
   telegram: z.string().optional(),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  securityPassword: z
-    .string()
-    .min(6, "Security password must be at least 6 characters"),
   inviteCode: z.preprocess(
     (val) => val === "" ? undefined : val,
     z.string().min(6).optional()
@@ -70,7 +66,6 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
-  const [showSecurityPassword, setShowSecurityPassword] = useState(false);
   const [welcomeCode, setWelcomeCode] = useState<string>(referralCode || "");
   const { loginMutation, registerMutation } = useAuth();
   const [loginMethod, setLoginMethod] = useState<
@@ -99,7 +94,6 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
       phone: "",
       telegram: "",
       password: "",
-      securityPassword: "",
       inviteCode: referralCode || "",
     },
   });
@@ -509,49 +503,6 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
                 )}
               />
 
-              <FormField
-                control={registerForm.control}
-                name="securityPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-white/70">
-                        Security Password (used for transactions)
-                      </span>
-                      <span className="text-xs text-green-400">Important</span>
-                    </div>
-                    <FormControl>
-                      <div className="relative">
-                        <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70 h-5 w-5" />
-                        <Input
-                          type={showSecurityPassword ? "text" : "password"}
-                          placeholder="Security Password"
-                          className="gradient-input pl-10 pr-10 py-6 focus:ring-0 focus:outline-none"
-                          {...field}
-                        />
-                        <button
-                          type="button"
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
-                          onClick={() =>
-                            setShowSecurityPassword(!showSecurityPassword)
-                          }
-                        >
-                          {showSecurityPassword ? (
-                            <EyeOff className="h-5 w-5" />
-                          ) : (
-                            <Eye className="h-5 w-5" />
-                          )}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <p className="text-xs text-white/60 mt-1">
-                      This is your transaction security code. Required for
-                      withdrawals and financial operations.
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <FormField
                 control={registerForm.control}

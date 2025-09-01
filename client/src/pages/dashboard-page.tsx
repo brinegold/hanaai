@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Plus,
   X,
+  FileText,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import Logo from "@/components/logo";
@@ -215,6 +216,10 @@ const DashboardPage: React.FC = () => {
     navigate("/invite");
   };
 
+  const handleWhitePaperClick = () => {
+    window.open("https://raw.githubusercontent.com/areebasiddiqi/nebrix/refs/heads/main/client/src/about.pdf", "_blank");
+  };
+
   // Country Rep application handler
   const handleCountryRepApplication = async () => {
     try {
@@ -317,6 +322,11 @@ const DashboardPage: React.FC = () => {
           icon={TrendingUp}
           label={t('dashboard.aiTrading')}
           onClick={handleWealthGrowthClick}
+        />
+        <FeatureButton
+          icon={FileText}
+          label="White Paper"
+          onClick={handleWhitePaperClick}
         />
       </div>
 
