@@ -178,7 +178,7 @@ async function sendDepositNotification(user, amount, txHash) {
           <p style="color: #333; font-size: 16px;">Hello <strong>${user.username || user.email}</strong>,</p>
           <p style="color: #333; font-size: 16px;">Your deposit has been successfully processed:</p>
           <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 5px 0;"><strong>Amount:</strong> $${amount} USDT</p>
+            <p style="margin: 5px 0;"><strong>Amount:</strong> $${parseFloat(amount).toFixed(2)} USDT</p>
             <p style="margin: 5px 0;"><strong>Transaction Hash:</strong> ${txHash}</p>
             <p style="margin: 5px 0;"><strong>Status:</strong> Completed</p>
           </div>
