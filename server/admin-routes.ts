@@ -40,7 +40,7 @@ async function sendWithdrawalApprovalEmail(user: any, transaction: any, txHash: 
             <p><strong>Amount:</strong> $${parseFloat(transaction.amount.toString()).toFixed(2)}</p>
             <p><strong>Destination Address:</strong> ${transaction.address}</p>
             <p><strong>Network:</strong> ${transaction.network || 'BSC'}</p>
-            <p><strong>Transaction Hash:</strong> <a href="https://testnet.bscscan.com/tx/${txHash}" style="color: #3498db; text-decoration: none;">${txHash}</a></p>
+            <p><strong>Transaction Hash:</strong> <a href="https://bscscan.com/tx/${txHash}" style="color: #3498db; text-decoration: none;">${txHash}</a></p>
             <p><strong>Status:</strong> <span style="color: #27ae60; font-weight: bold;">Completed</span></p>
           </div>
           
