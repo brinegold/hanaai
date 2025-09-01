@@ -247,7 +247,6 @@ const ProfilePage: React.FC = () => {
                   </span>
                 )}
               </div>
-              <div className="text-xs text-[#87CEEB]">Copy</div>
             </div>
           </div>
         </div>
