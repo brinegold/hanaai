@@ -217,7 +217,7 @@ const ProfilePage: React.FC = () => {
         <div className="flex items-center mb-4">
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-[#4F9CF9]/20 flex items-center justify-center mr-3">
-              <User className="h-5 w-5 text-[#4F9CF9]" />
+              <User className="h-5 w-5 text-black" />
             </div>
             <div>
               <div className="flex items-center gap-2">
