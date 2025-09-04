@@ -586,7 +586,7 @@ const LevelReferralList: React.FC<{
                       Level {level}
                     </Badge>
                   </div>
-                  <strong className="text-sm text-[#66ff00] mt-1">
+                  <strong className="text-sm text-yellow-300 mt-1">
                     Joined: {new Date(referral.createdAt).toLocaleDateString()}
                   </strong>
                 </div>
@@ -599,7 +599,7 @@ const LevelReferralList: React.FC<{
                     ${commissionAmount.toFixed(2)}
                   </span>
                 </div>
-                <p className="text-xs text-[#66ff00]">
+                <p className="text-xs text-yellow-300">
                   Deposited: ${totalDeposits.toFixed(2)}
                 </p>
               </div>

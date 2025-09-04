@@ -242,7 +242,7 @@ const ProfilePage: React.FC = () => {
                     Pending
                   </span>
                 ) : (
-                  <span className="px-1.5 py-0.5 rounded-full bg-blue-900/20 text-blue-500 text-xs">
+                  <span className="px-1.5 py-0.5 rounded-full bg-yellow-700 text-blue-500 text-xs">
                     Unverified
                   </span>
                 )}
