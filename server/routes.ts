@@ -1,6 +1,5 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { SalaryScheduler } from "./salary-scheduler";
 import { setupAuth } from "./auth";
 import { z } from "zod";
 import {
@@ -972,9 +971,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Initialize salary scheduler
-  const salaryScheduler = SalaryScheduler.getInstance();
-  salaryScheduler.start();
+  // Salary scheduler removed - all bonuses are now immediately available for withdrawal
 
   // Simulate daily earnings - protected route
   app.post("/api/simulate-earnings", async (req, res) => {

@@ -434,23 +434,7 @@ const InvitePage: React.FC = () => {
         <Card className="border-gray-200" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-white">Your Referral Link</CardTitle>
-            <Button
-              onClick={generateInviteCode}
-              disabled={isGeneratingCode}
-              className="bg-[#4F9CF9] text-[#121212] hover:bg-[#E0B845]"
-            >
-              {isGeneratingCode ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4 mr-2" />
-                  {t('invite.copyCode')}
-                </>
-              )}
-            </Button>
+    
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -602,20 +586,20 @@ const LevelReferralList: React.FC<{
                       Level {level}
                     </Badge>
                   </div>
-                  <p className="text-sm text-white/80 mt-1">
+                  <strong className="text-sm text-[#66ff00] mt-1">
                     Joined: {new Date(referral.createdAt).toLocaleDateString()}
-                  </p>
+                  </strong>
                 </div>
               </div>
               
               <div className="text-right">
                 <div className="flex items-center gap-2 mb-1">
                 
-                  <span className="font-semibold text-green-600">
+                  <span className="font-semibold text-[#66ff00]">
                     ${commissionAmount.toFixed(2)}
                   </span>
                 </div>
-                <p className="text-xs text-white/60">
+                <p className="text-xs text-[#66ff00]">
                   Deposited: ${totalDeposits.toFixed(2)}
                 </p>
               </div>

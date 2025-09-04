@@ -56,6 +56,11 @@ const QuantitativePage: React.FC = () => {
   const { t } = useLanguage();
   const [showTibankInfo, setShowTibankInfo] = useState<boolean>(false);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [detailedTimeRemaining, setDetailedTimeRemaining] = useState<{
+    hours: number;
+    minutes: number;
+    seconds: number;
+  } | null>(null);
   // Local UI state for the top trading card
   const [selectedRange, setSelectedRange] = useState<'1d' | '7d' | '30d' | '90d' | 'all'>('1d');
   const [strategy, setStrategy] = useState<string>('Hermatic');
@@ -111,39 +116,36 @@ const QuantitativePage: React.FC = () => {
 
   // Calculate time remaining for next investment
   useEffect(() => {
-    if (accountInfo?.user?.lastInvestmentDate) {
-      const lastInvestment = new Date(accountInfo.user.lastInvestmentDate);
-      const currentTime = new Date();
-      const timeDifference = currentTime.getTime() - lastInvestment.getTime();
-      const hoursDifference = timeDifference / (1000 * 60 * 60);
-
-      if (hoursDifference < 24) {
-        const hoursRemaining = Math.ceil(24 - hoursDifference);
-        setTimeRemaining(hoursRemaining);
-      } else {
-        setTimeRemaining(null);
-      }
-    } else {
-      setTimeRemaining(null);
-    }
-
-    // Update the timer every minute
-    const timer = setInterval(() => {
+    const updateTimer = () => {
       if (accountInfo?.user?.lastInvestmentDate) {
         const lastInvestment = new Date(accountInfo.user.lastInvestmentDate);
         const currentTime = new Date();
         const timeDifference = currentTime.getTime() - lastInvestment.getTime();
-        const hoursDifference = timeDifference / (1000 * 60 * 60);
+        const millisecondsIn24Hours = 24 * 60 * 60 * 1000;
+        const remainingMs = millisecondsIn24Hours - timeDifference;
 
-        if (hoursDifference < 24) {
-          const hoursRemaining = Math.ceil(24 - hoursDifference);
-          setTimeRemaining(hoursRemaining);
+        if (remainingMs > 0) {
+          const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+          const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+          
+          setTimeRemaining(Math.ceil(remainingMs / (1000 * 60 * 60)));
+          setDetailedTimeRemaining({ hours, minutes, seconds });
         } else {
           setTimeRemaining(null);
-          clearInterval(timer);
+          setDetailedTimeRemaining(null);
         }
+      } else {
+        setTimeRemaining(null);
+        setDetailedTimeRemaining(null);
       }
-    }, 60000); // Update every minute
+    };
+
+    // Initial update
+    updateTimer();
+
+    // Update the timer every second for real-time countdown
+    const timer = setInterval(updateTimer, 1000);
 
     return () => clearInterval(timer);
   }, [accountInfo]);
@@ -395,18 +397,47 @@ const QuantitativePage: React.FC = () => {
         </div>
       )}
 
-      {/* Time Remaining Alert */}
+      {/* Time Remaining Alert with Detailed Timer */}
       {timeRemaining !== null && !isWeekend() && (
         <div className="px-4 mb-4">
           <Alert className="bg-blue-900/30 border-blue-700 text-blue-200">
             <Clock className="h-5 w-5 text-blue-400" />
-            <AlertTitle className="ml-2 font-semibold text-blue-900">
+            <AlertTitle className="ml-2 font-semibold text-white">
               Trading Cooldown Period
             </AlertTitle>
-            <AlertDescription className="ml-2 text-black">
-              You can start a new investment in {timeRemaining} hour
-              {timeRemaining === 1 ? "" : "s"}. Only one Ai trade is
-              allowed every 24 hours.
+            <AlertDescription className="ml-2 text-white">
+              <div className="flex flex-col space-y-2">
+                <span>
+                  Only one AI trade is allowed every 24 hours.
+                </span>
+                {detailedTimeRemaining && (
+                  <div className="flex items-center space-x-4 mt-2">
+                    <span className="text-sm font-medium">Next trade available in:</span>
+                    <div className="flex items-center space-x-2 bg-black/20 rounded-lg px-3 py-2">
+                      <div className="flex flex-col items-center">
+                        <span className="text-lg font-bold text-[#4F9CF9]">
+                          {detailedTimeRemaining.hours.toString().padStart(2, '0')}
+                        </span>
+                        <span className="text-xs text-gray-300">Hours</span>
+                      </div>
+                      <span className="text-[#4F9CF9] font-bold">:</span>
+                      <div className="flex flex-col items-center">
+                        <span className="text-lg font-bold text-[#4F9CF9]">
+                          {detailedTimeRemaining.minutes.toString().padStart(2, '0')}
+                        </span>
+                        <span className="text-xs text-gray-300">Minutes</span>
+                      </div>
+                      <span className="text-[#4F9CF9] font-bold">:</span>
+                      <div className="flex flex-col items-center">
+                        <span className="text-lg font-bold text-[#4F9CF9]">
+                          {detailedTimeRemaining.seconds.toString().padStart(2, '0')}
+                        </span>
+                        <span className="text-xs text-gray-300">Seconds</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </AlertDescription>
           </Alert>
         </div>

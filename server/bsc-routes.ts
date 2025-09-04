@@ -143,7 +143,84 @@ export function registerBSCRoutes(app: Express) {
         // Continue with deposit processing even if collection fails
       }
 
-      // Create deposit transaction record
+      // Handle multi-tier referral commissions for BSC deposits BEFORE creating deposit transaction
+      console.log(`Checking referral commissions for user ${user.id}...`);
+      const referrals = await storage.getReferralsByReferredId(user.id);
+      console.log(`Found ${referrals.length} referral relationships for user ${user.id}:`, referrals);
+      
+      if (referrals.length > 0) {
+        // Check if user has previous deposits
+        const userDeposits = await storage.getTransactionsByUserId(user.id);
+        const completedDeposits = userDeposits.filter(
+          (t) => t.type === "Deposit" && t.status === "Completed",
+        );
+        console.log(`User ${user.id} has ${completedDeposits.length} previous completed deposits`);
+
+        // Only give commission if this is the first deposit
+        if (completedDeposits.length === 0) {
+          console.log(`This is user ${user.id}'s first deposit - processing referral commissions...`);
+          // Commission rates for each tier
+          const tierCommissionRates = {
+            "1": 0.05, // 5% for Tier 1
+            "2": 0.03, // 3% for Tier 2
+            "3": 0.02, // 2% for Tier 3
+            "4": 0.01, // 1% for Tier 4
+          };
+
+          // Process commissions for all tiers
+          for (const referral of referrals) {
+            const referrer = await storage.getUser(referral.referrerId);
+            if (referrer) {
+              let commissionRate = tierCommissionRates[referral.level] || 0;
+              const commissionAmount = userAmount * commissionRate;
+
+              if (commissionAmount > 0) {
+                // Update referrer's assets with commission
+                await storage.updateUser(referrer.id, {
+                  commissionAssets: (
+                    parseFloat(referrer.commissionAssets.toString()) +
+                    commissionAmount
+                  ).toString(),
+                  commissionToday: (
+                    parseFloat(referrer.commissionToday.toString()) +
+                    commissionAmount
+                  ).toString(),
+                  withdrawableAmount: (
+                    parseFloat(referrer.withdrawableAmount.toString()) +
+                    commissionAmount
+                  ).toString(),
+                });
+
+                // Update referral commission record
+                const currentCommission = parseFloat(
+                  referral.commission || "0",
+                );
+                await storage.updateReferral(referral.id, {
+                  commission: (currentCommission + commissionAmount).toString(),
+                });
+
+                // Create commission transaction
+                await storage.createTransaction({
+                  userId: referrer.id,
+                  type: "Commission",
+                  amount: commissionAmount.toString(),
+                  status: "Completed",
+                  reason: `Tier ${referral.level} referral commission from BSC deposit by ${user.username || user.email}`,
+                  txHash: null,
+                });
+
+                console.log(`Paid ${commissionAmount.toFixed(2)} USDT commission to referrer ${referrer.id} (Tier ${referral.level})`);
+              }
+            }
+          }
+        } else {
+          console.log(`User ${user.id} has previous deposits - no referral commission paid`);
+        }
+      } else {
+        console.log(`No referral relationships found for user ${user.id} - no commission to pay`);
+      }
+
+      // Create deposit transaction record AFTER commission processing
       await storage.createTransaction({
         userId: user.id,
         type: "Deposit",
@@ -171,6 +248,31 @@ export function registerBSCRoutes(app: Express) {
           confirmationStatus: "confirmed",
           reason: `Admin fee for deposit - Original TX: ${txHash}`
         });
+      }
+
+      // Return remaining BNB to global admin wallet after deposit processing
+      if (userWallet) {
+        try {
+          console.log(`Checking remaining BNB balance for user ${user.id} wallet ${userWallet.address}...`);
+          const remainingBnbBalance = await bscService.getBNBBalance(userWallet.address);
+          console.log(`User ${user.id} remaining BNB balance: ${remainingBnbBalance}`);
+          
+          if (remainingBnbBalance > 0.0001) { // Only transfer if more than 0.0001 BNB (to cover gas)
+            console.log(`Returning ${remainingBnbBalance} BNB from user ${user.id} wallet to global admin wallet...`);
+            const bnbReturnResult = await bscService.collectAllBNBFromUser(user.id);
+            
+            if (bnbReturnResult) {
+              console.log(`Successfully returned ${bnbReturnResult.amount} BNB to global admin wallet. TX: ${bnbReturnResult.txHash}`);
+            } else {
+              console.log(`No BNB to return from user ${user.id} wallet`);
+            }
+          } else {
+            console.log(`User ${user.id} BNB balance too low (${remainingBnbBalance}) - not returning to admin`);
+          }
+        } catch (bnbReturnError) {
+          console.warn(`Failed to return BNB from user ${user.id} wallet:`, bnbReturnError.message);
+          // Don't fail the deposit if BNB return fails
+        }
       }
 
       // Update user balance
