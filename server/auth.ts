@@ -366,22 +366,13 @@ export function setupAuth(app: Express) {
     try {
       const userData = insertUserSchema.parse(req.body);
 
-      // If no invite code provided, use default "NebrixAi" referral code
-      let inviteCodeToUse = userData.inviteCode;
-      if (!inviteCodeToUse) {
-        // Find NebrixAi user's invite code
-        const nebrixUser = await storage.getUserByUsername("NebrixAi");
-        if (nebrixUser && nebrixUser.referralCode) {
-          inviteCodeToUse = nebrixUser.referralCode;
-        } else {
-          return res.status(400).json({ message: "Default referral system not available" });
+      // Validate invite code if provided
+      let inviteCode = null;
+      if (userData.inviteCode) {
+        inviteCode = await storage.getInviteCode(userData.inviteCode);
+        if (!inviteCode) {
+          return res.status(400).json({ message: "Invalid invite code" });
         }
-      }
-
-      // Validate invite code
-      const inviteCode = await storage.getInviteCode(inviteCodeToUse);
-      if (!inviteCode) {
-        return res.status(400).json({ message: "Invalid invite code" });
       }
 
       // Check if user exists
@@ -430,11 +421,11 @@ export function setupAuth(app: Express) {
         ...userData,
         password: hashedPassword,
         referralCode: newInviteCode,
-        inviteCode: inviteCodeToUse, // Store the invite code used (could be default NebrixAi)
+        inviteCode: userData.inviteCode || null, // Store the invite code used or null if none
       };
 
-      // Only add referrerId if it exists and is not null
-      if (inviteCode.createdById && inviteCode.createdById !== null) {
+      // Only add referrerId if invite code exists and has a creator
+      if (inviteCode && inviteCode.createdById && inviteCode.createdById !== null) {
         userCreateData.referrerId = inviteCode.createdById;
       }
 
@@ -448,17 +439,20 @@ export function setupAuth(app: Express) {
         createdById: user.id,
       });
 
-      // Validate the invite code is valid
-      await storage.useInviteCode(inviteCodeToUse, user.id);
+      // Only process invite code if one was provided
+      if (inviteCode && userData.inviteCode) {
+        // Validate the invite code is valid
+        await storage.useInviteCode(userData.inviteCode, user.id);
 
-      // Add multi-tier referral relationships if the invite code has a creator
-      if (inviteCode.createdById && inviteCode.createdById !== null) {
-        await createMultiTierReferrals(inviteCode.createdById, user.id, user.username);
-        
-        // Send referral notification to the referrer
-        const referrer = await storage.getUserById(inviteCode.createdById);
-        if (referrer) {
-          await sendReferralNotification(referrer, user);
+        // Add multi-tier referral relationships if the invite code has a creator
+        if (inviteCode.createdById && inviteCode.createdById !== null) {
+          await createMultiTierReferrals(inviteCode.createdById, user.id, user.username);
+          
+          // Send referral notification to the referrer
+          const referrer = await storage.getUserById(inviteCode.createdById);
+          if (referrer) {
+            await sendReferralNotification(referrer, user);
+          }
         }
       }
 
