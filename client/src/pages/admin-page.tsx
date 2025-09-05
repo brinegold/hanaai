@@ -369,6 +369,9 @@ export default function AdminPage() {
                 <TableHead>ID</TableHead>
                 <TableHead>Username</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Rank</TableHead>
+                <TableHead>Direct Volume</TableHead>
+                <TableHead>Indirect Volume</TableHead>
                 <TableHead>Total Assets</TableHead>
                 <TableHead>Withdrawable</TableHead>
                 <TableHead>Total Deposit</TableHead>
@@ -381,6 +384,9 @@ export default function AdminPage() {
                   <TableCell>{user.id}</TableCell>
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.rank || 'None'}</TableCell>
+                  <TableCell>{formatCurrency(user.directVolume || 0)}</TableCell>
+                  <TableCell>{formatCurrency(user.indirectVolume || 0)}</TableCell>
                   <TableCell>{formatCurrency(user.totalAssets)}</TableCell>
                   <TableCell>{formatCurrency(user.withdrawableAmount)}</TableCell>
                   <TableCell>{formatCurrency(user.rechargeAmount)}</TableCell>

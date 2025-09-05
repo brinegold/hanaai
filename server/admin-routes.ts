@@ -87,13 +87,49 @@ export function registerAdminRoutes(app: Express) {
   app.get("/api/admin/users", async (req, res) => {
     try {
       const users = await storage.getAllUsers();
-      res.json(
-        users.map((user) => ({
-          ...user,
-          password: undefined,
-          securityPassword: undefined,
-        })),
+      
+      // Calculate direct and indirect volumes for each user
+      const enrichedUsers = await Promise.all(
+        users.map(async (user) => {
+          // Calculate direct volume (sum of deposits from direct referrals)
+          const directReferrals = await storage.getReferralsByReferrerId(user.id);
+          const directReferralIds = directReferrals
+            .filter(ref => ref.level === "1")
+            .map(ref => ref.referredId);
+          
+          let directVolume = 0;
+          for (const referralId of directReferralIds) {
+            const referralUser = await storage.getUser(referralId);
+            if (referralUser) {
+              directVolume += parseFloat(referralUser.rechargeAmount.toString());
+            }
+          }
+          
+          // Calculate indirect volume (sum of deposits from indirect referrals - levels 2, 3, 4)
+          const indirectReferrals = directReferrals
+            .filter(ref => ref.level !== "1")
+            .map(ref => ref.referredId);
+          
+          let indirectVolume = 0;
+          for (const referralId of indirectReferrals) {
+            const referralUser = await storage.getUser(referralId);
+            if (referralUser) {
+              indirectVolume += parseFloat(referralUser.rechargeAmount.toString());
+            }
+          }
+          
+          return {
+            ...user,
+            password: undefined,
+            securityPassword: undefined,
+            rank: user.currentRank || 'None',
+            directVolume: directVolume,
+            indirectVolume: indirectVolume,
+          };
+        })
       );
+      
+      res.json(enrichedUsers);
     } catch (err) {
       console.error("Error fetching users:", err);
       res.status(500).json({ message: "Failed to fetch users" });

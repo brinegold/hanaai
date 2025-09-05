@@ -534,11 +534,37 @@ const LevelReferralList: React.FC<{
   referrals: ReferralDetail[];
   isLoading: boolean;
 }> = ({ level, referrals, isLoading }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+  
   const levelPercentages: { [key: string]: number } = {
     "1": 5,
     "2": 3,
     "3": 2,
     "4": 1,
+  };
+
+  // Reset to first page when level changes or referrals change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [level, referrals.length]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(referrals.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentReferrals = referrals.slice(startIndex, endIndex);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
   if (isLoading) {
@@ -565,48 +591,83 @@ const LevelReferralList: React.FC<{
   }
 
   return (
-    <div className="space-y-3">
-      {referrals.map((referral, index) => {
-        const totalDeposits = Number(referral.totalDeposits || 0);
-        const commissionAmount = totalDeposits * (levelPercentages[level] / 100);
-        
-        return (
-          <div key={referral.id} className="bg-black/10 rounded-lg p-4 border border-white/20">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="bg-[#4F9CF9] text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium">
-                  {index + 1}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-white">
-                      {referral.displayName || referral.username || `User${referral.referredId}`}
-                    </p>
-                    <Badge variant="outline" className="text-xs bg-yellow-500/20 border-yellow-500 text-yellow-400">
-                      Level {level}
-                    </Badge>
+    <div className="space-y-4">
+      <div className="space-y-3">
+        {currentReferrals.map((referral, index) => {
+          const totalDeposits = Number(referral.totalDeposits || 0);
+          const commissionAmount = totalDeposits * (levelPercentages[level] / 100);
+          const globalIndex = startIndex + index + 1;
+          
+          return (
+            <div key={referral.id} className="bg-black/10 rounded-lg p-4 border border-white/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-[#4F9CF9] text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium">
+                    {globalIndex}
                   </div>
-                  <strong className="text-sm text-yellow-300 mt-1">
-                    Joined: {new Date(referral.createdAt).toLocaleDateString()}
-                  </strong>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-white">
+                        {referral.displayName || referral.username || `User${referral.referredId}`}
+                      </p>
+                      <Badge variant="outline" className="text-xs bg-yellow-500/20 border-yellow-500 text-yellow-400">
+                        Level {level}
+                      </Badge>
+                    </div>
+                    <strong className="text-sm text-yellow-300 mt-1">
+                      Joined: {new Date(referral.createdAt).toLocaleDateString()}
+                    </strong>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="text-right">
-                <div className="flex items-center gap-2 mb-1">
                 
-                  <span className="font-semibold text-[#66ff00]">
-                    ${commissionAmount.toFixed(2)}
-                  </span>
+                <div className="text-right">
+                  <div className="flex items-center gap-2 mb-1">
+                  
+                    <span className="font-semibold text-[#66ff00]">
+                      ${commissionAmount.toFixed(2)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-yellow-300">
+                    Deposited: ${totalDeposits.toFixed(2)}
+                  </p>
                 </div>
-                <p className="text-xs text-yellow-300">
-                  Deposited: ${totalDeposits.toFixed(2)}
-                </p>
               </div>
             </div>
+          );
+        })}
+      </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/20">
+          <div className="text-sm text-gray-400">
+            Showing {startIndex + 1}-{Math.min(endIndex, referrals.length)} of {referrals.length} referrals
           </div>
-        );
-      })}
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrevPage}
+              disabled={currentPage === 1}
+              className="bg-black/20 border-white/20 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-gray-400 px-3">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className="bg-black/20 border-white/20 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next Page
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
