@@ -369,6 +369,7 @@ export default function AdminPage() {
                 <TableHead>ID</TableHead>
                 <TableHead>Username</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Upline</TableHead>
                 <TableHead>Rank</TableHead>
                 <TableHead>Direct Volume</TableHead>
                 <TableHead>Indirect Volume</TableHead>
@@ -384,7 +385,8 @@ export default function AdminPage() {
                   <TableCell>{user.id}</TableCell>
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.rank || 'None'}</TableCell>
+                  <TableCell>{user.uplineUsername || '-'}</TableCell>
+                  <TableCell>{user.rank || 'Bronze'}</TableCell>
                   <TableCell>{formatCurrency(user.directVolume || 0)}</TableCell>
                   <TableCell>{formatCurrency(user.indirectVolume || 0)}</TableCell>
                   <TableCell>{formatCurrency(user.totalAssets)}</TableCell>

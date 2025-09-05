@@ -118,13 +118,21 @@ export function registerAdminRoutes(app: Express) {
             }
           }
           
+          // Get upline username if user has a referrer
+          let uplineUsername = null;
+          if (user.referrerId) {
+            const uplineUser = await storage.getUser(user.referrerId);
+            uplineUsername = uplineUser?.username || null;
+          }
+          
           return {
             ...user,
             password: undefined,
             securityPassword: undefined,
-            rank: user.currentRank || 'None',
+            rank: user.currentRank || 'Bronze',
             directVolume: directVolume,
             indirectVolume: indirectVolume,
+            uplineUsername: uplineUsername,
           };
         })
       );
