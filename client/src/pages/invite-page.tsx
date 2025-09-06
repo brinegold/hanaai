@@ -366,7 +366,7 @@ const InvitePage: React.FC = () => {
               <div className="text-center py-4 text-gray-500">
                 <User className="h-12 w-12 mx-auto mb-2 text-white" />
                 <strong className="text-sm">No upline found</strong><br></br>
-                <strong className="text-xs text-green-600">You joined directly without a referrer</strong>
+                <strong className="text-xs text-black">You joined directly without a referrer</strong>
               </div>
             )}
           </CardContent>
