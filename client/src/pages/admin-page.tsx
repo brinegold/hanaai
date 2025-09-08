@@ -445,6 +445,31 @@ export default function AdminPage() {
                       >
                         Add Withdrawable
                       </button>
+                      <button
+                        onClick={() => {
+                          const amount = prompt("Enter withdrawable amount to deduct:");
+                          if (amount && !isNaN(parseFloat(amount))) {
+                            apiRequest("POST", `/api/admin/users/${user.id}/deduct-withdrawable`, { amount: parseFloat(amount) })
+                              .then(() => {
+                                queryClient.invalidateQueries({ queryKey: ["admin"] });
+                                toast({
+                                  title: "Success",
+                                  description: "Withdrawable amount deducted successfully",
+                                });
+                              })
+                              .catch((error) => {
+                                toast({
+                                  title: "Error",
+                                  description: error.message || "Failed to deduct withdrawable amount",
+                                  variant: "destructive",
+                                });
+                              });
+                          }
+                        }}
+                        className="bg-red-500 text-white px-2 py-1 rounded text-sm mr-2"
+                      >
+                        Deduct Withdrawable
+                      </button>
                       {!user.isCountryRep && (
                         <button
                           onClick={async () => {

@@ -223,6 +223,58 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  // Deduct withdrawable amount from user
+  app.post("/api/admin/users/:id/deduct-withdrawable", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { amount } = req.body;
+
+      if (!amount || parseFloat(amount) <= 0) {
+        return res.status(400).json({ message: "Valid amount is required" });
+      }
+
+      const user = await storage.getUser(parseInt(id));
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const deductAmount = parseFloat(amount);
+      const currentWithdrawable = parseFloat(user.withdrawableAmount.toString());
+
+      if (deductAmount > currentWithdrawable) {
+        return res.status(400).json({ 
+          message: `Cannot deduct $${deductAmount}. User only has $${currentWithdrawable} withdrawable.` 
+        });
+      }
+
+      // Create transaction record for the deduction
+      const transaction = await storage.createTransaction({
+        userId: parseInt(id),
+        type: "Admin Deduction",
+        amount: (-deductAmount).toString(),
+        status: "Completed",
+        reason: "Admin deducted withdrawable amount",
+        txHash: null,
+      });
+
+      // Update user's withdrawable amount
+      await storage.updateUser(parseInt(id), {
+        withdrawableAmount: (currentWithdrawable - deductAmount).toString(),
+        totalAssets: (parseFloat(user.totalAssets.toString()) - deductAmount).toString(),
+      });
+
+      res.json({
+        success: true,
+        message: `Successfully deducted $${deductAmount} from user's withdrawable balance`,
+        transaction,
+        newWithdrawableAmount: (currentWithdrawable - deductAmount).toFixed(2)
+      });
+    } catch (err) {
+      console.error("Error deducting withdrawable amount:", err);
+      res.status(500).json({ message: "Failed to deduct withdrawable amount" });
+    }
+  });
+
   // Ban user route
   app.post("/api/admin/users/:id/ban", async (req, res) => {
     try {
