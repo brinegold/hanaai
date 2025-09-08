@@ -2,7 +2,7 @@ const { ethers } = require("hardhat");
 
 async function main() {
   // Replace with your deployed TestUSDT contract address
-  const TEST_USDT_ADDRESS = "0x7C5FCE4f6aF59eCd7a557Fa9a7812Eaf0A4E42cb";
+  const TEST_USDT_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
   
   // Replace with YOUR MetaMask wallet address
   const RECIPIENT_ADDRESS = "0x5aD0620BdD2EBc328F854f4F8126B1E663193112";

@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { useWithdrawalStatus } from "@/hooks/use-withdrawal-status";
 import { AlertTriangle, ArrowDownLeft, CheckCircle, Clock } from "lucide-react";
 
 interface AutoWithdrawDialogProps {
@@ -25,6 +26,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { data: withdrawalStatus, isLoading: isLoadingStatus } = useWithdrawalStatus();
   const [amount, setAmount] = useState("");
   const [address, setAddress] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -36,6 +38,16 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
   const maxWithdrawable = Math.max(0, availableBalance * (1 - withdrawalFee));
 
   const handleWithdraw = async () => {
+    // Check for pending withdrawal first
+    if (withdrawalStatus?.hasPendingWithdrawal) {
+      toast({
+        title: "Withdrawal Already Pending",
+        description: "You have a pending withdrawal request. Please wait for it to be processed before submitting a new one.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const amountNum = parseFloat(amount);
 
     // Validation
@@ -102,6 +114,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
       // Invalidate queries to refresh user balance and transactions
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/withdrawal/status"] });
 
       // Close dialog after 3 seconds
       setTimeout(() => {
@@ -152,6 +165,32 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Pending Withdrawal Warning */}
+          {withdrawalStatus?.hasPendingWithdrawal && (
+            <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="h-4 w-4 text-orange-600 animate-pulse" />
+                <h3 className="text-sm font-medium text-orange-800">Withdrawal Processing</h3>
+              </div>
+              <p className="text-xs text-orange-700 mb-2">
+                You have a pending withdrawal request that is being processed by our admin team.
+              </p>
+              <div className="text-xs text-orange-600">
+                <div className="flex justify-between">
+                  <span>Amount:</span>
+                  <span className="font-medium">${parseFloat(withdrawalStatus.pendingWithdrawal?.amount || "0").toFixed(2)} USDT</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Status:</span>
+                  <span className="font-medium capitalize">{withdrawalStatus.pendingWithdrawal?.status}</span>
+                </div>
+              </div>
+              <p className="text-xs text-orange-700 mt-2 font-medium">
+                New withdrawal requests are disabled until this one is completed.
+              </p>
+            </div>
+          )}
+
           {/* Balance Information */}
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
             <h3 className="text-sm font-medium text-gray-800 mb-3">Withdrawal Information</h3>
@@ -170,7 +209,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
               </div>
               <div className="flex justify-between">
                 <span>Processing:</span>
-                <span className="font-medium text-orange-600">Instant Approval</span>
+                <span className="font-medium text-orange-600">Admin Approval Required</span>
               </div>
               <div className="flex justify-between">
                 <span>Gas Fee:</span>
@@ -202,6 +241,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
               className="bg-white border-gray-200 text-gray-900"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              disabled={withdrawalStatus?.hasPendingWithdrawal || isLoadingStatus}
             />
             {amount && (
               <div className="bg-red-50 p-3 rounded-lg border border-red-200">
@@ -238,6 +278,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
               className="bg-white border-gray-200 text-gray-900 font-mono text-sm"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
+              disabled={withdrawalStatus?.hasPendingWithdrawal || isLoadingStatus}
             />
           </div>
 
@@ -269,11 +310,16 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
 
           {/* Action Button */}
           <Button
-            className="w-full bg-[#4F9CF9] hover:bg-[#E0B83C] text-black"
+            className="w-full bg-[#4F9CF9] hover:bg-[#E0B83C] text-black disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleWithdraw}
-            disabled={submitting || !amount || !address}
+            disabled={submitting || !amount || !address || withdrawalStatus?.hasPendingWithdrawal || isLoadingStatus}
           >
-            {submitting ? "Submitting Request..." : "Submit Withdrawal Request"}
+            {withdrawalStatus?.hasPendingWithdrawal 
+              ? "Withdrawal Processing - Please Wait" 
+              : submitting 
+                ? "Submitting Request..." 
+                : "Submit Withdrawal Request"
+            }
           </Button>
 
           {/* Warning */}

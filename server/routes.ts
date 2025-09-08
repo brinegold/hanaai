@@ -625,6 +625,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ transactions, totals });
   });
 
+  // Check for pending withdrawal transactions - protected route
+  app.get("/api/withdrawal/status", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+
+    try {
+      const userTransactions = await storage.getTransactionsByUserId(req.user!.id);
+      
+      // Find pending withdrawal transactions (including related fees)
+      const pendingWithdrawals = userTransactions.filter(tx => 
+        tx.status === "Pending" && 
+        (tx.type === "Withdrawal" || tx.type === "Withdrawal Fee" || tx.type === "Gas Fee")
+      );
+
+      // Group by main withdrawal transaction
+      const mainPendingWithdrawal = pendingWithdrawals.find(tx => tx.type === "Withdrawal");
+      
+      if (mainPendingWithdrawal) {
+        // Find related fee transactions created around the same time
+        const relatedFees = pendingWithdrawals.filter(tx => 
+          tx.type !== "Withdrawal" && 
+          Math.abs(new Date(tx.createdAt).getTime() - new Date(mainPendingWithdrawal.createdAt).getTime()) < 60000 // Within 1 minute
+        );
+
+        res.json({
+          hasPendingWithdrawal: true,
+          pendingWithdrawal: {
+            id: mainPendingWithdrawal.id,
+            amount: mainPendingWithdrawal.amount,
+            address: mainPendingWithdrawal.address,
+            createdAt: mainPendingWithdrawal.createdAt,
+            status: mainPendingWithdrawal.status,
+            relatedFees: relatedFees.map(fee => ({
+              type: fee.type,
+              amount: fee.amount
+            }))
+          }
+        });
+      } else {
+        res.json({
+          hasPendingWithdrawal: false,
+          pendingWithdrawal: null
+        });
+      }
+    } catch (error) {
+      console.error("Error checking withdrawal status:", error);
+      res.status(500).json({ error: "Failed to check withdrawal status" });
+    }
+  });
+
   // Verify and store invite code
   app.post("/api/invite-code/verify", async (req, res) => {
     try {
@@ -1608,28 +1657,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
             reason: `Rank achievement: ${newRank}`,
           });
 
+          // Calculate direct and indirect volumes
+          const referrals = await storage.getReferralsByReferrerId(userId);
+        
+          const directReferralIds = referrals
+            .filter(ref => ref.level === "1")
+            .map(ref => ref.referredId);
+        
+          let directVolume = 0;
+          for (const referralId of directReferralIds) {
+            const referralUser = await storage.getUser(referralId);
+            if (referralUser) {
+              directVolume += parseFloat(referralUser.rechargeAmount.toString());
+            }
+          }
+        
+          const indirectReferrals = referrals
+            .filter(ref => ref.level !== "1")
+            .map(ref => ref.referredId);
+        
+          let indirectVolume = 0;
+          for (const referralId of indirectReferrals) {
+            const referralUser = await storage.getUser(referralId);
+            if (referralUser) {
+              indirectVolume += parseFloat(referralUser.rechargeAmount.toString());
+            }
+          }
+
           res.json({ 
             success: true, 
             newRank, 
             incentivePaid: true, 
             incentiveAmount: qualifiedRank.incentiveAmount,
-            totalVolume 
+            totalVolume,
+            directVolume,
+            indirectVolume
           });
         } else {
+          // Calculate direct and indirect volumes for existing rank case
+          const referrals = await db.select().from(referralTree).where(eq(referralTree.referrerId, userId));
+          
+          const directReferralIds = referrals
+            .filter(ref => ref.level === "1")
+            .map(ref => ref.referredId);
+          
+          let directVolume = 0;
+          for (const referralId of directReferralIds) {
+            const referralUser = await storage.getUser(referralId);
+            if (referralUser) {
+              directVolume += parseFloat(referralUser.rechargeAmount.toString());
+            }
+          }
+          
+          const indirectReferrals = referrals
+            .filter(ref => ref.level !== "1")
+            .map(ref => ref.referredId);
+          
+          let indirectVolume = 0;
+          for (const referralId of indirectReferrals) {
+            const referralUser = await storage.getUser(referralId);
+            if (referralUser) {
+              indirectVolume += parseFloat(referralUser.rechargeAmount.toString());
+            }
+          }
+
           res.json({ 
             success: true, 
             newRank, 
             incentivePaid: false, 
             message: "Rank updated but incentive already claimed",
-            totalVolume 
+            totalVolume,
+            directVolume,
+            indirectVolume
           });
         }
       } else {
+        // Calculate direct and indirect volumes for no rank change case
+        const referrals = await db.select().from(referralTree).where(eq(referralTree.referrerId, userId));
+        
+        const directReferralIds = referrals
+          .filter(ref => ref.level === "1")
+          .map(ref => ref.referredId);
+        
+        let directVolume = 0;
+        for (const referralId of directReferralIds) {
+          const referralUser = await storage.getUser(referralId);
+          if (referralUser) {
+            directVolume += parseFloat(referralUser.rechargeAmount.toString());
+          }
+        }
+        
+        const indirectReferrals = referrals
+          .filter(ref => ref.level !== "1")
+          .map(ref => ref.referredId);
+        
+        let indirectVolume = 0;
+        for (const referralId of indirectReferrals) {
+          const referralUser = await storage.getUser(referralId);
+          if (referralUser) {
+            indirectVolume += parseFloat(referralUser.rechargeAmount.toString());
+          }
+        }
+
         res.json({ 
           success: true, 
           currentRank, 
           noRankChange: true, 
-          totalVolume 
+          totalVolume,
+          directVolume,
+          indirectVolume
         });
       }
     } catch (error) {

@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Copy, ExternalLink, Wallet, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { WithdrawalProcessingStatus } from "@/components/withdrawal-processing-status";
+import { useWithdrawalStatus } from "@/hooks/use-withdrawal-status";
 
 interface BSCWallet {
   walletAddress: string;
@@ -31,6 +33,7 @@ export default function BSCPage() {
   const [depositForm, setDepositForm] = useState({ txHash: "", amount: "" });
   const [withdrawForm, setWithdrawForm] = useState({ amount: "", walletAddress: "" });
   const { toast } = useToast();
+  const { data: withdrawalStatus, isLoading: withdrawalStatusLoading } = useWithdrawalStatus();
 
   useEffect(() => {
     fetchWallet();
@@ -123,6 +126,15 @@ export default function BSCPage() {
   };
 
   const handleWithdraw = async () => {
+    if (withdrawalStatus?.hasPendingWithdrawal) {
+      toast({
+        title: "Withdrawal Already Pending",
+        description: "You have a pending withdrawal request. Please wait for it to be processed before submitting a new one.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!withdrawForm.amount || !withdrawForm.walletAddress) {
       toast({
         title: "Error",
@@ -144,8 +156,8 @@ export default function BSCPage() {
 
       if (result.success) {
         toast({
-          title: "Withdrawal Successful!",
-          description: `$${result.netAmount} sent to your wallet (Fee: $${result.fee})`,
+          title: "Withdrawal Request Submitted!",
+          description: `Your withdrawal request for $${result.netAmount} has been submitted and is pending admin approval.`,
         });
         setWithdrawForm({ amount: "", walletAddress: "" });
       } else {
@@ -274,6 +286,9 @@ export default function BSCPage() {
         </Card>
       )}
 
+      {/* Withdrawal Processing Status */}
+      <WithdrawalProcessingStatus />
+
       <Tabs defaultValue="deposit" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="deposit" className="flex items-center gap-2">
@@ -351,6 +366,14 @@ export default function BSCPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {withdrawalStatus?.hasPendingWithdrawal && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <p className="text-yellow-800 text-sm">
+                    ⚠️ You have a pending withdrawal request. New withdrawals are disabled until your current request is processed.
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="withdrawAmount">Amount (USDT)</Label>
                 <Input
@@ -358,6 +381,7 @@ export default function BSCPage() {
                   type="number"
                   placeholder="50"
                   value={withdrawForm.amount}
+                  disabled={withdrawalStatus?.hasPendingWithdrawal || withdrawalStatusLoading}
                   onChange={(e) =>
                     setWithdrawForm({ ...withdrawForm, amount: e.target.value })
                   }
@@ -370,6 +394,7 @@ export default function BSCPage() {
                   id="walletAddress"
                   placeholder="0x..."
                   value={withdrawForm.walletAddress}
+                  disabled={withdrawalStatus?.hasPendingWithdrawal || withdrawalStatusLoading}
                   onChange={(e) =>
                     setWithdrawForm({ ...withdrawForm, walletAddress: e.target.value })
                   }
@@ -388,10 +413,10 @@ export default function BSCPage() {
 
               <Button
                 onClick={handleWithdraw}
-                disabled={loading}
+                disabled={loading || withdrawalStatus?.hasPendingWithdrawal || withdrawalStatusLoading}
                 className="w-full"
               >
-                {loading ? "Processing..." : "Process Withdrawal"}
+                {loading ? "Processing..." : withdrawalStatus?.hasPendingWithdrawal ? "Withdrawal Pending" : "Process Withdrawal"}
               </Button>
             </CardContent>
           </Card>

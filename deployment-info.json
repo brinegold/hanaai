@@ -1,0 +1,22 @@
+
+{
+  "network": {
+    "name": "bsc_testnet",
+    "chainId": "97"
+  },
+  "deployer": "0x5aD0620BdD2EBc328F854f4F8126B1E663193112",
+  "contracts": {
+    "usdtToken": "0x55d398326f99059fF775485246999027B3197955",
+    "secureGlobalWallet": "0x1bef6b4B2a1479a738dbCf1d8B3cCDDe2AE57D80",
+    "securePaymentProcessor": "0x3a0894E38b61431666a01eA5311b537865089404",
+    "adminFeeWallet": "0x5443b2896226b3278ec9F05E349FCcB93670ae98"
+  },
+  "deployedAt": "2025-09-06T10:49:07.696Z"
+}
+
+=== SECURITY REMINDERS ===
+🔐 IMPORTANT: The deployer address is the owner of both contracts
+🔐 Only the owner can approve withdrawals from SecureGlobalWallet
+🔐 Make sure to transfer ownership to your secure external wallet
+🔐 Use hardware wallet or multisig for production deployment
+🔐 Test all functions on testnet before mainnet deployment

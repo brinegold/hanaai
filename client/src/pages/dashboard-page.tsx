@@ -21,6 +21,7 @@ import MarketTicker from "@/components/market-ticker";
 import FeatureButton from "@/components/feature-button";
 import RechargeDialog from "@/components/recharge-dialog";
 import WithdrawDialog from "@/components/withdraw-dialog";
+import { WithdrawalProcessingStatus } from "@/components/withdrawal-processing-status";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
@@ -60,6 +61,8 @@ const RankDisplay: React.FC = () => {
   const currentRank = user?.currentRank || "none";
   // Use the calculated volume from the rank check API if available, otherwise fall back to user data
   const totalVolume = rankData?.totalVolume || parseFloat(user?.totalVolumeGenerated?.toString() || "0");
+  const directVolume = rankData?.directVolume || 0;
+  const indirectVolume = rankData?.indirectVolume || 0;
 
   // Find next rank
   const nextRank = ranks?.find((rank: any) => 
@@ -104,6 +107,14 @@ const RankDisplay: React.FC = () => {
               <p className="text-xs text-gray-500">
                 {t('rank.totalVolume')}: ${totalVolume.toLocaleString()}
               </p>
+              <div className="flex gap-4 mt-1">
+                <p className="text-xs text-blue-600">
+                  Direct: ${directVolume.toLocaleString()}
+                </p>
+                <p className="text-xs text-purple-600">
+                  Indirect: ${indirectVolume.toLocaleString()}
+                </p>
+              </div>
             </div>
           </div>
           
@@ -333,6 +344,11 @@ const DashboardPage: React.FC = () => {
       {/* Rank Display */}
       <RankDisplay />
 
+      {/* Withdrawal Processing Status */}
+      <div className="mx-4 mb-6">
+        <WithdrawalProcessingStatus />
+      </div>
+
     
 
       {/* Country Rep Application */}
@@ -441,7 +457,7 @@ const DashboardPage: React.FC = () => {
             })}
           </div>
           <div className="text-xs flex items-center">
-            <span className="text-black">+2.5%</span>
+            <span className="text-black">+1.5%</span>
             <span className="text-black ml-1">24h</span>
           </div>
         </div>
@@ -466,7 +482,7 @@ const DashboardPage: React.FC = () => {
           </div>
           <div className="font-mono font-medium text-white text-xl">$0.00</div>
           <div className="text-xs flex items-center">
-            <span className="text-black">+3.2%</span>
+            <span className="text-black">+1.5%</span>
             <span className="text-black ml-1">24h</span>
           </div>
         </div>

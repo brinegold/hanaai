@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { Send, AlertCircle } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
+import { useWithdrawalStatus } from '@/hooks/use-withdrawal-status';
+import { Send, AlertCircle, Clock } from 'lucide-react';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 
 export const BSCWithdrawal: React.FC = () => {
   const [walletAddress, setWalletAddress] = useState('');
@@ -14,8 +15,19 @@ export const BSCWithdrawal: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { data: withdrawalStatus, isLoading: isLoadingStatus } = useWithdrawalStatus();
 
   const processWithdrawal = async () => {
+    // Check for pending withdrawal first
+    if (withdrawalStatus?.hasPendingWithdrawal) {
+      toast({
+        title: 'Withdrawal Already Pending',
+        description: 'You have a pending withdrawal request. Please wait for it to be processed before submitting a new one.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!walletAddress || !amount) {
       toast({
         title: 'Error',
@@ -66,11 +78,14 @@ export const BSCWithdrawal: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         toast({
-          title: 'Withdrawal Successful!',
-          description: `$${data.netAmount} sent to your wallet. Fee: $${data.fee}`
+          title: 'Withdrawal Request Submitted!',
+          description: `Your withdrawal request for $${data.netAmount} has been submitted and is awaiting admin approval.`
         });
         setWalletAddress('');
         setAmount('');
+        
+        // Invalidate withdrawal status to refresh the UI
+        queryClient.invalidateQueries({ queryKey: ["/api/withdrawal/status"] });
       } else {
         const error = await response.json();
         toast({
@@ -109,6 +124,32 @@ export const BSCWithdrawal: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Pending Withdrawal Warning */}
+        {withdrawalStatus?.hasPendingWithdrawal && (
+          <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="h-4 w-4 text-orange-600 animate-pulse" />
+              <span className="font-medium text-orange-900">Withdrawal Processing</span>
+            </div>
+            <p className="text-sm text-orange-800 mb-2">
+              You have a pending withdrawal request being processed by our admin team.
+            </p>
+            <div className="text-xs text-orange-700">
+              <div className="flex justify-between">
+                <span>Amount:</span>
+                <span className="font-medium">${parseFloat(withdrawalStatus.pendingWithdrawal?.amount || "0").toFixed(2)} USDT</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Status:</span>
+                <span className="font-medium capitalize">{withdrawalStatus.pendingWithdrawal?.status}</span>
+              </div>
+            </div>
+            <p className="text-xs text-orange-700 mt-2 font-medium">
+              New withdrawal requests are disabled until this one is completed.
+            </p>
+          </div>
+        )}
+
         <div className="bg-blue-50 p-4 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <AlertCircle className="h-4 w-4 text-blue-600" />
@@ -127,6 +168,7 @@ export const BSCWithdrawal: React.FC = () => {
             value={walletAddress}
             onChange={(e) => setWalletAddress(e.target.value)}
             className="font-mono"
+            disabled={withdrawalStatus?.hasPendingWithdrawal || isLoadingStatus}
           />
           <p className="text-xs text-gray-600 mt-1">
             Enter your BSC wallet address (MetaMask, Trust Wallet, etc.)
@@ -144,6 +186,7 @@ export const BSCWithdrawal: React.FC = () => {
             min="1"
             max={user?.withdrawableAmount?.toString() || '0'}
             step="0.01"
+            disabled={withdrawalStatus?.hasPendingWithdrawal || isLoadingStatus}
           />
         </div>
 
@@ -166,10 +209,15 @@ export const BSCWithdrawal: React.FC = () => {
 
         <Button
           onClick={processWithdrawal}
-          disabled={isProcessing || !walletAddress || !amount}
-          className="w-full"
+          disabled={isProcessing || !walletAddress || !amount || withdrawalStatus?.hasPendingWithdrawal || isLoadingStatus}
+          className="w-full disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isProcessing ? 'Processing Withdrawal...' : 'Withdraw to BSC'}
+          {withdrawalStatus?.hasPendingWithdrawal 
+            ? 'Withdrawal Processing - Please Wait' 
+            : isProcessing 
+              ? 'Processing Withdrawal...' 
+              : 'Withdraw to BSC'
+          }
         </Button>
 
         <div className="bg-yellow-50 p-4 rounded-lg">
@@ -178,7 +226,7 @@ export const BSCWithdrawal: React.FC = () => {
             <li>• 5% processing fee will be deducted</li>
             <li>• Minimum withdrawal: $1 USDT</li>
             <li>• Funds sent to BSC network (BEP-20)</li>
-            <li>• Processing time: 5-15 minutes</li>
+            <li>• Processing time: 24-48 hours (admin approval required)</li>
             <li>• Gas fees paid from processing fee</li>
             <li>• Double-check wallet address before confirming</li>
           </ul>

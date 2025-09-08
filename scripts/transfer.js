@@ -1,0 +1,2 @@
+await secureGlobalWallet.transferOwnership("0x5bA6f67a240e2E0d2F5493Eb3dB242d8052ec3c0");
+await securePaymentProcessor.transferOwnership("0x5bA6f67a240e2E0d2F5493Eb3dB242d8052ec3c0");
