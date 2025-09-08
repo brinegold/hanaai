@@ -1521,27 +1521,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Calculate and update user volume and rank
-  async function calculateUserVolume(userId: number): Promise<number> {
-    // Get user's own investments
-    const userInvestments = await db
-      .select({ amount: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` })
-      .from(transactions)
-      .where(and(eq(transactions.userId, userId), eq(transactions.type, "Deposit")));
-
-    const ownInvestment = parseFloat(userInvestments[0]?.amount?.toString() || "0");
-
-    // Get user's referral commissions earned
-    const userCommissions = await db
-      .select({ amount: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` })
-      .from(transactions)
-      .where(and(eq(transactions.userId, userId), eq(transactions.type, "Commission"), eq(transactions.status, "Completed")));
-
-    const commissionEarned = parseFloat(userCommissions[0]?.amount?.toString() || "0");
-
-    // Get downline investments (recursive referral tree)
-    const downlineInvestments = await getDownlineInvestments(userId);
-
-    return ownInvestment + commissionEarned + downlineInvestments;
+  async function calculateUserVolume(userId: number): Promise<{ totalVolume: number, directVolume: number, indirectVolume: number }> {
+    // Get all referrals for this user
+    const referrals = await storage.getReferralsByReferrerId(userId);
+    
+    // Calculate direct volume (Level 1 referrals)
+    const directReferralIds = referrals
+      .filter(ref => ref.level === "1")
+      .map(ref => ref.referredId);
+    
+    let directVolume = 0;
+    for (const referralId of directReferralIds) {
+      const referralUser = await storage.getUser(referralId);
+      if (referralUser) {
+        directVolume += parseFloat(referralUser.rechargeAmount.toString());
+      }
+    }
+    
+    // Calculate indirect volume (Level 2, 3, and 4 referrals)
+    const indirectReferralIds = referrals
+      .filter(ref => ["2", "3", "4"].includes(ref.level))
+      .map(ref => ref.referredId);
+    
+    let indirectVolume = 0;
+    for (const referralId of indirectReferralIds) {
+      const referralUser = await storage.getUser(referralId);
+      if (referralUser) {
+        indirectVolume += parseFloat(referralUser.rechargeAmount.toString());
+      }
+    }
+    
+    // Total volume = Direct volume + Indirect volume
+    const totalVolume = directVolume + indirectVolume;
+    
+    return { totalVolume, directVolume, indirectVolume };
   }
 
   async function getDownlineInvestments(userId: number): Promise<number> {
@@ -1582,12 +1595,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       const userId = parseInt(req.params.userId);
-      const totalVolume = await calculateUserVolume(userId);
+      const volumeData = await calculateUserVolume(userId);
 
       // Update user's total volume
       await db
         .update(users)
-        .set({ totalVolumeGenerated: Number(totalVolume).toFixed(2) })
+        .set({ totalVolumeGenerated: Number(volumeData.totalVolume).toFixed(2) })
         .where(eq(users.id, userId));
 
       // Get all ranks ordered by required volume (descending)
@@ -1598,7 +1611,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let qualifiedRank: Rank | null = null;
 
       for (const rank of allRanks) {
-        if (totalVolume >= parseFloat(rank.requiredVolume)) {
+        if (volumeData.totalVolume >= parseFloat(rank.requiredVolume)) {
           newRank = rank.name;
           qualifiedRank = rank;
           break;
@@ -1633,7 +1646,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             rankName: newRank,
             incentivePaid: true,
             incentiveAmount: qualifiedRank.incentiveAmount,
-            volumeAtAchievement: Number(totalVolume).toFixed(2),
+            volumeAtAchievement: Number(volumeData.totalVolume).toFixed(2),
           });
 
           // Add incentive to user's withdrawable balance
@@ -1657,115 +1670,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
             reason: `Rank achievement: ${newRank}`,
           });
 
-          // Calculate direct and indirect volumes
-          const referrals = await storage.getReferralsByReferrerId(userId);
-        
-          const directReferralIds = referrals
-            .filter(ref => ref.level === "1")
-            .map(ref => ref.referredId);
-        
-          let directVolume = 0;
-          for (const referralId of directReferralIds) {
-            const referralUser = await storage.getUser(referralId);
-            if (referralUser) {
-              directVolume += parseFloat(referralUser.rechargeAmount.toString());
-            }
-          }
-        
-          const indirectReferrals = referrals
-            .filter(ref => ref.level !== "1")
-            .map(ref => ref.referredId);
-        
-          let indirectVolume = 0;
-          for (const referralId of indirectReferrals) {
-            const referralUser = await storage.getUser(referralId);
-            if (referralUser) {
-              indirectVolume += parseFloat(referralUser.rechargeAmount.toString());
-            }
-          }
-
           res.json({ 
             success: true, 
             newRank, 
             incentivePaid: true, 
             incentiveAmount: qualifiedRank.incentiveAmount,
-            totalVolume,
-            directVolume,
-            indirectVolume
+            totalVolume: volumeData.totalVolume,
+            directVolume: volumeData.directVolume,
+            indirectVolume: volumeData.indirectVolume
           });
         } else {
-          // Calculate direct and indirect volumes for existing rank case
-          const referrals = await db.select().from(referralTree).where(eq(referralTree.referrerId, userId));
-          
-          const directReferralIds = referrals
-            .filter(ref => ref.level === "1")
-            .map(ref => ref.referredId);
-          
-          let directVolume = 0;
-          for (const referralId of directReferralIds) {
-            const referralUser = await storage.getUser(referralId);
-            if (referralUser) {
-              directVolume += parseFloat(referralUser.rechargeAmount.toString());
-            }
-          }
-          
-          const indirectReferrals = referrals
-            .filter(ref => ref.level !== "1")
-            .map(ref => ref.referredId);
-          
-          let indirectVolume = 0;
-          for (const referralId of indirectReferrals) {
-            const referralUser = await storage.getUser(referralId);
-            if (referralUser) {
-              indirectVolume += parseFloat(referralUser.rechargeAmount.toString());
-            }
-          }
-
           res.json({ 
             success: true, 
             newRank, 
             incentivePaid: false, 
             message: "Rank updated but incentive already claimed",
-            totalVolume,
-            directVolume,
-            indirectVolume
+            totalVolume: volumeData.totalVolume,
+            directVolume: volumeData.directVolume,
+            indirectVolume: volumeData.indirectVolume
           });
         }
       } else {
-        // Calculate direct and indirect volumes for no rank change case
-        const referrals = await db.select().from(referralTree).where(eq(referralTree.referrerId, userId));
-        
-        const directReferralIds = referrals
-          .filter(ref => ref.level === "1")
-          .map(ref => ref.referredId);
-        
-        let directVolume = 0;
-        for (const referralId of directReferralIds) {
-          const referralUser = await storage.getUser(referralId);
-          if (referralUser) {
-            directVolume += parseFloat(referralUser.rechargeAmount.toString());
-          }
-        }
-        
-        const indirectReferrals = referrals
-          .filter(ref => ref.level !== "1")
-          .map(ref => ref.referredId);
-        
-        let indirectVolume = 0;
-        for (const referralId of indirectReferrals) {
-          const referralUser = await storage.getUser(referralId);
-          if (referralUser) {
-            indirectVolume += parseFloat(referralUser.rechargeAmount.toString());
-          }
-        }
-
         res.json({ 
           success: true, 
           currentRank, 
           noRankChange: true, 
-          totalVolume,
-          directVolume,
-          indirectVolume
+          totalVolume: volumeData.totalVolume,
+          directVolume: volumeData.directVolume,
+          indirectVolume: volumeData.indirectVolume
         });
       }
     } catch (error) {
