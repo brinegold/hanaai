@@ -56,29 +56,40 @@ export function registerBSCRoutes(app: Express) {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
 
     try {
-      const { txHash, amount } = req.body;
+      const { txHash } = req.body; // Remove amount from destructuring - we'll get it from blockchain
       const user = await storage.getUser(req.user!.id);
       
       if (!user) return res.status(404).send("User not found");
       if (!user.bscWalletAddress) return res.status(400).json({ error: "No BSC wallet found" });
 
-      // Verify transaction hash
+      // Verify transaction hash and extract actual transfer amount
       const txDetails = await bscService.verifyTransaction(txHash);
       
-      // Debug wallet addresses
+      // Debug transaction details
       console.log("Transaction details:", {
         txHash,
         from: txDetails.from,
         to: txDetails.to,
+        actualRecipient: txDetails.actualRecipient,
+        usdtTransferAmount: txDetails.usdtTransferAmount,
         userBscWallet: user.bscWalletAddress
       });
 
-      // For TestUSDT transactions, we need to check if it's a token transfer to the user's wallet
-      // The transaction 'to' field will be the TestUSDT contract, but we need to decode the transfer
+      // Validate that this is a USDT transfer to the user's wallet
       if (txDetails.to.toLowerCase() === BSC_CONFIG.usdtContractAddress.toLowerCase()) {
-        console.log("This is a TestUSDT token transfer transaction");
-        // For now, we'll allow TestUSDT contract transactions and verify the recipient in the token transfer data
-        // TODO: Add proper token transfer decoding to verify the actual recipient
+        // This is a USDT token transfer - verify the recipient matches user's wallet
+        if (!txDetails.actualRecipient || txDetails.actualRecipient.toLowerCase() !== user.bscWalletAddress.toLowerCase()) {
+          return res.status(400).json({ 
+            error: `USDT transfer not sent to your wallet. Expected: ${user.bscWalletAddress}, Got: ${txDetails.actualRecipient || 'unknown'}` 
+          });
+        }
+        
+        // Verify that USDT was actually transferred
+        if (!txDetails.usdtTransferAmount || parseFloat(txDetails.usdtTransferAmount) <= 0) {
+          return res.status(400).json({ 
+            error: "No USDT transfer found in this transaction" 
+          });
+        }
       } else if (user.bscWalletAddress && txDetails.to.toLowerCase() !== user.bscWalletAddress.toLowerCase()) {
         return res.status(400).json({ 
           error: `Transaction not sent to your wallet. Expected: ${user.bscWalletAddress}, Got: ${txDetails.to}` 
@@ -91,8 +102,13 @@ export function registerBSCRoutes(app: Express) {
         return res.status(400).json({ error: "Transaction already processed" });
       }
 
+      // Use the actual transfer amount from blockchain, not user input
+      const depositAmount = parseFloat(txDetails.usdtTransferAmount);
+      
+      // Note: Minimum amount validation is now handled in BSC service during transaction verification
+      // This prevents processing transactions below $5 USDT before expensive blockchain operations
+      
       // Calculate amounts (2% fee, 98% to user)
-      const depositAmount = parseFloat(amount);
       const adminFee = depositAmount * 0.02;
       const userAmount = depositAmount * 0.98;
 

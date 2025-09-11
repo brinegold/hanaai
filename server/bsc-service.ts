@@ -22,7 +22,7 @@ class BSCService {
     this.config = config;
     
     // Use BSC testnet RPC URL specifically
-    const rpcUrl = "https://bsc-dataseed1.binance.org/";
+    const rpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/";
     console.log("BSC Service initialized with RPC:", rpcUrl);
     
     this.web3 = new Web3(rpcUrl);
@@ -112,7 +112,7 @@ class BSCService {
     };
   }
 
-  // Verify transaction hash and get transaction details
+  // Verify transaction hash and get transaction details with USDT transfer amount extraction
   async verifyTransaction(txHash: string): Promise<any> {
     try {
       console.log(`Verifying transaction: ${txHash}`);
@@ -195,18 +195,76 @@ class BSCService {
         throw new Error('Transaction failed on blockchain');
       }
 
+      // Extract USDT transfer amount from transaction logs if it's a token transfer
+      let usdtTransferAmount = '0';
+      let actualRecipient = transaction.to;
+      
+      if (transaction.to?.toLowerCase() === this.config.usdtContractAddress.toLowerCase()) {
+        // This is a USDT token transfer - extract the actual amount and recipient from logs
+        const transferAmount = this.extractUSDTTransferFromLogs(receipt.logs);
+        if (transferAmount) {
+          usdtTransferAmount = transferAmount.amount;
+          actualRecipient = transferAmount.to;
+          console.log(`USDT Transfer detected: ${usdtTransferAmount} USDT to ${actualRecipient}`);
+        }
+      } else if (transaction.value && transaction.value !== '0') {
+        // This is a direct BNB transfer
+        usdtTransferAmount = this.web3.utils.fromWei(transaction.value.toString(), 'ether');
+        console.log(`BNB Transfer detected: ${usdtTransferAmount} BNB`);
+      }
+
       return {
         from: transaction.from,
         to: transaction.to,
+        actualRecipient: actualRecipient, // The actual recipient of the tokens
         value: transaction.value?.toString(),
+        usdtTransferAmount: usdtTransferAmount, // The actual USDT amount transferred
         blockNumber: receipt.blockNumber?.toString(),
         confirmed: true,
         gasUsed: receipt.gasUsed?.toString(),
-        status: receipt.status
+        status: receipt.status,
+        logs: receipt.logs
       };
     } catch (error: any) {
       console.error('Error verifying transaction:', error);
       throw error;
+    }
+  }
+
+  // Extract USDT transfer details from transaction logs
+  private extractUSDTTransferFromLogs(logs: any[]): { amount: string, to: string, from: string } | null {
+    try {
+      // USDT Transfer event signature: Transfer(address,address,uint256)
+      const transferEventSignature = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+      
+      for (const log of logs) {
+        if (log.topics && log.topics[0] === transferEventSignature && log.topics.length >= 3) {
+          // Decode the transfer event
+          const fromAddress = '0x' + log.topics[1].slice(26); // Remove padding
+          const toAddress = '0x' + log.topics[2].slice(26); // Remove padding
+          const amount = this.web3.utils.fromWei(log.data, 'ether'); // Convert from wei to USDT
+          
+          console.log(`Transfer event found: ${amount} USDT from ${fromAddress} to ${toAddress}`);
+          
+          // Validate minimum amount before returning
+          if (parseFloat(amount) < 5) {
+            console.log(`Transfer amount ${amount} USDT is below minimum requirement of 5 USDT`);
+            throw new Error(`Minimum deposit amount is 5 USDT. Transaction amount: ${amount} USDT`);
+          }
+          
+          return {
+            amount: amount,
+            to: toAddress,
+            from: fromAddress
+          };
+        }
+      }
+      
+      console.log('No USDT transfer event found in transaction logs');
+      return null;
+    } catch (error) {
+      console.error('Error extracting USDT transfer from logs:', error);
+      throw error; // Re-throw to propagate minimum amount validation errors
     }
   }
 

@@ -470,6 +470,35 @@ export default function AdminPage() {
                       >
                         Deduct Withdrawable
                       </button>
+                      <button
+                        onClick={() => {
+                          const amount = prompt("Enter deposit amount to deduct:");
+                          const reason = prompt("Enter reason for deposit reversal (optional):");
+                          if (amount && !isNaN(parseFloat(amount))) {
+                            apiRequest("POST", `/api/admin/users/${user.id}/deduct-deposit`, { 
+                              amount: parseFloat(amount),
+                              reason: reason || "Admin deposit reversal"
+                            })
+                              .then(() => {
+                                queryClient.invalidateQueries({ queryKey: ["admin"] });
+                                toast({
+                                  title: "Success",
+                                  description: "Deposit amount deducted successfully",
+                                });
+                              })
+                              .catch((error) => {
+                                toast({
+                                  title: "Error",
+                                  description: error.message || "Failed to deduct deposit amount",
+                                  variant: "destructive",
+                                });
+                              });
+                          }
+                        }}
+                        className="bg-orange-500 text-white px-2 py-1 rounded text-sm mr-2"
+                      >
+                        Deduct Deposit
+                      </button>
                       {!user.isCountryRep && (
                         <button
                           onClick={async () => {
@@ -623,13 +652,14 @@ export default function AdminPage() {
                 <TableHead>Type</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>TX Hash</TableHead>
                 <TableHead>Created At</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {!platformStats?.transactions ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">
+                  <TableCell colSpan={6} className="text-center">
                     No transactions found
                   </TableCell>
                 </TableRow>
@@ -647,6 +677,20 @@ export default function AdminPage() {
                       } text-white`}>
                         {tx.status}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      {tx.txHash ? (
+                        <a 
+                          href={`https://testnet.bscscan.com/tx/${tx.txHash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-mono text-xs text-blue-600 hover:text-blue-800 underline"
+                        >
+                          {tx.txHash.slice(0, 8)}...{tx.txHash.slice(-6)}
+                        </a>
+                      ) : (
+                        <span className="text-gray-400 text-xs">-</span>
+                      )}
                     </TableCell>
                     <TableCell>{new Date(tx.createdAt).toLocaleString()}</TableCell>
                   </TableRow>
@@ -671,6 +715,7 @@ export default function AdminPage() {
                 <TableHead>Type</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Destination Address</TableHead>
+                <TableHead>TX Hash</TableHead>
                 <TableHead>Requested At</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -678,7 +723,7 @@ export default function AdminPage() {
             <TableBody>
               {!pendingTransactions || pendingTransactions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center">
+                  <TableCell colSpan={8} className="text-center">
                     No pending withdrawal requests
                   </TableCell>
                 </TableRow>
@@ -699,8 +744,22 @@ export default function AdminPage() {
                     <TableCell>{formatCurrency(tx.amount)}</TableCell>
                     <TableCell>
                       <span className="font-mono text-xs">
-                        {tx.toAddress ? `${tx.toAddress.slice(0, 6)}...${tx.toAddress.slice(-4)}` : '-'}
+                        {tx.address ? `${tx.address.slice(0, 6)}...${tx.address.slice(-4)}` : '-'}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      {tx.txHash ? (
+                        <a 
+                          href={`https://testnet.bscscan.com/tx/${tx.txHash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-mono text-xs text-blue-600 hover:text-blue-800 underline"
+                        >
+                          {tx.txHash.slice(0, 8)}...{tx.txHash.slice(-6)}
+                        </a>
+                      ) : (
+                        <span className="text-gray-400 text-xs">Pending</span>
+                      )}
                     </TableCell>
                     <TableCell>{new Date(tx.createdAt).toLocaleString()}</TableCell>
                     <TableCell>

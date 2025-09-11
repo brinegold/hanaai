@@ -275,6 +275,68 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  // Deduct deposit amount from user (reverse deposit)
+  app.post("/api/admin/users/:id/deduct-deposit", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { amount, reason } = req.body;
+
+      if (!amount || parseFloat(amount) <= 0) {
+        return res.status(400).json({ message: "Valid amount is required" });
+      }
+
+      const user = await storage.getUser(parseInt(id));
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const deductAmount = parseFloat(amount);
+      const currentRechargeAmount = parseFloat(user.rechargeAmount.toString());
+      const currentTotalAssets = parseFloat(user.totalAssets.toString());
+
+      if (deductAmount > currentRechargeAmount) {
+        return res.status(400).json({ 
+          message: `Cannot deduct $${deductAmount}. User only has $${currentRechargeAmount} in deposits.` 
+        });
+      }
+
+      // Create transaction record for the deposit deduction
+      const transaction = await storage.createTransaction({
+        userId: parseInt(id),
+        type: "Deposit Reversal",
+        amount: (-deductAmount).toString(),
+        status: "Completed",
+        reason: reason || "Admin reversed deposit transaction",
+        txHash: null,
+      });
+
+      // Update user's deposit amount and total assets
+      await storage.updateUser(parseInt(id), {
+        rechargeAmount: (currentRechargeAmount - deductAmount).toString(),
+        totalAssets: (currentTotalAssets - deductAmount).toString(),
+      });
+
+      // Create notification for user
+      await storage.createNotification({
+        userId: parseInt(id),
+        type: "system",
+        message: `Your deposit has been reversed: -$${deductAmount.toFixed(2)}. Reason: ${reason || "Administrative action"}`,
+        isRead: false,
+      });
+
+      res.json({
+        success: true,
+        message: `Successfully deducted $${deductAmount} from user's deposit balance`,
+        transaction,
+        newDepositAmount: (currentRechargeAmount - deductAmount).toFixed(2),
+        newTotalAssets: (currentTotalAssets - deductAmount).toFixed(2)
+      });
+    } catch (err) {
+      console.error("Error deducting deposit amount:", err);
+      res.status(500).json({ message: "Failed to deduct deposit amount" });
+    }
+  });
+
   // Ban user route
   app.post("/api/admin/users/:id/ban", async (req, res) => {
     try {
