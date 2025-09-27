@@ -541,13 +541,10 @@ export function registerAdminRoutes(app: Express) {
             }
           }
 
-          // Deduct from user's withdrawable amount
+          // Deduct from user's withdrawable amount only
           await storage.updateUser(user.id, {
             withdrawableAmount: (
               parseFloat(user.withdrawableAmount.toString()) - totalRequestedAmount
-            ).toString(),
-            totalAssets: (
-              parseFloat(user.totalAssets.toString()) - totalRequestedAmount
             ).toString(),
           });
 
