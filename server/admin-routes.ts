@@ -582,10 +582,10 @@ export function registerAdminRoutes(app: Express) {
           if (completedDeposits.length === 0) {
             // Commission rates for each tier
             const tierCommissionRates = {
-              "1": 0.05, // 5% for Tier 1
-              "2": 0.03, // 3% for Tier 2
-              "3": 0.02, // 2% for Tier 3
-              "4": 0.01, // 1% for Tier 4
+              "1": 0.10, // 10% for Tier 1
+              "2": 0.05, // 5% for Tier 2
+              "3": 0.03, // 3% for Tier 3
+              "4": 0.02, // 2% for Tier 4
             };
 
             // Process commissions for all tiers

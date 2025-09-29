@@ -391,7 +391,7 @@ const InvitePage: React.FC = () => {
                   <span className="text-white">Commission Rate</span>
                 </div>
                 <span className="text-[#4F9CF9] font-bold">
-                  5%
+                  10%
                 </span>
               </div>
 
@@ -402,19 +402,19 @@ const InvitePage: React.FC = () => {
                 <div className="space-y-1 text-sm text-white">
                   <div className="flex justify-between">
                     <span>Level 1 (Direct):</span>
-                    <span className="text-[#4F9CF9] font-medium">5%</span>
+                    <span className="text-[#4F9CF9] font-medium">10%</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Level 2:</span>
-                    <span className="text-[#4F9CF9] font-medium">3%</span>
+                    <span className="text-[#4F9CF9] font-medium">5%</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Level 3:</span>
-                    <span className="text-[#4F9CF9] font-medium">2%</span>
+                    <span className="text-[#4F9CF9] font-medium">3%</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Level 4:</span>
-                    <span className="text-[#4F9CF9] font-medium">1%</span>
+                    <span className="text-[#4F9CF9] font-medium">2%</span>
                   </div>
                 </div>
               </div>
@@ -538,10 +538,10 @@ const LevelReferralList: React.FC<{
   const itemsPerPage = 20;
   
   const levelPercentages: { [key: string]: number } = {
-    "1": 5,
-    "2": 3,
-    "3": 2,
-    "4": 1,
+    "1": 10,
+    "2": 5,
+    "3": 3,
+    "4": 2,
   };
 
   // Reset to first page when level changes or referrals change

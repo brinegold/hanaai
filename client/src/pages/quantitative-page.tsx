@@ -610,10 +610,7 @@ const QuantitativePage: React.FC = () => {
                   const expectedDailyReturn = directDeposits * 0.015; // 1.5% daily
                   const dailyProgressPercentage = expectedDailyReturn > 0 ? Math.min(100, (todayEarnings / expectedDailyReturn) * 100) : 0;
                   
-                  // Calculate 300% withdrawal limit for trading capital only
-                  const maxTradingWithdrawal = directDeposits * 3; // 300% of deposits
                   const tradingEarnings = user?.totalAssets ? parseFloat(user.totalAssets.toString()) - directDeposits : 0;
-                  const tradingWithdrawalProgress = maxTradingWithdrawal > 0 ? Math.min(100, (tradingEarnings / maxTradingWithdrawal) * 100) : 0;
                   
                   return (
                     <>
@@ -631,18 +628,18 @@ const QuantitativePage: React.FC = () => {
                         </div>
                         
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Withdrawal limit:</span>
+                          <span className="text-gray-500">Total earnings:</span>
                           <span className="text-white font-medium">
-                            ${Math.min(tradingEarnings, maxTradingWithdrawal - Math.max(0, tradingEarnings - maxTradingWithdrawal)).toFixed(2)} (300% of deposits)
+                            ${tradingEarnings.toFixed(2)} (No limit)
                           </span>
                         </div>
                       </div>
 
                       <Progress
-                        value={tradingWithdrawalProgress}
+                        value={dailyProgressPercentage}
                         className="h-2 bg-gray-200"
                         style={
-                          { "--progress-foreground": tradingWithdrawalProgress >= 100 ? "#ef4444" : "#4F9CF9" } as React.CSSProperties
+                          { "--progress-foreground": dailyProgressPercentage >= 100 ? "#00ff00" : "#4F9CF9" } as React.CSSProperties
                         }
                       />
                     </>

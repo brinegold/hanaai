@@ -366,25 +366,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const investment = await storage.createInvestment(investmentToCreate);
 
-      // Check if user has reached 200% profit cap
-      const currentProfitAssets = parseFloat(user.profitAssets.toString());
-      const currentRechargeAmount = parseFloat(user.rechargeAmount.toString());
-      const maxAllowedProfit = currentRechargeAmount * 2; // 200% of deposits
-      
-      if (currentProfitAssets >= maxAllowedProfit) {
-        return res.status(400).json({
-          error: "You have reached the maximum profit limit of 200% of your deposits. Trading is suspended.",
-        });
-      }
-
       // Calculate immediate profit for AI Trading (1.5% of deposit amount)
       const instantProfitPercentage = 0.015; // 1.5% instant profit
-      const instantProfit = Math.min(
-        amount * instantProfitPercentage,
-        maxAllowedProfit - currentProfitAssets // Don't exceed 200% cap
-      );
+      const instantProfit = amount * instantProfitPercentage;
       
       // Only update profit-related fields, not total assets
+      const currentProfitAssets = parseFloat(user.profitAssets.toString());
       await storage.updateUser(req.user!.id, {
         profitAssets: (
           currentProfitAssets + instantProfit
@@ -1348,23 +1335,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .filter((tx) => tx.type === "Ranking Bonus" && tx.status === "Completed")
           .reduce((sum, tx) => sum + parseFloat(tx.amount.toString()), 0);
 
-        // Calculate maximum withdrawable amount (300% of deposits + all referral/ranking bonuses)
-        const totalDeposits = deposits.reduce(
-          (sum, deposit) => sum + parseFloat(deposit.amount.toString()),
-          0,
-        );
-        const maxFromTradingCapital = totalDeposits * 3; // 300% of deposits
-        const maxWithdrawableAmount = maxFromTradingCapital + totalCommissions + totalReferralBonuses + totalRankingBonuses;
-
         // Calculate 5% withdrawal fee
         const withdrawalFee = transactionData.amount * 0.05;
         const totalAmount = transactionData.amount + withdrawalFee;
-        
-        if (totalAmount > maxWithdrawableAmount) {
-          return res.status(400).json({
-            message: `Maximum withdrawal amount is ${maxWithdrawableAmount.toFixed(2)} USDT (300% of deposits plus all referral/ranking bonuses)`,
-          });
-        }
 
         // Check sufficient funds for withdrawal (including 5% fee)
         if (parseFloat(user.totalAssets.toString()) < totalAmount) {
