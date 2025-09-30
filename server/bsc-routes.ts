@@ -165,72 +165,60 @@ export function registerBSCRoutes(app: Express) {
       console.log(`Found ${referrals.length} referral relationships for user ${user.id}:`, referrals);
       
       if (referrals.length > 0) {
-        // Check if user has previous deposits
-        const userDeposits = await storage.getTransactionsByUserId(user.id);
-        const completedDeposits = userDeposits.filter(
-          (t) => t.type === "Deposit" && t.status === "Completed",
-        );
-        console.log(`User ${user.id} has ${completedDeposits.length} previous completed deposits`);
+        console.log(`Processing referral commissions for user ${user.id} on all deposits...`);
+        // Commission rates for each tier
+        const tierCommissionRates = {
+          "1": 0.10, // 10% for Tier 1
+          "2": 0.05, // 5% for Tier 2
+          "3": 0.03, // 3% for Tier 3
+          "4": 0.02, // 2% for Tier 4
+        };
 
-        // Only give commission if this is the first deposit
-        if (completedDeposits.length === 0) {
-          console.log(`This is user ${user.id}'s first deposit - processing referral commissions...`);
-          // Commission rates for each tier
-          const tierCommissionRates = {
-            "1": 0.10, // 10% for Tier 1
-            "2": 0.05, // 5% for Tier 2
-            "3": 0.03, // 3% for Tier 3
-            "4": 0.02, // 2% for Tier 4
-          };
+        // Process commissions for all tiers
+        for (const referral of referrals) {
+          const referrer = await storage.getUser(referral.referrerId);
+          if (referrer) {
+            let commissionRate = tierCommissionRates[referral.level] || 0;
+            const commissionAmount = userAmount * commissionRate;
 
-          // Process commissions for all tiers
-          for (const referral of referrals) {
-            const referrer = await storage.getUser(referral.referrerId);
-            if (referrer) {
-              let commissionRate = tierCommissionRates[referral.level] || 0;
-              const commissionAmount = userAmount * commissionRate;
+            if (commissionAmount > 0) {
+              // Update referrer's assets with commission
+              await storage.updateUser(referrer.id, {
+                commissionAssets: (
+                  parseFloat(referrer.commissionAssets.toString()) +
+                  commissionAmount
+                ).toString(),
+                commissionToday: (
+                  parseFloat(referrer.commissionToday.toString()) +
+                  commissionAmount
+                ).toString(),
+                withdrawableAmount: (
+                  parseFloat(referrer.withdrawableAmount.toString()) +
+                  commissionAmount
+                ).toString(),
+              });
 
-              if (commissionAmount > 0) {
-                // Update referrer's assets with commission
-                await storage.updateUser(referrer.id, {
-                  commissionAssets: (
-                    parseFloat(referrer.commissionAssets.toString()) +
-                    commissionAmount
-                  ).toString(),
-                  commissionToday: (
-                    parseFloat(referrer.commissionToday.toString()) +
-                    commissionAmount
-                  ).toString(),
-                  withdrawableAmount: (
-                    parseFloat(referrer.withdrawableAmount.toString()) +
-                    commissionAmount
-                  ).toString(),
-                });
+              // Update referral commission record
+              const currentCommission = parseFloat(
+                referral.commission || "0",
+              );
+              await storage.updateReferral(referral.id, {
+                commission: (currentCommission + commissionAmount).toString(),
+              });
 
-                // Update referral commission record
-                const currentCommission = parseFloat(
-                  referral.commission || "0",
-                );
-                await storage.updateReferral(referral.id, {
-                  commission: (currentCommission + commissionAmount).toString(),
-                });
+              // Create commission transaction
+              await storage.createTransaction({
+                userId: referrer.id,
+                type: "Commission",
+                amount: commissionAmount.toString(),
+                status: "Completed",
+                reason: `Tier ${referral.level} referral commission from BSC deposit by ${user.username || user.email}`,
+                txHash: null,
+              });
 
-                // Create commission transaction
-                await storage.createTransaction({
-                  userId: referrer.id,
-                  type: "Commission",
-                  amount: commissionAmount.toString(),
-                  status: "Completed",
-                  reason: `Tier ${referral.level} referral commission from BSC deposit by ${user.username || user.email}`,
-                  txHash: null,
-                });
-
-                console.log(`Paid ${commissionAmount.toFixed(2)} USDT commission to referrer ${referrer.id} (Tier ${referral.level})`);
-              }
+              console.log(`Paid ${commissionAmount.toFixed(2)} USDT commission to referrer ${referrer.id} (Tier ${referral.level})`);
             }
           }
-        } else {
-          console.log(`User ${user.id} has previous deposits - no referral commission paid`);
         }
       } else {
         console.log(`No referral relationships found for user ${user.id} - no commission to pay`);
