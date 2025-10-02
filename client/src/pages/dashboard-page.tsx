@@ -697,7 +697,7 @@ Trade Time : Once Per day
                     To Generate Daily Returns You Must click on "Trade Now", then click on "Start Trading" wait for few seconds .
                   </p>
                   <p>
-                    Invite others to participate and get 5%,3%,2% and 1% in Nebrix Uni-Level referral commission Program✔
+                    Invite others to participate and get 10%,5%,3% and 2% in Nebrix Uni-Level referral commission Program✔
                   </p>
                   <p>
                     Trading time: Trading Time is once every 24hrs.
