@@ -10,10 +10,10 @@ import {
   insertReferralSchema,
   insertInvestmentSchema,
   insertTransactionSchema,
+  type Transaction,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
-import { TransactionHistory } from "./types"; // Assuming types file exists
+import { eq, and, desc, gte, lte } from "drizzle-orm";
 
 export const storage = {
   async getPendingTransactions() {
@@ -143,11 +143,28 @@ export const storage = {
     return transaction;
   },
 
-  async getTransactionsByUserId(userId) {
+  async getTransactionsByUserId(userId, filter = {}) {
+    const conditions = [eq(transactions.userId, userId)];
+
+    // Apply additional filters if provided
+    if (filter.type) {
+      conditions.push(eq(transactions.type, filter.type));
+    }
+    if (filter.status) {
+      conditions.push(eq(transactions.status, filter.status));
+    }
+    if (filter.createdAt?.gte) {
+      conditions.push(gte(transactions.createdAt, filter.createdAt.gte));
+    }
+    if (filter.createdAt?.lte) {
+      conditions.push(lte(transactions.createdAt, filter.createdAt.lte));
+    }
+
     return db
       .select()
       .from(transactions)
-      .where(eq(transactions.userId, userId));
+      .where(and(...conditions))
+      .orderBy(desc(transactions.createdAt));
   },
 
   async getTransactionByHash(txHash) {
@@ -244,8 +261,8 @@ export const storage = {
   },
 
   async createTransactionHistory(
-    history: Omit<TransactionHistory, "id">,
-  ): Promise<TransactionHistory> {
+    history: any,
+  ) {
     const newHistory = await db
       .insert(transactionHistory)
       .values({

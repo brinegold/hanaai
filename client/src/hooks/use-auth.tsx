@@ -58,10 +58,6 @@ type AuthContextType = {
   registerMutation: UseMutationResult<User, Error, RegisterData>;
 };
 
-// Helper function to filter transactions for a specific user
-const filterTransactionsForUser = (transactions: any[], userId: number) => {
-  return transactions.filter((tx) => tx.userId === userId);
-};
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -79,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       const [userRes, transactionsRes, accountRes] = await Promise.all([
         apiRequest("GET", "/api/user"),
-        apiRequest("GET", "/api/admin/stats"),
+        apiRequest("GET", "/api/transactions"),
         apiRequest("GET", "/api/account"),
       ]);
 
@@ -92,17 +88,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const txData = await transactionsRes.json();
       const accountData = await accountRes.json();
 
-      // Filter transactions to only include those with userId matching the current user
-      const userTransactions = filterTransactionsForUser(
-        txData.transactions,
-        userData.id,
-      );
+      // Use transactions directly from the user's transaction endpoint
+      const userTransactions = txData.transactions || [];
 
       return {
         ...userData,
         notifications: accountData.user?.notifications || [],
         messages: accountData.user?.messages || [],
-        transactions: userTransactions || [],
+        transactions: userTransactions,
       };
     },
   });
@@ -143,25 +136,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: async (user: User) => {
       // After successful login, fetch transactions and notifications
-      const [statsRes, accountRes] = await Promise.all([
-        apiRequest("GET", "/api/admin/stats"),
+      const [transactionsRes, accountRes] = await Promise.all([
+        apiRequest("GET", "/api/transactions"),
         apiRequest("GET", "/api/account"),
       ]);
 
-      const statsData = await statsRes.json();
+      const transactionsData = await transactionsRes.json();
       const accountData = await accountRes.json();
 
-      // Filter transactions for this user
-      const userTransactions = filterTransactionsForUser(
-        statsData.transactions,
-        user.id,
-      );
+      // Use transactions directly from the user's transaction endpoint
+      const userTransactions = transactionsData.transactions || [];
 
-      // Update the query cache with complete user data including filtered transactions and notifications
+      // Update the query cache with complete user data including transactions and notifications
       queryClient.setQueryData(["/api/user"], {
         ...user,
         notifications: accountData.user?.notifications || [],
-        transactions: userTransactions || [],
+        transactions: userTransactions,
       });
 
       // Also update the account query cache to ensure notifications are available
@@ -187,21 +177,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: async (user: User) => {
-      // After successful registration, fetch transactions
-      const statsRes = await apiRequest("GET", "/api/admin/stats");
-      const statsData = await statsRes.json();
+      // After successful registration, fetch transactions (likely none for new users)
+      const transactionsRes = await apiRequest("GET", "/api/transactions");
+      const transactionsData = await transactionsRes.json();
 
-      // Filter transactions for this user (likely none for new users)
-      const userTransactions = filterTransactionsForUser(
-        statsData.transactions,
-        user.id,
-      );
+      // Use transactions directly from the user's transaction endpoint
+      const userTransactions = transactionsData.transactions || [];
 
-      // Update the query cache with complete user data including filtered transactions
+      // Update the query cache with complete user data including transactions
       queryClient.setQueryData(["/api/user"], {
         ...user,
-        notifications: user.notifications || [],
-        transactions: userTransactions || [],
+        notifications: [],
+        transactions: userTransactions,
       });
 
       toast({

@@ -402,8 +402,7 @@ export function registerAdminRoutes(app: Express) {
           .sort(
             (a, b) =>
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-          )
-          .slice(0, 50), // Show last 50 transactions
+          ), // Show all transactions
       };
 
       res.json(stats);
