@@ -1403,33 +1403,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // This endpoint has been moved to the top of the file
 
-  // Verification upload endpoint
-  app.post("/api/verify/upload", async (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
-
-    try {
-      // Here you would typically:
-      // 1. Handle file upload (using multer or similar)
-      // 2. Store the file securely
-      // 3. Update user verification status
-      // 4. Queue the document for review
-
-      // Automatically verify user upon image upload
-      const updatedUser = await storage.updateUser(req.user!.id, {
-        verificationStatus: "verified",
-        verificationSubmittedAt: new Date(),
-      });
-
-      res.status(200).json({ 
-        message: "Document uploaded successfully",
-        user: updatedUser 
-      });
-    } catch (error) {
-      console.error("Verification upload error:", error);
-      res.status(500).json({ error: "Failed to upload verification document" });
-    }
-  });
-
   // Mark notification as read
   app.post("/api/notifications/:id/read", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");

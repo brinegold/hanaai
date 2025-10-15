@@ -522,30 +522,6 @@ export default function AdminPage() {
                           Make C.Rep
                         </button>
                       )}
-                      {user.verificationStatus !== "verified" && (
-                        <button
-                          onClick={() => {
-                            apiRequest("POST", `/api/admin/users/${user.id}/verify`)
-                              .then(() => {
-                                queryClient.invalidateQueries({ queryKey: ["admin"] });
-                                toast({
-                                  title: "Success",
-                                  description: "User verified successfully",
-                                });
-                              })
-                              .catch(() => {
-                                toast({
-                                  title: "Error",
-                                  description: "Failed to verify user",
-                                  variant: "destructive",
-                                });
-                              });
-                          }}
-                          className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-                        >
-                          Verify
-                        </button>
-                      )}
                       <button
                         onClick={async () => {
                           try {

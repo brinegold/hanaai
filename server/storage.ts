@@ -103,18 +103,6 @@ export const storage = {
   },
 
   async updateUser(id, updates) {
-    
-    // If this is a verification status update, we don't want to process referral bonus
-    if (updates.verificationStatus) {
-      const [updatedUser] = await db
-        .update(users)
-        .set(updates)
-        .where(eq(users.id, id))
-        .returning();
-      return updatedUser;
-    }
-
-    // Handle other updates normally
     const [updatedUser] = await db
       .update(users)
       .set(updates)

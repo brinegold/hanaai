@@ -6,14 +6,13 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import DashboardPage from "@/pages/dashboard-page";
 import ProfilePage from "@/pages/profile-page";
-import VerificationPage from "@/pages/verification-page";
 import InvitePage from "@/pages/invite-page";
 import QuantitativePage from "@/pages/quantitative-page";
 import BSCPage from "@/pages/bsc-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import ResetPasswordPage from "./pages/reset-password-page";
-import AdminPage from "./pages/admin-page";
+import AdminPage from "@/pages/admin-page";
 import { GoogleTranslate } from "@/components/GoogleTranslate";
 import { LanguageProvider } from "./hooks/use-language";
 
@@ -27,7 +26,6 @@ function Router() {
       {/* Protected routes */}
       <ProtectedRoute path="/" component={DashboardPage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
-      <ProtectedRoute path="/verify" component={VerificationPage} />
       <ProtectedRoute path="/invite" component={InvitePage} />
       <ProtectedRoute path="/tradenow" component={QuantitativePage} />
       <ProtectedRoute path="/bsc" component={BSCPage} />

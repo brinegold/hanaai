@@ -66,8 +66,6 @@ export const users = pgTable("users", {
   referrerId: integer("referrer_id"),
   resetToken: text("reset_token"),
   resetTokenExpiry: timestamp("reset_token_expiry"),
-  verificationStatus: text("verification_status").default('unverified'),
-  verificationSubmittedAt: timestamp("verification_submitted_at"),
   isAdmin: boolean("is_admin").default(false).notNull(),
   isBanned: boolean("is_banned").default(false).notNull(),
   isCountryRep: boolean("is_country_rep").default(false).notNull(),

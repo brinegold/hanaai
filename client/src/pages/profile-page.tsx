@@ -178,27 +178,6 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-24">
-      {/* Verification Alert */}
-      {user && user.verificationStatus === "unverified" && (
-        <div className="p-4" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <ShieldCheck className="h-5 w-5 text-blue-500" />
-              <p className="text-blue-500" >
-                Please verify your identity to unlock all features
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              className="text-blue-500 border-blue-500 hover:bg-blue-900/20"
-              onClick={() => setLocation("/verify")}
-            >
-              Verify Now
-            </Button>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <header className="bg-black/20 backdrop-blur-md border-b border-white/10 p-4 mb-4">
         <div className="flex items-center justify-between">
@@ -226,26 +205,7 @@ const ProfilePage: React.FC = () => {
                   <span className="px-1.5 py-0.5 rounded-full bg-yellow-900/20 text-yellow-500 text-xs flex items-center gap-1">
                     <Crown className="h-3 w-3" /> Country Representative
                   </span>
-                ) : user.verificationStatus === "verified" ? (
-                  <div className="flex items-center gap-2">
-                    <span className="px-1.5 py-0.5 rounded-full bg-green-900/20 text-green-500 text-xs">
-                      Verified
-                    </span>
-                    {user.countryRepStatus === "pending" && (
-                      <span className="text-xs text-blue-500">
-                        C.Rep Application Pending
-                      </span>
-                    )}
-                  </div>
-                ) : user.verificationStatus === "pending" ? (
-                  <span className="px-1.5 py-0.5 rounded-full bg-blue-900/20 text-blue-500 text-xs">
-                    Pending
-                  </span>
-                ) : (
-                  <span className="px-1.5 py-0.5 rounded-full bg-yellow-700 text-blue-500 text-xs">
-                    Unverified
-                  </span>
-                )}
+                ) : null}
               </div>
             </div>
           </div>
@@ -354,18 +314,6 @@ const ProfilePage: React.FC = () => {
                           <div className="flex justify-between items-center">
                             <span className="text-gray-600">Telegram:</span>
                             <span className="text-gray-900 font-medium">{user.telegram || "-"}</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-600">Verification Status:</span>
-                            <span className={`px-2 py-1 rounded text-xs ${
-                              user.verificationStatus === "verified" 
-                                ? "bg-green-500/20 text-green-500"
-                                : user.verificationStatus === "pending"
-                                  ? "bg-blue-500/20 text-blue-500"
-                                  : "bg-gray-500/20 text-gray-500"
-                            }`}>
-                              {user.verificationStatus?.charAt(0).toUpperCase() + user.verificationStatus?.slice(1) || "Unverified"}
-                            </span>
                           </div>
                         </div>
                       </div>
@@ -570,36 +518,6 @@ const ProfilePage: React.FC = () => {
               </Tabs>
             </DialogContent>
           </Dialog>
-        </div>
-      </div>
-
-      {/* Verification Banner */}
-      <div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-lg mx-4 mb-6 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div
-              className={`w-10 h-10 rounded-full ${user.verificationStatus === "verified" ? "bg-green-500/20" : "bg-blue-500/20"} flex items-center justify-center`}
-            >
-              <ShieldCheck
-                className={`h-5 w-5 ${user.verificationStatus === "verified" ? "text-green-900" : "text-blue-900"}`}
-              />
-            </div>
-            <div>
-              <div className="text-white font-medium">Account Status</div>
-              <div className="text-sm text-black">
-                Verification required for full access
-              </div>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            className={`${user.verificationStatus === "verified" ? "text-green-500 border-green-500" : "text-blue-500 border-blue-500"}`}
-            onClick={() =>
-              user.verificationStatus !== "verified" && setLocation("/verify")
-            }
-          >
-            {user.verificationStatus === "verified" ? "Verified" : "Verify Now"}
-          </Button>
         </div>
       </div>
 
