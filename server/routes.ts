@@ -257,15 +257,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(req.user!.id);
       const userDepositAmount = user ? parseFloat(user.rechargeAmount.toString()) : 0;
 
-      // Single investment plan - trading works with deposit amount only
+      // Three investment plans with different tiers
       const plans = [
         {
-          id: "ai-trading",
-          name: "AI Trading",
-          minAmount: 5, // Always $5 minimum
-          maxAmount: Math.max(userDepositAmount, 5), // User can invest up to their full deposit amount
-          dailyRate: 1.5,
-          description: `Earn 1.5% daily on your deposit amount (Min $5, Max $${userDepositAmount.toLocaleString()})`,
+          id: "basic-trading",
+          name: "Basic AI Trading",
+          minAmount: 10,
+          maxAmount: 500,
+          dailyRate: 3.0,
+          description: "Earn 3% daily ($10 - $500)",
+        },
+        {
+          id: "premium-trading",
+          name: "Premium AI Trading",
+          minAmount: 510,
+          maxAmount: 5000,
+          dailyRate: 3.5,
+          description: "Earn 3.5% daily ($510 - $5,000)",
+        },
+        {
+          id: "vip-trading",
+          name: "VIP AI Trading",
+          minAmount: 5001,
+          maxAmount: 50000,
+          dailyRate: 4.0,
+          description: "Earn 4% daily ($5,001 - $50,000)",
         },
       ];
       
@@ -286,14 +302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Investment data received:", req.body);
 
-      // Check if it's weekend (Saturday = 6, Sunday = 0)
-      const currentDate = new Date();
-      const dayOfWeek = currentDate.getDay();
-      if (dayOfWeek === 0 || dayOfWeek === 6) {
-        return res.status(400).json({
-          error: "Trading is not available on weekends. Please try again on Monday-Friday."
-        });
-      }
+      // Trading is now available 7 days a week (Monday to Sunday)
 
       // Validate request data
       const { amount, plan, dailyRate } = req.body;
@@ -302,16 +311,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userBalance = parseFloat(user.totalAssets.toString());
 
-      if (typeof amount !== "number" || amount < 5) {
+      if (typeof amount !== "number" || amount < 10) {
         return res
           .status(400)
-          .json({ error: "Investment amount must be at least $5" });
+          .json({ error: "Investment amount must be at least $10" });
       }
 
-      if (amount > 500000) {
+      if (amount > 50000) {
         return res
           .status(400)
-          .json({ error: "Investment amount cannot exceed $500,000" });
+          .json({ error: "Investment amount cannot exceed $50,000" });
       }
 
       if (typeof plan !== "string" || !plan) {
@@ -322,6 +331,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res
           .status(400)
           .json({ error: "Daily rate must be a positive number" });
+      }
+
+      // Validate plan tier and amount range
+      const planTiers = {
+        "basic-trading": { min: 10, max: 500, rate: 3.0 },
+        "premium-trading": { min: 510, max: 5000, rate: 3.5 },
+        "vip-trading": { min: 5001, max: 50000, rate: 4.0 }
+      };
+
+      const selectedPlan = planTiers[plan as keyof typeof planTiers];
+      if (!selectedPlan) {
+        return res.status(400).json({ error: "Invalid investment plan selected" });
+      }
+
+      if (amount < selectedPlan.min || amount > selectedPlan.max) {
+        return res.status(400).json({
+          error: `Investment amount must be between $${selectedPlan.min} and $${selectedPlan.max} for ${plan.replace('-', ' ')}`
+        });
+      }
+
+      if (dailyRate !== selectedPlan.rate) {
+        return res.status(400).json({
+          error: `Invalid daily rate for selected plan. Expected ${selectedPlan.rate}%`
+        });
       }
 
       // Validate investment amount against user's deposit amount
@@ -366,8 +399,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const investment = await storage.createInvestment(investmentToCreate);
 
-      // Calculate immediate profit for AI Trading (1.5% of deposit amount)
-      const instantProfitPercentage = 0.015; // 1.5% instant profit
+      // Calculate immediate profit based on selected plan's daily rate
+      const instantProfitPercentage = dailyRate / 100; // Convert percentage to decimal
       const instantProfit = amount * instantProfitPercentage;
       
       // Only update profit-related fields, not total assets
@@ -1292,9 +1325,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Calculate deposit fee (2% platform fee)
+        // Calculate deposit fee (5% platform fee)
         const depositAmount = transactionData.amount;
-        const platformFee = depositAmount * 0.02; // 2% fee
+        const platformFee = depositAmount * 0.05; // 5% fee
         const netDepositAmount = depositAmount - platformFee; // Amount after fee deduction
         
         // Update user's rechargeAmount (deposit amount) with net amount
@@ -1313,10 +1346,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Withdrawals are available every day
         // Referral bonuses can be withdrawn freely without restrictions
 
-        // Check for minimum withdrawal
+        // Check for minimum and maximum withdrawal
         if (transactionData.amount < 5) {
           return res.status(400).json({
             message: "Minimum withdrawal amount is $5",
+          });
+        }
+
+        if (transactionData.amount > 50000) {
+          return res.status(400).json({
+            message: "Maximum withdrawal amount is $50,000",
           });
         }
 
@@ -1357,7 +1396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "Pending",
         network: transactionData.network,
         address: transactionData.address,
-        fee: transactionData.type === "Withdrawal" ? (transactionData.amount * 0.1).toString() : "0",
+        fee: transactionData.type === "Withdrawal" ? (transactionData.amount * 0.05).toString() : "0",
         processingTime: null,
         completionTime: null,
         reason: null,

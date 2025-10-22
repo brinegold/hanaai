@@ -65,12 +65,7 @@ const QuantitativePage: React.FC = () => {
   const [selectedRange, setSelectedRange] = useState<'1d' | '7d' | '30d' | '90d' | 'all'>('1d');
   const [strategy, setStrategy] = useState<string>('Hermatic');
   
-  // Check if it's weekend
-  const isWeekend = () => {
-    const currentDate = new Date();
-    const dayOfWeek = currentDate.getDay();
-    return dayOfWeek === 0 || dayOfWeek === 6;
-  };
+  // Trading is now available 7 days a week (Monday to Sunday)
 
   // Fetch investment plans
   const { data: plans, isLoading } = useQuery<InvestmentPlan[]>({
@@ -177,7 +172,7 @@ const QuantitativePage: React.FC = () => {
       toast({
         title: "Investment Created",
         description: instantProfit
-          ? `Successfully invested $${data.amount}. You earned 1.5% ($${instantProfit.toFixed(2)}) instant profit!`
+          ? `Successfully invested $${data.amount}. You earned ${data.dailyRate}% ($${instantProfit.toFixed(2)}) instant profit!`
           : `Successfully invested $${data.amount}`,
       });
     },
@@ -193,6 +188,9 @@ const QuantitativePage: React.FC = () => {
   const [showTradingSimulation, setShowTradingSimulation] = useState(false);
   const [simulationSteps, setSimulationSteps] = useState<string[]>([]);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [showInvestmentDialog, setShowInvestmentDialog] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<InvestmentPlan | null>(null);
+  const [investmentAmount, setInvestmentAmount] = useState<string>("");
 
   // Handle starting a new investment
   // Get current BTC price
@@ -211,19 +209,7 @@ const QuantitativePage: React.FC = () => {
       .catch(console.error);
   }, []);
 
-  const handleStartInvestment = async (plan: InvestmentPlan) => {
-    // Check if it's weekend
-    const currentDate = new Date();
-    const dayOfWeek = currentDate.getDay();
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
-      toast({
-        title: "Weekend Trading Restriction",
-        description: "Trading is not available on weekends. Please try again on Monday-Friday.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleStartInvestment = async (plan: InvestmentPlan, customAmount?: number) => {
     // Check if user is in cooldown period
     if (timeRemaining !== null) {
       toast({
@@ -258,11 +244,35 @@ const QuantitativePage: React.FC = () => {
     setIsSimulating(false);
 
     // Create the actual investment after simulation
+    const amount = customAmount || plan.minAmount;
     investmentMutation.mutate({
-      amount: plan.maxAmount,
+      amount: amount,
       plan: plan.id,
       dailyRate: plan.dailyRate,
     });
+  };
+
+  const handlePlanSelect = (plan: InvestmentPlan) => {
+    setSelectedPlan(plan);
+    setInvestmentAmount("");
+    setShowInvestmentDialog(true);
+  };
+
+  const handleInvestmentSubmit = () => {
+    if (!selectedPlan || !investmentAmount) return;
+    
+    const amount = parseFloat(investmentAmount);
+    if (isNaN(amount) || amount < selectedPlan.minAmount || amount > selectedPlan.maxAmount) {
+      toast({
+        title: "Invalid Amount",
+        description: `Investment amount must be between $${selectedPlan.minAmount} and $${selectedPlan.maxAmount}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setShowInvestmentDialog(false);
+    handleStartInvestment(selectedPlan, amount);
   };
 
   if (isLoading) {
@@ -368,7 +378,7 @@ const QuantitativePage: React.FC = () => {
                 onClick={() => {
                   const defaultPlan = plans && plans.length > 0 ? plans[0] : undefined;
                   if (defaultPlan) {
-                    handleStartInvestment(defaultPlan as any);
+                    handlePlanSelect(defaultPlan as any);
                   } else {
                     toast({ title: 'No Plans Available', description: 'Investment plans are not loaded yet.' });
                   }
@@ -381,24 +391,9 @@ const QuantitativePage: React.FC = () => {
         </Card>
       </div>
 
-      {/* Weekend Trading Restriction Alert */}
-      {isWeekend() && (
-        <div className="px-4 mb-4">
-          <Alert className="bg-red-900 border-red-700 text-red-200">
-            <Clock className="h-5 w-5 text-red" />
-            <AlertTitle className="ml-2 font-semibold text-white">
-              Weekend Trading Restriction
-            </AlertTitle>
-            <AlertDescription className="ml-2 text-grey-500">
-              Trading is not available on weekends. Markets are closed Saturday and Sunday. 
-              Trading will resume on Monday.
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
 
       {/* Time Remaining Alert with Detailed Timer */}
-      {timeRemaining !== null && !isWeekend() && (
+      {timeRemaining !== null && (
         <div className="px-4 mb-4">
           <Alert className="bg-blue-900/30 border-blue-700 text-blue-200">
             <Clock className="h-5 w-5 text-blue-400" />
@@ -607,7 +602,7 @@ const QuantitativePage: React.FC = () => {
                   // Calculate daily percentage gain based on direct deposits used for trading
                   const directDeposits = user?.rechargeAmount ? parseFloat(user.rechargeAmount.toString()) : 0;
                   const todayEarnings = user?.todayEarnings ? parseFloat(user.todayEarnings.toString()) : 0;
-                  const expectedDailyReturn = directDeposits * 0.015; // 1.5% daily
+                  const expectedDailyReturn = directDeposits * 0.03; // 3% daily
                   const dailyProgressPercentage = expectedDailyReturn > 0 ? Math.min(100, (todayEarnings / expectedDailyReturn) * 100) : 0;
                   
                   const tradingEarnings = user?.totalAssets ? parseFloat(user.totalAssets.toString()) - directDeposits : 0;
@@ -623,7 +618,7 @@ const QuantitativePage: React.FC = () => {
                         <div className="flex justify-between">
                           <span className="text-gray-500">Today's earnings:</span>
                           <span className="text-white font-medium">
-                            ${todayEarnings.toFixed(2)} / Expected: ${expectedDailyReturn.toFixed(2)} (1.5% daily)
+                            ${todayEarnings.toFixed(2)} / Expected: ${expectedDailyReturn.toFixed(2)} (3% daily)
                           </span>
                         </div>
                         
@@ -676,7 +671,7 @@ const QuantitativePage: React.FC = () => {
                       {t('quantitative.minimumInvestment')}
                     </span>
                     <span className="text-white font-medium">
-                      $5
+                      ${plan.minAmount}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -684,7 +679,7 @@ const QuantitativePage: React.FC = () => {
                       {t('quantitative.maximumInvestment')}
                     </span>
                     <span className="text-white font-medium">
-                      $500,000
+                      ${plan.maxAmount.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -695,8 +690,8 @@ const QuantitativePage: React.FC = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400 text-sm">Trading Days</span>
-                    <span className="text-blue-500 font-medium">
-                      Mon-Fri Only
+                    <span className="text-green-500 font-medium">
+                      Monday to Sunday
                     </span>
                   </div>
                 </div>
@@ -704,7 +699,7 @@ const QuantitativePage: React.FC = () => {
                 <Button
                   className="w-full bg-gradient-to-r from-[#4F9CF9] to-[#FFCB8E] text-[#121212] hover:opacity-90 transition-opacity"
                   variant="default"
-                  onClick={() => handleStartInvestment(plan)}
+                  onClick={() => handlePlanSelect(plan)}
                 >
                   {t('quantitative.investNow')} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -763,6 +758,53 @@ const QuantitativePage: React.FC = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Investment Amount Dialog */}
+      <Dialog open={showInvestmentDialog} onOpenChange={setShowInvestmentDialog}>
+        <DialogContent className="bg-white border-gray-200 text-gray-900">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedPlan?.name} - Enter Investment Amount
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="amount">Investment Amount (USD)</Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder={`Enter amount ($${selectedPlan?.minAmount} - $${selectedPlan?.maxAmount?.toLocaleString()})`}
+                value={investmentAmount}
+                onChange={(e) => setInvestmentAmount(e.target.value)}
+                min={selectedPlan?.minAmount}
+                max={selectedPlan?.maxAmount}
+              />
+              <div className="text-sm text-gray-600">
+                <p>Daily Rate: <span className="font-medium text-green-600">{selectedPlan?.dailyRate}%</span></p>
+                <p>Range: ${selectedPlan?.minAmount} - ${selectedPlan?.maxAmount?.toLocaleString()}</p>
+                {investmentAmount && !isNaN(parseFloat(investmentAmount)) && (
+                  <p className="mt-2 p-2 bg-blue-50 rounded">
+                    Expected daily profit: <span className="font-medium text-blue-600">
+                      ${((parseFloat(investmentAmount) * (selectedPlan?.dailyRate || 0)) / 100).toFixed(2)}
+                    </span>
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowInvestmentDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleInvestmentSubmit}
+              disabled={!investmentAmount || isNaN(parseFloat(investmentAmount))}
+            >
+              Start Investment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Bottom Navigation */}
       <BottomNav />
 
@@ -789,12 +831,12 @@ const QuantitativePage: React.FC = () => {
               profit.
             </p>
             
-            <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mt-3">
-              <p className="text-blue-700 font-medium text-sm">
-                📅 Trading Schedule: Monday to Friday only
+            <div className="bg-green-50 border border-green-200 p-3 rounded-lg mt-3">
+              <p className="text-green-700 font-medium text-sm">
+                📅 Trading Schedule: Monday to Sunday (7 days a week)
               </p>
-              <p className="text-blue-600 text-xs mt-1">
-                Daily returns are generated on weekdays. No trading activity on weekends.
+              <p className="text-green-600 text-xs mt-1">
+                Daily returns are generated every day of the week including weekends.
               </p>
             </div>
 
