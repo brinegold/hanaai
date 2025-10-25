@@ -59,11 +59,11 @@ const ResetPasswordPage = () => {
   return (
     <div className="min-h-screen dark-pattern bg-white pb-10">
       <div className="max-w-md mx-auto pt-10 px-4">
-        <div className="bg-white rounded-2xl p-5 border border-gray-200">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Reset Password</h1>
+        <div className="bg-white rounded-2xl p-5 border border-white/20">
+          <h1 className="text-2xl font-bold text-white mb-6">Reset Password</h1>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="password" className="text-gray-900">
+              <Label htmlFor="password" className="text-white">
                 New Password
               </Label>
               <Input
@@ -71,11 +71,11 @@ const ResetPasswordPage = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-gray-50 border-gray-200 text-gray-900"
+                className="bg-white/10 border-white/20 text-white"
               />
             </div>
             <div>
-              <Label htmlFor="confirmPassword" className="text-gray-900">
+              <Label htmlFor="confirmPassword" className="text-white">
                 Confirm Password
               </Label>
               <Input
@@ -83,7 +83,7 @@ const ResetPasswordPage = () => {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="bg-gray-50 border-gray-200 text-gray-900"
+                className="bg-white/10 border-white/20 text-white"
               />
             </div>
             <Button

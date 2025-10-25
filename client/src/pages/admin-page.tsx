@@ -113,7 +113,7 @@ export default function AdminPage() {
         <CardContent>
           <textarea
             placeholder="Enter message to send to all users..."
-            className="w-full p-2 bg-white border border-gray-200 rounded text-gray-900 mb-4"
+            className="w-full p-2 bg-white border border-gray-200 rounded text-white900 mb-4"
             value={notificationMessage}
             onChange={(e) => setNotificationMessage(e.target.value)}
           />
@@ -159,7 +159,7 @@ export default function AdminPage() {
             {/* USDT Collection */}
             <div>
               <h3 className="text-lg font-semibold mb-2">USDT Collection</h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-white600 mb-4">
                 Collect USDT tokens from user wallets to admin wallets
               </p>
               <div className="flex gap-4">
@@ -236,7 +236,7 @@ export default function AdminPage() {
             {/* BNB Collection */}
             <div>
               <h3 className="text-lg font-semibold mb-2">BNB Collection</h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-white600 mb-4">
                 Collect BNB from user wallets to admin wallets (leaves 0.001 BNB for gas)
               </p>
               <div className="flex gap-4">
@@ -665,7 +665,7 @@ export default function AdminPage() {
                           {tx.txHash.slice(0, 8)}...{tx.txHash.slice(-6)}
                         </a>
                       ) : (
-                        <span className="text-gray-400 text-xs">-</span>
+                        <span className="text-white400 text-xs">-</span>
                       )}
                     </TableCell>
                     <TableCell>{new Date(tx.createdAt).toLocaleString()}</TableCell>
@@ -712,7 +712,7 @@ export default function AdminPage() {
                       <span className={`px-2 py-1 rounded text-xs ${
                         tx.type === 'Withdrawal' ? 'bg-blue-100 text-blue-800' :
                         tx.type === 'Withdrawal Fee' ? 'bg-orange-100 text-orange-800' :
-                        'bg-gray-100 text-gray-800'
+                        'bg-gray-100 text-white800'
                       }`}>
                         {tx.type}
                       </span>
@@ -734,7 +734,7 @@ export default function AdminPage() {
                           {tx.txHash.slice(0, 8)}...{tx.txHash.slice(-6)}
                         </a>
                       ) : (
-                        <span className="text-gray-400 text-xs">Pending</span>
+                        <span className="text-white400 text-xs">Pending</span>
                       )}
                     </TableCell>
                     <TableCell>{new Date(tx.createdAt).toLocaleString()}</TableCell>
@@ -756,7 +756,7 @@ export default function AdminPage() {
                         </div>
                       )}
                       {tx.type !== 'Withdrawal' && (
-                        <span className="text-gray-500 text-sm">Auto-processed with main withdrawal</span>
+                        <span className="text-white500 text-sm">Auto-processed with main withdrawal</span>
                       )}
                     </TableCell>
                   </TableRow>

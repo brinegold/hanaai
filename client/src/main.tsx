@@ -4,7 +4,7 @@ import "./index.css";
 import favicon from "./favicon.ico";
 
 // Set document title
-document.title = " Nebrix- AI Trading Platform";
+document.title = " Hana- AI Trading Platform";
 
 // Set favicon if needed
 const link = document.createElement('link');

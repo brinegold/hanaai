@@ -293,8 +293,8 @@ const InvitePage: React.FC = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Join Nebrix",
-          text: "Use my referral link to join Nebrix and earn crypto rewards!",
+          title: "Join Hana",
+          text: "Use my referral link to join Hana and earn crypto rewards!",
           url: referralLink,
         });
         toast({
@@ -363,10 +363,10 @@ const InvitePage: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-4 text-gray-500">
+              <div className="text-center py-4 text-white">
                 <User className="h-12 w-12 mx-auto mb-2 text-white" />
                 <strong className="text-sm">No upline found</strong><br></br>
-                <strong className="text-xs text-black">You joined directly without a referrer</strong>
+                <strong className="text-xs text-white">You joined directly without a referrer</strong>
               </div>
             )}
           </CardContent>
@@ -378,7 +378,7 @@ const InvitePage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-5">
-              <p className="text-gray-400 text-sm">
+              <p className="text-white text-sm">
                 Your referral code can be used unlimited times. Earn commission
                 from each referral when they make investments!
               </p>
@@ -438,7 +438,7 @@ const InvitePage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <p className="text-gray-400 text-sm mb-2">
+              <p className="text-white text-sm mb-2">
                 {t('invite.step1')}
               </p>
               <div className="bg-black/10 border border-white/20 p-4 rounded-lg space-y-4">
@@ -583,7 +583,7 @@ const LevelReferralList: React.FC<{
         <p className="text-sm">
           When users join through your Level {parseInt(level) - 1 || "direct"} referrals, they'll appear here.
         </p>
-        <p className="text-xs text-grey-300 mt-2">
+        <p className="text-xs text-white mt-2">
           Earn {levelPercentages[level]}% commission on their investments!
         </p>
       </div>
@@ -640,7 +640,7 @@ const LevelReferralList: React.FC<{
       {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/20">
-          <div className="text-sm text-gray-400">
+          <div className="text-sm text-white">
             Showing {startIndex + 1}-{Math.min(endIndex, referrals.length)} of {referrals.length} referrals
           </div>
           <div className="flex items-center space-x-2">
@@ -653,7 +653,7 @@ const LevelReferralList: React.FC<{
             >
               Previous
             </Button>
-            <span className="text-sm text-gray-400 px-3">
+            <span className="text-sm text-white px-3">
               Page {currentPage} of {totalPages}
             </span>
             <Button

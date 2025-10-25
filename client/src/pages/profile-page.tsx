@@ -122,7 +122,7 @@ const ProfilePage: React.FC = () => {
 
   // Handler for Quantization Tutorial click
   const handleTutorialClick = () => {
-    // Open the Nebrix AI Trading dialog
+    // Open the Hana AI Trading dialog
     setShowTibankInfo(true);
   };
 
@@ -248,7 +248,7 @@ const ProfilePage: React.FC = () => {
             <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-1 text-blue-500">
               <Wallet className="h-5 w-5" />
             </div>
-            <span className="text-xs text-gray-300">{t('profile.deposit')}</span>
+            <span className="text-xs text-white300">{t('profile.deposit')}</span>
           </button>
           <button
             className="flex flex-col items-center"
@@ -257,7 +257,7 @@ const ProfilePage: React.FC = () => {
             <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-1 text-blue-500">
               <RefreshCcw className="h-5 w-5" />
             </div>
-            <span className="text-xs text-gray-300">{t('profile.withdraw')}</span>
+            <span className="text-xs text-white300">{t('profile.withdraw')}</span>
           </button>
           <button
             className="flex flex-col items-center"
@@ -266,14 +266,14 @@ const ProfilePage: React.FC = () => {
             <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-1 text-blue-500">
               <History className="h-5 w-5" />
             </div>
-            <span className="text-xs text-gray-300">{t('profile.detail')}</span>
+            <span className="text-xs text-white300">{t('profile.detail')}</span>
           </button>
 
           {/* History Dialog - Made Responsive */}
           <Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen}>
-            <DialogContent className="bg-white text-gray-900 border-gray-200 max-w-2xl w-[90vw] p-4 sm:p-6">
+            <DialogContent className="bg-white text-white900 border-gray-200 max-w-2xl w-[90vw] p-4 sm:p-6">
               <DialogHeader>
-                <DialogTitle className="text-gray-900">
+                <DialogTitle className="text-white900">
                   Account Details
                 </DialogTitle>
               </DialogHeader>
@@ -297,39 +297,39 @@ const ProfilePage: React.FC = () => {
                     <div className="space-y-6 p-2">
                       {/* Account Information */}
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
+                        <h3 className="text-lg font-semibold text-white900 mb-4">Account Information</h3>
                         <div className="space-y-3">
                           <div className="flex justify-between items-center">
-                            <span className="text-gray-600">Username:</span>
-                            <span className="text-gray-900 font-medium">{user.username}</span>
+                            <span className="text-white600">Username:</span>
+                            <span className="text-white900 font-medium">{user.username}</span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-gray-600">Email:</span>
-                            <span className="text-gray-900 font-medium">{user.email || "-"}</span>
+                            <span className="text-white600">Email:</span>
+                            <span className="text-white900 font-medium">{user.email || "-"}</span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-gray-600">Phone:</span>
-                            <span className="text-gray-900 font-medium">{user.phone || "-"}</span>
+                            <span className="text-white600">Phone:</span>
+                            <span className="text-white900 font-medium">{user.phone || "-"}</span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-gray-600">Telegram:</span>
-                            <span className="text-gray-900 font-medium">{user.telegram || "-"}</span>
+                            <span className="text-white600">Telegram:</span>
+                            <span className="text-white900 font-medium">{user.telegram || "-"}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Wallet Information */}
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Wallet Information</h3>
+                        <h3 className="text-lg font-semibold text-white900 mb-4">Wallet Information</h3>
                         <div className="space-y-3">
                           <div className="flex justify-between items-center">
-                            <span className="text-gray-600">Network:</span>
-                            <span className="text-gray-900 font-medium bg-yellow-100 px-2 py-1 rounded text-sm">BSC (Binance Smart Chain)</span>
+                            <span className="text-white600">Network:</span>
+                            <span className="text-white900 font-medium bg-yellow-100 px-2 py-1 rounded text-sm">BSC (Binance Smart Chain)</span>
                           </div>
                           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                            <span className="text-gray-600">Withdrawal/Deposit Address:</span>
+                            <span className="text-white600">Withdrawal/Deposit Address:</span>
                             <div className="flex items-center gap-2">
-                              <span className="text-gray-900 font-mono text-sm bg-white px-2 py-1 rounded border break-all">
+                              <span className="text-white900 font-mono text-sm bg-white px-2 py-1 rounded border break-all">
                                 {user.bscWalletAddress || "Not set"}
                               </span>
                               {user.bscWalletAddress && (
@@ -358,22 +358,22 @@ const ProfilePage: React.FC = () => {
 
                       {/* Asset Summary */}
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Asset Summary</h3>
+                        <h3 className="text-lg font-semibold text-white900 mb-4">Asset Summary</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="bg-white p-3 rounded border">
-                            <div className="text-gray-600 text-sm">Total Assets</div>
-                            <div className="text-xl font-bold text-gray-900">${parseFloat(user.totalAssets.toString()).toFixed(2)}</div>
+                            <div className="text-white600 text-sm">Total Assets</div>
+                            <div className="text-xl font-bold text-white900">${parseFloat(user.totalAssets.toString()).toFixed(2)}</div>
                           </div>
                           <div className="bg-white p-3 rounded border">
-                            <div className="text-gray-600 text-sm">Profit Assets</div>
+                            <div className="text-white600 text-sm">Profit Assets</div>
                             <div className="text-xl font-bold text-green-600">${parseFloat(user.profitAssets.toString()).toFixed(2)}</div>
                           </div>
                           <div className="bg-white p-3 rounded border">
-                            <div className="text-gray-600 text-sm">Deposit Amount</div>
+                            <div className="text-white600 text-sm">Deposit Amount</div>
                             <div className="text-xl font-bold text-blue-600">${parseFloat(user.rechargeAmount.toString()).toFixed(2)}</div>
                           </div>
                           <div className="bg-white p-3 rounded border">
-                            <div className="text-gray-600 text-sm">Withdrawable</div>
+                            <div className="text-white600 text-sm">Withdrawable</div>
                             <div className="text-xl font-bold text-purple-600">${parseFloat(user.withdrawableAmount.toString()).toFixed(2)}</div>
                           </div>
                         </div>
@@ -408,7 +408,7 @@ const ProfilePage: React.FC = () => {
                                 </div>
                                 <div className="grid grid-cols-2 gap-2 text-xs">
                                   <div>
-                                    <p className="text-gray-400">Status</p>
+                                    <p className="text-white400">Status</p>
                                     <p
                                       className={`px-2 py-1 rounded text-xs inline-block mt-1 ${
                                         tx.status === "Completed"
@@ -422,17 +422,17 @@ const ProfilePage: React.FC = () => {
                                     </p>
                                   </div>
                                   <div>
-                                    <p className="text-gray-400">Network</p>
+                                    <p className="text-white400">Network</p>
                                     <p>{tx.network || "-"}</p>
                                   </div>
                                   <div>
-                                    <p className="text-gray-400">Address</p>
+                                    <p className="text-white400">Address</p>
                                     <p className="truncate">
                                       {formatAddress(tx.address)}
                                     </p>
                                   </div>
                                   <div>
-                                    <p className="text-gray-400">Date</p>
+                                    <p className="text-white400">Date</p>
                                     <p>
                                       {new Date(
                                         tx.createdAt,
@@ -444,7 +444,7 @@ const ProfilePage: React.FC = () => {
                             ))}
                           </div>
                         ) : (
-                          <div className="text-center py-8 text-gray-400">
+                          <div className="text-center py-8 text-white400">
                             No transactions found
                           </div>
                         )}
@@ -565,7 +565,7 @@ const ProfilePage: React.FC = () => {
             </div>
             <span className="text-white">{t('profile.securityCenter')}</span>
           </div>
-          <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
+          <ArrowLeft className="h-4 w-4 text-white500 transform rotate-180" />
         </button>
 
         {/* Replace Quantization Tutorial <a> with a button */}
@@ -579,7 +579,7 @@ const ProfilePage: React.FC = () => {
             </div>
             <span className="text-white">{t('profile.quantizationTutorial')}</span>
           </div>
-          <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
+          <ArrowLeft className="h-4 w-4 text-white500 transform rotate-180" />
         </button>
 
         <button
@@ -592,7 +592,7 @@ const ProfilePage: React.FC = () => {
             </div>
             <span className="text-white">{t('profile.news')}</span>
           </div>
-          <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
+          <ArrowLeft className="h-4 w-4 text-white500 transform rotate-180" />
         </button>
 
         <button
@@ -605,7 +605,7 @@ const ProfilePage: React.FC = () => {
             </div>
             <span className="text-white">{t('profile.languageSettings')}</span>
           </div>
-          <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
+          <ArrowLeft className="h-4 w-4 text-white500 transform rotate-180" />
         </button>
 
         <button
@@ -618,7 +618,7 @@ const ProfilePage: React.FC = () => {
             </div>
             <span className="text-white">{t('profile.commonProblem')}</span>
           </div>
-          <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
+          <ArrowLeft className="h-4 w-4 text-white500 transform rotate-180" />
         </button>
 
         <button
@@ -631,7 +631,7 @@ const ProfilePage: React.FC = () => {
             </div>
             <span className="text-white">{t('profile.aboutUs')}</span>
           </div>
-          <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
+          <ArrowLeft className="h-4 w-4 text-white500 transform rotate-180" />
         </button>
 
         <button
@@ -644,7 +644,7 @@ const ProfilePage: React.FC = () => {
             </div>
             <span className="text-white">{t('profile.downloadApp')}</span>
           </div>
-          <ArrowLeft className="h-4 w-4 text-gray-500 transform rotate-180" />
+          <ArrowLeft className="h-4 w-4 text-white500 transform rotate-180" />
         </button>
       </div>
 
@@ -676,7 +676,7 @@ const ProfilePage: React.FC = () => {
 
       {/* Messages Dialog */}
       <Dialog open={messagesDialogOpen} onOpenChange={setMessagesDialogOpen}>
-        <DialogContent className="bg-white text-gray-900 border-gray-200 max-w-2xl w-[90vw]">
+        <DialogContent className="bg-white text-white900 border-gray-200 max-w-2xl w-[90vw]">
           <DialogHeader>
             <DialogTitle>Messages & Notifications</DialogTitle>
           </DialogHeader>
@@ -698,7 +698,7 @@ const ProfilePage: React.FC = () => {
                       className="bg-gray-50 p-3 rounded-lg"
                     >
                       <div className="flex justify-between items-center mb-1">
-                        <div className="text-sm text-gray-400">
+                        <div className="text-sm text-white400">
                           {new Date(notification.createdAt).toLocaleString()}
                         </div>
                         <Badge
@@ -787,7 +787,7 @@ const ProfilePage: React.FC = () => {
                   ))}
                   {(!user?.notifications ||
                     user.notifications.length === 0) && (
-                    <div className="text-gray-400 text-center py-4">
+                    <div className="text-white400 text-center py-4">
                       No notifications yet
                     </div>
                   )}
@@ -829,25 +829,25 @@ const ProfilePage: React.FC = () => {
         onOpenChange={setWithdrawDialogOpen}
       />
 
-      {/* Nebrix Info Dialog */}
+      {/* Hana Info Dialog */}
       <Dialog open={showTibankInfo} onOpenChange={setShowTibankInfo}>
-        <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogContent className="bg-white border-gray-200 text-white900 max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-center text-black mb-4">
-              Welcome To Nebrix Ai Trading
+              Welcome To Hana Ai Trading
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 text-sm">
             <p>
-            Nebrix is an advanced AI-powered quantitative trading ecosystem designed to transform the way investors interact with the digital economy. By integrating Hermetic AI, a proprietary trading engine, Nebrix delivers consistent and sustainable returns through adaptive strategies that thrive in the fast-paced crypto market.
+            Hana is an advanced AI-powered quantitative trading ecosystem designed to transform the way investors interact with the digital economy. By integrating Hermetic AI, a proprietary trading engine, Hana delivers consistent and sustainable returns through adaptive strategies that thrive in the fast-paced crypto market.
             </p>
 
             <h3 className="text-[#4F9CF9] font-medium mt-4">
-              Nebrix automatic Ai money-making function
+              Hana automatic Ai money-making function
             </h3>
             <p>
-              Nebrix can buy Bitcoin at a low price from Exchange A within 1
+              Hana can buy Bitcoin at a low price from Exchange A within 1
               second, and sell it at a high price on Exchange B to make a
               profit.
             </p>
@@ -879,23 +879,23 @@ const ProfilePage: React.FC = () => {
             <div className="space-y-3">
               <div>
                 <h4 className="font-medium mb-1">1. Speed and Accuracy</h4>
-                <p className="text-gray-700">
-                  Nebrix executes trades with unparalleled speed and accuracy,
+                <p className="text-white700">
+                  Hana executes trades with unparalleled speed and accuracy,
                   operating 24/7 through automated algorithms.
                 </p>
               </div>
 
               <div>
                 <h4 className="font-medium mb-1">2. Emotion-Free Trading</h4>
-                <p className="text-gray-700">
-                  Nebrix uses computer programs and algorithms to ensure
+                <p className="text-white700">
+                  Hana uses computer programs and algorithms to ensure
                   consistent trading results without emotional bias.
                 </p>
               </div>
 
               <div>
                 <h4 className="font-medium mb-1">3. Advanced Backtesting</h4>
-                <p className="text-gray-700">
+                <p className="text-white700">
                   Uses historical market data to customize and optimize trading
                   models for maximum profit.
                 </p>
@@ -903,7 +903,7 @@ const ProfilePage: React.FC = () => {
 
               <div>
                 <h4 className="font-medium mb-1">4. Strict Discipline</h4>
-                <p className="text-gray-700">
+                <p className="text-white700">
                   Helps investors stick to established trading plans and avoid
                   human errors in volatile markets.
                 </p>
@@ -911,7 +911,7 @@ const ProfilePage: React.FC = () => {
 
               <div>
                 <h4 className="font-medium mb-1">5. Market Trend Analysis</h4>
-                <p className="text-gray-700">
+                <p className="text-white700">
                   Real-time analysis of market prospects across multiple
                   cryptocurrency categories.
                 </p>
@@ -919,7 +919,7 @@ const ProfilePage: React.FC = () => {
 
               <div>
                 <h4 className="font-medium mb-1">6. Decentralized Trading</h4>
-                <p className="text-gray-700">
+                <p className="text-white700">
                   Enables diversified trading across multiple exchanges and
                   trading types automatically.
                 </p>
@@ -928,7 +928,7 @@ const ProfilePage: React.FC = () => {
 
             <div className="bg-gradient-to-r from-blue-600/20 to-blue-500/20 p-4 rounded-lg mt-6">
               <p className="text-center">
-                Nebrix has undergone its fourth transformation, expanding
+                Hana has undergone its fourth transformation, expanding
                 functionality while simplifying investor transactions. Profits
                 can be realized with just one click and waiting for 1-2 minutes.
               </p>

@@ -30,7 +30,7 @@ const Logo: React.FC<LogoProps> = ({ size = "medium" }) => {
     <div className="flex items-center space-x-2">
       <img 
         src={logo} 
-        alt="Nebrix Logo" 
+        alt="Hana Logo" 
         className={`${sizes[size].image} object-contain`}
       />
 

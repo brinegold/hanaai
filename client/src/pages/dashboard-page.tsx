@@ -81,7 +81,7 @@ const RankDisplay: React.FC = () => {
   };
 
   const getRankColor = (rank: string) => {
-    if (rank === "none") return "text-gray-500";
+    if (rank === "none") return "text-black";
     if (["President", "Chairman", "Vice Chairman"].includes(rank)) {
       return "text-yellow-600";
     }
@@ -104,7 +104,7 @@ const RankDisplay: React.FC = () => {
               <h3 className={`font-semibold ${getRankColor(currentRank)}`}>
                 {currentRank === "none" ? t('rank.noRank') : currentRank}
               </h3>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-black">
                 {t('rank.totalVolume')}: ${totalVolume.toLocaleString()}
               </p>
               <div className="flex gap-4 mt-1">
@@ -120,8 +120,8 @@ const RankDisplay: React.FC = () => {
           
           {nextRank && (
             <div className="text-right">
-              <p className="text-xs text-gray-500">{t('rank.nextRank')}</p>
-              <p className="font-medium text-sm text-gray-700">
+              <p className="text-xs text-white500">{t('rank.nextRank')}</p>
+              <p className="font-medium text-sm text-white700">
                 {nextRank.name}
               </p>
               <p className="text-xs text-blue-600">
@@ -133,7 +133,7 @@ const RankDisplay: React.FC = () => {
         
         {nextRank && (
           <div className="mt-3">
-            <div className="flex justify-between text-xs text-gray-600 mb-1">
+            <div className="flex justify-between text-xs text-white600 mb-1">
               <span>${totalVolume.toLocaleString()}</span>
               <span>${parseFloat(nextRank.requiredVolume).toLocaleString()}</span>
             </div>
@@ -552,7 +552,7 @@ const DashboardPage: React.FC = () => {
           }}>
             {/* Telegram */}
             <a 
-              href="https://t.me/Nebrixdex"
+              href="https://t.me/Hanadex"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -598,7 +598,7 @@ const DashboardPage: React.FC = () => {
 
             {/* Twitter */}
             <a 
-              href="https://x.com/NebrixCoin"
+              href="https://x.com/HanaCoin"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -628,13 +628,13 @@ const DashboardPage: React.FC = () => {
       <div className="mx-4 mb-6 p-4 rounded-lg text-sm" style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}>
         <h3 className="text-white font-medium mb-2">Additional Information</h3>
         <div className="text-white/80">
-        The Minimum deposit amount for Nebrix AI Trading is 5USDT , and the minimum withdrawal amount is 5USDT .
+        The Minimum deposit amount for Hana AI Trading is 5USDT , and the minimum withdrawal amount is 5USDT .
         The funds will be credited to your account within three minutes.<br></br>
           <br></br>
           <br></br> ===========<br></br> ✔How to make money: <br></br>
           1. Deposit Now and Earn 1.5% daily(Withdrawals available each day)<br></br>
-2. To Generate Daily Returns You Must Click on "Trade now" ,then Click on Start Trading" wait for few seconds for Nebrix AI to generate profits. <br></br>
-3.  Invite others participate and earn in Nebrix Uni-level referral Program earning in 4 levels; 5%,3%,2% and 1%.<br></br>
+2. To Generate Daily Returns You Must Click on "Trade now" ,then Click on Start Trading" wait for few seconds for Hana AI to generate profits. <br></br>
+3.  Invite others participate and earn in Hana Uni-level referral Program earning in 4 levels; 5%,3%,2% and 1%.<br></br>
 
 <strong>
 Trade Time : Once Per day
@@ -666,19 +666,19 @@ Trade Time : Once Per day
         <DialogContent className="bg-black/90 backdrop-blur-md text-white border-white/10">
           <DialogHeader>
             <DialogTitle className="text-white">
-              Nebrix Trading Info
+              Hana Trading Info
             </DialogTitle>
           </DialogHeader>
           <ScrollArea className="h-[60vh]">
             <div className="space-y-4 pr-4">
               <p>
-                The Minimum deposit amount for Nebrix AI trading is 5USDT, and the minimum withdrawal amount is 5USDT
+                The Minimum deposit amount for Hana AI trading is 5USDT, and the minimum withdrawal amount is 5USDT
               </p>
               <p>
                 The Maximum deposit is 500,000USDT.
               </p>
               <p>
-                The Deposit Fee is 2%(Fees used for Maintenance of the Nebrix AI Ecosystem)
+                The Deposit Fee is 2%(Fees used for Maintenance of the Hana AI Ecosystem)
               </p>
               <p>
                 The withdrawal fee is 5% and the funds will be credited to your account within few minutes.
@@ -697,7 +697,7 @@ Trade Time : Once Per day
                     To Generate Daily Returns You Must click on "Trade Now", then click on "Start Trading" wait for few seconds .
                   </p>
                   <p>
-                    Invite others to participate and get 10%,5%,3% and 2% in Nebrix Uni-Level referral commission Program✔
+                    Invite others to participate and get 10%,5%,3% and 2% in Hana Uni-Level referral commission Program✔
                   </p>
                   <p>
                     Trading time: Trading Time is once every 24hrs.
@@ -722,45 +722,45 @@ Trade Time : Once Per day
                 <div className="space-y-3">
                   <div>
                     <p className="font-medium">1: Get 5% of the deposit of level-1 team members</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-white600">
                       The first-level team can receive commission income every day = 100*5%*10 people = 50 USDT
                     </p>
-                    <p className="text-sm text-gray-600">
-                      Nebrix team daily deposit reward Your team can only deposit the value as a reward within 24 hours
+                    <p className="text-sm text-white600">
+                      Hana team daily deposit reward Your team can only deposit the value as a reward within 24 hours
                     </p>
                   </div>
                   
                   <div>
                     <p className="font-medium">2: Get 3% of the deposit of level-2 team members</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-white600">
                       The second-level team can receive commission income every day = 100*3%*10 people = 30 USDT
                     </p>
-                    <p className="text-sm text-gray-600">
-                      Nebrix team daily deposit reward Your team can only deposit the value as a reward within 24 hours
+                    <p className="text-sm text-white600">
+                      Hana team daily deposit reward Your team can only deposit the value as a reward within 24 hours
                     </p>
                   </div>
                   
                   <div>
                     <p className="font-medium">3: Get 2% of the deposit of level-3 team members</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-white600">
                       The third-level team can receive commission income every day = 100*2%*10 people = 20 USDT
                     </p>
-                    <p className="text-sm text-gray-600">
-                      Nebrix team daily deposit reward Your team can only deposit the value as a reward within 24 hours
+                    <p className="text-sm text-white600">
+                      Hana team daily deposit reward Your team can only deposit the value as a reward within 24 hours
                     </p>
                   </div>
                   
                   <div>
                     <p className="font-medium">4: Get 1% of the deposit of level-4 team members</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-white600">
                       The fourth-level team can receive commission income every day = 100*1%*10 people = 10 USDT
                     </p>
                   </div>
                 </div>
               </div>
 
-              <p className="text-sm text-gray-600">
-                Nebrix works with bloggers on multiple social platforms (such as Twitter, YouTube, TikTok, Facebook, Instagram, etc.)
+              <p className="text-sm text-white600">
+                Hana works with bloggers on multiple social platforms (such as Twitter, YouTube, TikTok, Facebook, Instagram, etc.)
                 to promote bloggers' tweets, videos and posts and increase account data (views, clicks, etc.) (Likes, reposts, fans, etc.)
                 Help accounts achieve traffic growth. The final right of interpretation belongs to this platform.
               </p>

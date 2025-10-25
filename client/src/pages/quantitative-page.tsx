@@ -296,7 +296,7 @@ const QuantitativePage: React.FC = () => {
             {/* Balance and Today Profit */}
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs text-gray-400">{t('quantitative.availableBalance')}</p>
+                <p className="text-xs text-white">{t('quantitative.availableBalance')}</p>
                 <div className="flex items-center space-x-2 mt-1">
                   <div className="w-6 h-6 rounded-md bg-[#4F9CF9]/10 flex items-center justify-center">
                     <svg className="w-3.5 h-3.5 text-[#4F9CF9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -308,10 +308,10 @@ const QuantitativePage: React.FC = () => {
                     ${user?.totalAssets ? parseFloat(user.totalAssets.toString()).toFixed(2) : '0.00'}
                   </div>
                 </div>
-                <p className="text-[10px] text-gray-400 mt-1">~ 0.00 BTC</p>
+                <p className="text-[10px] text-white mt-1">~ 0.00 BTC</p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-gray-400">{t('dashboard.todayEarnings')}</p>
+                <p className="text-xs text-white">{t('dashboard.todayEarnings')}</p>
                 <p className="text-green-600 font-semibold mt-1">
                   +${user?.todayEarnings ? parseFloat(user.todayEarnings.toString()).toFixed(2) : '0.00'}
                 </p>
@@ -329,7 +329,7 @@ const QuantitativePage: React.FC = () => {
                 <button
                   key={r}
                   onClick={() => setSelectedRange(r as any)}
-                  className={`px-3 py-1 rounded-md text-xs border transition-colors ${selectedRange === r ? 'bg-[#4F9CF9] text-white border-[#4F9CF9]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                  className={`px-3 py-1 rounded-md text-xs border transition-colors ${selectedRange === r ? 'bg-[#4F9CF9] text-white border-[#4F9CF9]' : 'bg-white text-white border-gray-300 hover:bg-gray-50'}`}
                 >
                   {r === 'all' ? 'All' : r}
                 </button>
@@ -339,13 +339,13 @@ const QuantitativePage: React.FC = () => {
             {/* Strategy Row */}
             <div className="flex items-center mt-4">
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-700">Strategy</span>
+                <span className="text-sm text-white">Strategy</span>
                 <select
                   value={strategy}
                   onChange={(e) => setStrategy(e.target.value)}
                   className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-[#4F9CF9]"
                 >
-                  <option value="Nebrix">Nebrix</option>
+                  <option value="Hana">Hana</option>
                 </select>
               </div>
             </div>
@@ -359,7 +359,7 @@ const QuantitativePage: React.FC = () => {
                 </svg>
               </div>
               <p className="text-white font-medium">Start Trading</p>
-              <p className="text-xs text-gray-500 mb-3">Enable trading now, and let our system execute trades seamlessly</p>
+              <p className="text-xs text-white mb-3">Enable trading now, and let our system execute trades seamlessly</p>
               <Button
                 className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-5"
                 onClick={() => {
@@ -400,21 +400,21 @@ const QuantitativePage: React.FC = () => {
                         <span className="text-lg font-bold text-[#4F9CF9]">
                           {detailedTimeRemaining.hours.toString().padStart(2, '0')}
                         </span>
-                        <span className="text-xs text-gray-300">Hours</span>
+                        <span className="text-xs text-white">Hours</span>
                       </div>
                       <span className="text-[#4F9CF9] font-bold">:</span>
                       <div className="flex flex-col items-center">
                         <span className="text-lg font-bold text-[#4F9CF9]">
                           {detailedTimeRemaining.minutes.toString().padStart(2, '0')}
                         </span>
-                        <span className="text-xs text-gray-300">Minutes</span>
+                        <span className="text-xs text-white">Minutes</span>
                       </div>
                       <span className="text-[#4F9CF9] font-bold">:</span>
                       <div className="flex flex-col items-center">
                         <span className="text-lg font-bold text-[#4F9CF9]">
                           {detailedTimeRemaining.seconds.toString().padStart(2, '0')}
                         </span>
-                        <span className="text-xs text-gray-300">Seconds</span>
+                        <span className="text-xs text-white">Seconds</span>
                       </div>
                     </div>
                   </div>
@@ -443,14 +443,14 @@ const QuantitativePage: React.FC = () => {
                 onClick={() => setShowTibankInfo(true)}
                 className="text-[#f5ef42] text-sm hover:text-yellow transition-colors"
               >
-                Welcome To Nebrix Ai Trading
+                Welcome To Hana Ai Trading
               </button>
             </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-4 gap-2 text-center mb-4 rounded-lg p-2" style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}>
               <div className="space-y-1">
-                <p className="text-xs text-gray-400">{t('quantitative.investmentAmount')}</p>
+                <p className="text-xs text-white">{t('quantitative.investmentAmount')}</p>
                 <p className="font-medium text-white">
                   {user?.totalAssets
                     ? parseFloat(user.totalAssets.toString()).toFixed(2)
@@ -459,7 +459,7 @@ const QuantitativePage: React.FC = () => {
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-gray-400">{t('dashboard.todayEarnings')}</p>
+                <p className="text-xs text-white">{t('dashboard.todayEarnings')}</p>
                 <p className="font-medium text-white">
                   {user?.todayEarnings
                     ? parseFloat(user.todayEarnings.toString()).toFixed(2)
@@ -468,7 +468,7 @@ const QuantitativePage: React.FC = () => {
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-gray-400">Total Revenue</p>
+                <p className="text-xs text-white">Total Revenue</p>
                 <p className="font-medium text-white">
                   {user?.profitAssets
                     ? parseFloat(user.profitAssets.toString()).toFixed(2)
@@ -496,7 +496,7 @@ const QuantitativePage: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  <span className="text-gray-200 text-sm">
+                  <span className="text-white text-sm">
                     Ai Trend (24 Day)
                   </span>
                 </div>
@@ -576,7 +576,7 @@ const QuantitativePage: React.FC = () => {
               <div className="flex justify-between items-center mb-2">
                 <div>
                   <h3 className="text-white font-medium">AI Trading System</h3>
-                  <p className="text-xs text-gray-400">Automatic algorithmic trading with daily profits</p>
+                  <p className="text-xs text-white">Automatic algorithmic trading with daily profits</p>
                 </div>
                 <Badge className="bg-[#4F9CF9] hover:bg-blue-500">
                   3% Daily
@@ -596,20 +596,20 @@ const QuantitativePage: React.FC = () => {
                   return (
                     <>
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-500">Daily Trading Progress</span>
+                        <span className="text-white">Daily Trading Progress</span>
                         <span className="text-[#4F9CF9] font-medium">{dailyProgressPercentage.toFixed(0)}%</span>
                       </div>
                       
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Today's earnings:</span>
+                          <span className="text-white">Today's earnings:</span>
                           <span className="text-white font-medium">
                             ${todayEarnings.toFixed(2)} / Expected: ${expectedDailyReturn.toFixed(2)} (3% daily)
                           </span>
                         </div>
                         
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Total earnings:</span>
+                          <span className="text-white">Total earnings:</span>
                           <span className="text-white font-medium">
                             ${tradingEarnings.toFixed(2)} (No limit)
                           </span>
@@ -652,10 +652,10 @@ const QuantitativePage: React.FC = () => {
                       <Zap className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
                       <h3 className="font-medium">No Available Plans</h3>
                     </div>
-                    <p className="text-gray-400 text-sm mb-3">
+                    <p className="text-white text-sm mb-3">
                       Your current balance (${userCapital.toFixed(2)}) doesn't match any available investment plans.
                     </p>
-                    <p className="text-gray-400 text-xs">
+                    <p className="text-white text-xs">
                       Please add funds to your account to access investment opportunities.
                     </p>
                   </CardContent>
@@ -669,7 +669,7 @@ const QuantitativePage: React.FC = () => {
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h3 className="text-white font-medium">{plan.name}</h3>
-                    <p className="text-xs text-gray-400">{plan.description}</p>
+                    <p className="text-xs text-white">{plan.description}</p>
                   </div>
                   <Badge className="bg-[#4F9CF9] hover:bg-blue-500">
                     {plan.dailyRate}% Daily
@@ -678,7 +678,7 @@ const QuantitativePage: React.FC = () => {
 
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">
+                    <span className="text-white text-sm">
                       {t('quantitative.minimumInvestment')}
                     </span>
                     <span className="text-white font-medium">
@@ -686,7 +686,7 @@ const QuantitativePage: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">
+                    <span className="text-white text-sm">
                       {t('quantitative.maximumInvestment')}
                     </span>
                     <span className="text-white font-medium">
@@ -694,13 +694,13 @@ const QuantitativePage: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">{t('quantitative.dailyReturn')}</span>
+                    <span className="text-white text-sm">{t('quantitative.dailyReturn')}</span>
                     <span className="text-[#4CAF50] font-medium">
                       {plan.dailyRate}%
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">Trading Days</span>
+                    <span className="text-white text-sm">Trading Days</span>
                     <span className="text-green-500 font-medium">
                       Monday to Sunday
                     </span>
@@ -773,25 +773,25 @@ const QuantitativePage: React.FC = () => {
       {/* Bottom Navigation */}
       <BottomNav />
 
-      {/* Nebrix Info Dialog */}
+      {/* Hana Info Dialog */}
       <Dialog open={showTibankInfo} onOpenChange={setShowTibankInfo}>
         <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-center text-black mb-4">
-              Welcome To Nebrix Ai Trading
+              Welcome To Hana Ai Trading
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 text-sm">
             <p>
-            Nebrix is an advanced AI-powered quantitative trading ecosystem designed to transform the way investors interact with the digital economy. By integrating Hermetic AI, a proprietary trading engine, Nebrix delivers consistent and sustainable returns through adaptive strategies that thrive in the fast-paced crypto market.
+            Hana is an advanced AI-powered quantitative trading ecosystem designed to transform the way investors interact with the digital economy. By integrating Hermetic AI, a proprietary trading engine, Hana delivers consistent and sustainable returns through adaptive strategies that thrive in the fast-paced crypto market.
             </p>
 
             <h3 className="text-[#4F9CF9] font-medium mt-4">
-              Nebrix automatic Ai money-making function
+              Hana automatic Ai money-making function
             </h3>
             <p>
-              Nebrix can buy Bitcoin at a low price from Exchange A within 1
+              Hana can buy Bitcoin at a low price from Exchange A within 1
               second, and sell it at a high price on Exchange B to make a
               profit.
             </p>
@@ -823,23 +823,23 @@ const QuantitativePage: React.FC = () => {
             <div className="space-y-3">
               <div>
                 <h4 className="font-medium mb-1">1. Speed and Accuracy</h4>
-                <p className="text-gray-700">
-                  Nebrix executes trades with unparalleled speed and accuracy,
+                <p className="text-white">
+                  Hana executes trades with unparalleled speed and accuracy,
                   operating 24/7 through automated algorithms.
                 </p>
               </div>
 
               <div>
                 <h4 className="font-medium mb-1">2. Emotion-Free Trading</h4>
-                <p className="text-gray-700">
-                  Nebrix uses computer programs and algorithms to ensure
+                <p className="text-white">
+                  Hana uses computer programs and algorithms to ensure
                   consistent trading results without emotional bias.
                 </p>
               </div>
 
               <div>
                 <h4 className="font-medium mb-1">3. Advanced Backtesting</h4>
-                <p className="text-gray-700">
+                <p className="text-white">
                   Uses historical market data to customize and optimize trading
                   models for maximum profit.
                 </p>
@@ -847,7 +847,7 @@ const QuantitativePage: React.FC = () => {
 
               <div>
                 <h4 className="font-medium mb-1">4. Strict Discipline</h4>
-                <p className="text-gray-700">
+                <p className="text-white">
                   Helps investors stick to established trading plans and avoid
                   human errors in volatile markets.
                 </p>
@@ -855,7 +855,7 @@ const QuantitativePage: React.FC = () => {
 
               <div>
                 <h4 className="font-medium mb-1">5. Market Trend Analysis</h4>
-                <p className="text-gray-700">
+                <p className="text-white">
                   Real-time analysis of market prospects across multiple
                   cryptocurrency categories.
                 </p>
@@ -863,7 +863,7 @@ const QuantitativePage: React.FC = () => {
 
               <div>
                 <h4 className="font-medium mb-1">6. Decentralized Trading</h4>
-                <p className="text-gray-700">
+                <p className="text-white">
                   Enables diversified trading across multiple exchanges and
                   trading types automatically.
                 </p>
@@ -872,7 +872,7 @@ const QuantitativePage: React.FC = () => {
 
             <div className="bg-gradient-to-r from-blue-600/20 to-blue-500/20 p-4 rounded-lg mt-6">
               <p className="text-center">
-                Nebrix has undergone its fourth transformation, expanding
+                Hana has undergone its fourth transformation, expanding
                 functionality while simplifying investor transactions. Profits
                 can be realized with just one click and waiting for 1-2 minutes.
               </p>
