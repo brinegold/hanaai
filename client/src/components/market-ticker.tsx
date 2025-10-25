@@ -54,7 +54,7 @@ const MarketTicker: React.FC = () => {
   }
 
   return (
-    <div className="mx-4 p-4 rounded-lg" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
+    <div className="mx-4 p-4 rounded-lg" style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}>
       <Tabs defaultValue="COINBASE" onValueChange={setSelectedExchange}>
         <TabsList className="flex space-x-4 mb-2 bg-transparent h-auto p-0">
           {exchanges.map((exchange) => (

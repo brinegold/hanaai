@@ -371,7 +371,7 @@ const DashboardPage: React.FC = () => {
                 onClick={handleCountryRepApplication}
                 disabled={isApplyingCountryRep}
                 className="text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}
+                style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}
               >
                 {isApplyingCountryRep ? "Applying..." : "Apply Now"}
               </button>
@@ -497,7 +497,7 @@ const DashboardPage: React.FC = () => {
           </div>
           <button
             className="px-3 py-1.5 rounded-lg text-white text-xs hover:bg-white/10 transition-colors"
-            style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}
+            style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}
             onClick={handleInviteClick}
           >
             {t('nav.invite')}
@@ -625,7 +625,7 @@ const DashboardPage: React.FC = () => {
       {/* Random User Display */}
 
       {/* Random Text Section */}
-      <div className="mx-4 mb-6 p-4 rounded-lg text-sm" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
+      <div className="mx-4 mb-6 p-4 rounded-lg text-sm" style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}>
         <h3 className="text-white font-medium mb-2">Additional Information</h3>
         <div className="text-white/80">
         The Minimum deposit amount for Nebrix AI Trading is 5USDT , and the minimum withdrawal amount is 5USDT .

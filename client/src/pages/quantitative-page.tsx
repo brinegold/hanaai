@@ -28,12 +28,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -188,12 +185,7 @@ const QuantitativePage: React.FC = () => {
   const [showTradingSimulation, setShowTradingSimulation] = useState(false);
   const [simulationSteps, setSimulationSteps] = useState<string[]>([]);
   const [isSimulating, setIsSimulating] = useState(false);
-  const [showInvestmentDialog, setShowInvestmentDialog] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<InvestmentPlan | null>(null);
-  const [investmentAmount, setInvestmentAmount] = useState<string>("");
-
-  // Handle starting a new investment
-  // Get current BTC price
+  // Removed investment dialog state variables as they're no longer needed
   const [btcPrice, setBtcPrice] = useState(84800);
 
   useEffect(() => {
@@ -209,7 +201,7 @@ const QuantitativePage: React.FC = () => {
       .catch(console.error);
   }, []);
 
-  const handleStartInvestment = async (plan: InvestmentPlan, customAmount?: number) => {
+  const handleStartInvestment = async (plan: InvestmentPlan, customAmount: number) => {
     // Check if user is in cooldown period
     if (timeRemaining !== null) {
       toast({
@@ -244,7 +236,7 @@ const QuantitativePage: React.FC = () => {
     setIsSimulating(false);
 
     // Create the actual investment after simulation
-    const amount = customAmount || plan.minAmount;
+    const amount = customAmount;
     investmentMutation.mutate({
       amount: amount,
       plan: plan.id,
@@ -253,26 +245,21 @@ const QuantitativePage: React.FC = () => {
   };
 
   const handlePlanSelect = (plan: InvestmentPlan) => {
-    setSelectedPlan(plan);
-    setInvestmentAmount("");
-    setShowInvestmentDialog(true);
-  };
-
-  const handleInvestmentSubmit = () => {
-    if (!selectedPlan || !investmentAmount) return;
+    // Get user's total available capital
+    const userCapital = user?.totalAssets ? parseFloat(user.totalAssets.toString()) : 0;
     
-    const amount = parseFloat(investmentAmount);
-    if (isNaN(amount) || amount < selectedPlan.minAmount || amount > selectedPlan.maxAmount) {
+    // Check if user has sufficient capital for this plan
+    if (userCapital < plan.minAmount) {
       toast({
-        title: "Invalid Amount",
-        description: `Investment amount must be between $${selectedPlan.minAmount} and $${selectedPlan.maxAmount}`,
+        title: "Insufficient Capital",
+        description: `You need at least $${plan.minAmount} to invest in this plan. Your current balance is $${userCapital.toFixed(2)}`,
         variant: "destructive",
       });
       return;
     }
-
-    setShowInvestmentDialog(false);
-    handleStartInvestment(selectedPlan, amount);
+    
+    // Automatically invest the user's total available capital
+    handleStartInvestment(plan, userCapital);
   };
 
   if (isLoading) {
@@ -304,7 +291,7 @@ const QuantitativePage: React.FC = () => {
 
       {/* Trading Dashboard Card */}
       <div className="px-4 mb-4">
-        <Card className="border-white/10 overflow-hidden" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
+        <Card className="border-white/10 overflow-hidden" style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}>
           <CardContent className="p-4">
             {/* Balance and Today Profit */}
             <div className="flex items-start justify-between">
@@ -461,7 +448,7 @@ const QuantitativePage: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-4 gap-2 text-center mb-4 rounded-lg p-2" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
+            <div className="grid grid-cols-4 gap-2 text-center mb-4 rounded-lg p-2" style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}>
               <div className="space-y-1">
                 <p className="text-xs text-gray-400">{t('quantitative.investmentAmount')}</p>
                 <p className="font-medium text-white">
@@ -491,7 +478,7 @@ const QuantitativePage: React.FC = () => {
               </div>
             </div>
 
-            <div className="rounded-lg p-2 mb-2" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
+            <div className="rounded-lg p-2 mb-2" style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}>
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center space-x-2">
                   <div className="bg-[#4F9CF9]/10 p-1 rounded-md">
@@ -583,21 +570,20 @@ const QuantitativePage: React.FC = () => {
           Investment Status
         </h2>
         <div className="space-y-4">
-          <Card className="mb-4 overflow-hidden" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
+          <Card className="mb-4 overflow-hidden" style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}>
             <div className="bg-gradient-to-r from-blue-600 to-blue-500 h-1.5" />
             <CardContent className="p-4">
               <div className="flex justify-between items-center mb-2">
-                <Badge className="bg-blue-600 hover:bg-blue-700 text-xs font-semibold">
-                  AI Trading
+                <div>
+                  <h3 className="text-white font-medium">AI Trading System</h3>
+                  <p className="text-xs text-gray-400">Automatic algorithmic trading with daily profits</p>
+                </div>
+                <Badge className="bg-[#4F9CF9] hover:bg-blue-500">
+                  3% Daily
                 </Badge>
-                <span className="text-gray-400 text-xs">
-                  $5 - $500,000
-                </span>
               </div>
-              <h3 className="text-white font-medium text-lg mb-3">AI Trading System</h3>
-              
-              {/* Enhanced Progress Section */}
-              <div className="space-y-3">
+
+              <div className="space-y-2 mb-4">
                 {(() => {
                   // Calculate daily percentage gain based on direct deposits used for trading
                   const directDeposits = user?.rechargeAmount ? parseFloat(user.rechargeAmount.toString()) : 0;
@@ -652,8 +638,33 @@ const QuantitativePage: React.FC = () => {
           Investment Plans
         </h2>
         <div className="space-y-4">
-          {plans?.map((plan) => (
-            <Card key={plan.id} className="border-gray-200" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
+          {(() => {
+            const userCapital = user?.totalAssets ? parseFloat(user.totalAssets.toString()) : 0;
+            const filteredPlans = plans?.filter((plan) => {
+              return userCapital >= plan.minAmount && userCapital <= plan.maxAmount;
+            });
+
+            if (!filteredPlans || filteredPlans.length === 0) {
+              return (
+                <Card className="border-gray-200" style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}>
+                  <CardContent className="p-6 text-center">
+                    <div className="text-white mb-2">
+                      <Zap className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
+                      <h3 className="font-medium">No Available Plans</h3>
+                    </div>
+                    <p className="text-gray-400 text-sm mb-3">
+                      Your current balance (${userCapital.toFixed(2)}) doesn't match any available investment plans.
+                    </p>
+                    <p className="text-gray-400 text-xs">
+                      Please add funds to your account to access investment opportunities.
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            }
+
+            return filteredPlans.map((plan) => (
+            <Card key={plan.id} className="border-gray-200" style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}>
               <CardContent className="p-4">
                 <div className="flex justify-between items-start mb-3">
                   <div>
@@ -701,11 +712,12 @@ const QuantitativePage: React.FC = () => {
                   variant="default"
                   onClick={() => handlePlanSelect(plan)}
                 >
-                  {t('quantitative.investNow')} <ArrowRight className="ml-2 h-4 w-4" />
+                  Invest ${user?.totalAssets ? parseFloat(user.totalAssets.toString()).toFixed(2) : '0.00'} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>
-          ))}
+            ));
+          })()}
         </div>
       </div>
 
@@ -755,53 +767,6 @@ const QuantitativePage: React.FC = () => {
               </div>
             )}
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Investment Amount Dialog */}
-      <Dialog open={showInvestmentDialog} onOpenChange={setShowInvestmentDialog}>
-        <DialogContent className="bg-white border-gray-200 text-gray-900">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedPlan?.name} - Enter Investment Amount
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Investment Amount (USD)</Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder={`Enter amount ($${selectedPlan?.minAmount} - $${selectedPlan?.maxAmount?.toLocaleString()})`}
-                value={investmentAmount}
-                onChange={(e) => setInvestmentAmount(e.target.value)}
-                min={selectedPlan?.minAmount}
-                max={selectedPlan?.maxAmount}
-              />
-              <div className="text-sm text-gray-600">
-                <p>Daily Rate: <span className="font-medium text-green-600">{selectedPlan?.dailyRate}%</span></p>
-                <p>Range: ${selectedPlan?.minAmount} - ${selectedPlan?.maxAmount?.toLocaleString()}</p>
-                {investmentAmount && !isNaN(parseFloat(investmentAmount)) && (
-                  <p className="mt-2 p-2 bg-blue-50 rounded">
-                    Expected daily profit: <span className="font-medium text-blue-600">
-                      ${((parseFloat(investmentAmount) * (selectedPlan?.dailyRate || 0)) / 100).toFixed(2)}
-                    </span>
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowInvestmentDialog(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleInvestmentSubmit}
-              disabled={!investmentAmount || isNaN(parseFloat(investmentAmount))}
-            >
-              Start Investment
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 

@@ -372,7 +372,7 @@ const InvitePage: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-gray-200" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
+        <Card className="border-gray-200" style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}>
           <CardHeader>
             <CardTitle className="text-white">{t('invite.totalEarnings')}</CardTitle>
           </CardHeader>
@@ -431,7 +431,7 @@ const InvitePage: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-gray-200" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
+        <Card className="border-gray-200" style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-white">Your Referral Link</CardTitle>
     

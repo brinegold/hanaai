@@ -11,6 +11,11 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       colors: {
+        // Custom gradient colors
+        'gradient-purple-dark': '#2D1B69',
+        'gradient-teal': '#11998e', 
+        'gradient-purple-light': '#667eea',
+        'gradient-purple-medium': '#764ba2',
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {

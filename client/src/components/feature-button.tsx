@@ -11,7 +11,7 @@ const FeatureButton: React.FC<FeatureButtonProps> = ({ icon: Icon, label, onClic
   return (
     <button
       className="feature-button flex flex-col items-center p-3 rounded-lg transition-all hover:transform hover:-translate-y-1"
-      style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}
+      style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}
       onClick={onClick}
     >
       <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mb-2 text-white">

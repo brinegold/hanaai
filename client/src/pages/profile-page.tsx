@@ -554,7 +554,7 @@ const ProfilePage: React.FC = () => {
       </div>
 
       {/* Menu Options */}
-      <div className="border border-gray-200 rounded-lg mx-4 mb-6" style={{ backgroundColor: 'rgba(2, 10, 77, 0.9)' }}>
+      <div className="border border-gray-200 rounded-lg mx-4 mb-6" style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}>
         <button
           onClick={handleSecurityCenterClick}
           className="flex items-center justify-between p-4 border-b border-[#333333] w-full text-left"

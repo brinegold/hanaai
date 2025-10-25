@@ -57,17 +57,17 @@
 
 /* Gradient Background Classes */
 .gradient-bg {
-  background: #00bfff;
+  background: linear-gradient(135deg, #2D1B69 0%, #11998e 50%, #667eea 100%);
   min-height: 100vh;
 }
 
 .trading-chart-bg {
-  background: #00bfff;
+  background: linear-gradient(135deg, #2D1B69 0%, #11998e 50%, #667eea 100%);
   min-height: 100vh;
 }
 
 .gradient-bg-auth {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #533483 75%, #7209b7 100%);
+  background: linear-gradient(135deg, #2D1B69 0%, #764ba2 25%, #667eea 50%, #11998e 75%, #2D1B69 100%);
   min-height: 100vh;
 }
 
@@ -78,7 +78,7 @@
 }
 
 .gradient-input {
-  background: rgba(2, 10, 77, 0.9);
+  background: rgba(45, 27, 105, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
   backdrop-filter: blur(5px);
@@ -89,13 +89,13 @@
 }
 
 .gradient-input:focus {
-  background: rgba(2, 10, 77, 1);
-  border-color: rgba(2, 10, 77, 0.37);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+  background: rgba(45, 27, 105, 1);
+  border-color: rgba(102, 126, 234, 0.6);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
 }
 
 .gradient-button {
-  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #11998e 100%);
   color: white;
   font-weight: 600;
   border: none;
@@ -103,9 +103,9 @@
 }
 
 .gradient-button:hover {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  background: linear-gradient(135deg, #764ba2 0%, #2D1B69 50%, #11998e 100%);
   transform: translateY(-1px);
-  box-shadow: 0 10px 25px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
 }
 
 .tab-button {
@@ -116,7 +116,7 @@
 }
 
 .tab-button.active {
-  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  background: linear-gradient(135deg, #667eea 0%, #11998e 100%);
   color: white;
   border-color: transparent;
 }
