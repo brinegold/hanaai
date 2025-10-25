@@ -7,8 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 const MarketTicker: React.FC = () => {
   const { data: initialCryptos, isLoading } = useCryptoPrices();
   const [cryptos, setCryptos] = useState(initialCryptos);
-  const [exchanges] = useState(["COINBASE", "OKX", "HUOBI"]);
-  const [selectedExchange, setSelectedExchange] = useState("COINBASE");
+  const [exchanges] = useState(["COINGECKO"]);
+  const [selectedExchange, setSelectedExchange] = useState("COINGECKO");
 
   useEffect(() => {
     if (!initialCryptos || initialCryptos.length === 0) return;
@@ -55,7 +55,7 @@ const MarketTicker: React.FC = () => {
 
   return (
     <div className="mx-4 p-4 rounded-lg" style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}>
-      <Tabs defaultValue="COINBASE" onValueChange={setSelectedExchange}>
+      <Tabs defaultValue="COINGECKO" onValueChange={setSelectedExchange}>
         <TabsList className="flex space-x-4 mb-2 bg-transparent h-auto p-0">
           {exchanges.map((exchange) => (
             <TabsTrigger
@@ -63,7 +63,7 @@ const MarketTicker: React.FC = () => {
               value={exchange}
               className="py-2 px-3 text-gray-400 data-[state=active]:text-white data-[state=active]:bg-yellow-500 data-[state=active]:font-medium rounded-md transition-colors bg-transparent"
             >
-              {exchange === "COINBASE" ? "BINANCE" : exchange}
+              {exchange === "COINGECKO" ? "LIVE MARKET" : exchange}
             </TabsTrigger>
           ))}
         </TabsList>
