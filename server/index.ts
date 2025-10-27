@@ -48,7 +48,12 @@ app.use((req, res, next) => {
     throw err; // Note: Throwing here might not be necessary unless you want upstream handling
   });
 
-  await setupVite(app, server);
+  // Use Vite dev server in development, serve static files in production
+  if (process.env.NODE_ENV !== "production") {
+    await setupVite(app, server);
+  } else {
+    serveStatic(app);
+  }
   
   const port = parseInt(process.env.PORT || "5000", 10);
   const host = process.env.HOST || "0.0.0.0";

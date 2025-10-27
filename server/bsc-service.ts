@@ -289,26 +289,6 @@ class BSCService {
     }
   }
 
-  // Process withdrawal through smart contract
-  async processWithdrawal(userWallet: string, amount: string): Promise<string> {
-    try {
-      const amountWei = this.web3.utils.toWei(amount, 'ether');
-      
-      const tx = await this.contract.methods.processWithdrawal(
-        userWallet,
-        amountWei
-      ).send({
-        from: this.account.address,
-        gas: '200000'
-      });
-
-      return tx.transactionHash;
-    } catch (error) {
-      console.error('Error processing withdrawal:', error);
-      throw error;
-    }
-  }
-
   // Get USDT balance of an address
   async getUSDTBalance(address: string): Promise<string> {
     try {
@@ -363,7 +343,7 @@ class BSCService {
       const receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction as string);
       
       console.log(`BNB transfer successful: ${bnbAmount} BNB to ${userAddress}`);
-      return receipt.transactionHash;
+      return typeof receipt.transactionHash === 'string' ? receipt.transactionHash : this.web3.utils.bytesToHex(receipt.transactionHash);
     } catch (error) {
       console.error('Error funding user wallet:', error);
       throw error;
@@ -409,10 +389,11 @@ class BSCService {
       // Send transaction
       const receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction as string);
       
+      const txHash = typeof receipt.transactionHash === 'string' ? receipt.transactionHash : this.web3.utils.bytesToHex(receipt.transactionHash);
       console.log(`USDT transfer successful: ${amount} USDT from ${fromAccount.address} to ${toAddress}`);
-      console.log(`Transaction hash: ${receipt.transactionHash}`);
+      console.log(`Transaction hash: ${txHash}`);
       
-      return receipt.transactionHash;
+      return txHash;
     } catch (error) {
       console.error('Error transferring USDT:', error);
       throw error;
