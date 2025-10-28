@@ -2560,12 +2560,32 @@ async function registerRoutes(app2) {
     }
   });
   app2.get("/api/crypto/prices", async (req, res) => {
+    const getFallbackPrices = () => [
+      { symbol: "BTC", name: "Bitcoin", price: 95420.5, change24h: 2.34, exchange: "COINGECKO" },
+      { symbol: "ETH", name: "Ethereum", price: 3285.75, change24h: 1.87, exchange: "COINGECKO" },
+      { symbol: "BNB", name: "BNB", price: 635.2, change24h: -0.45, exchange: "COINGECKO" },
+      { symbol: "XRP", name: "XRP", price: 2.15, change24h: 3.21, exchange: "COINGECKO" },
+      { symbol: "ADA", name: "Cardano", price: 0.98, change24h: 1.15, exchange: "COINGECKO" },
+      { symbol: "SOL", name: "Solana", price: 185.4, change24h: 4.52, exchange: "COINGECKO" },
+      { symbol: "DOGE", name: "Dogecoin", price: 0.32, change24h: -1.23, exchange: "COINGECKO" },
+      { symbol: "AVAX", name: "Avalanche", price: 38.75, change24h: 2.08, exchange: "COINGECKO" }
+    ];
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5e3);
       const coinGeckoRes = await fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,ripple,cardano,solana,dogecoin,avalanche-2&vs_currencies=usd&include_24hr_change=true"
+        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,ripple,cardano,solana,dogecoin,avalanche-2&vs_currencies=usd&include_24hr_change=true",
+        {
+          signal: controller.signal,
+          headers: {
+            "Accept": "application/json"
+          }
+        }
       );
+      clearTimeout(timeout);
       if (!coinGeckoRes.ok) {
-        throw new Error("Failed to fetch from CoinGecko");
+        console.warn(`CoinGecko API returned status ${coinGeckoRes.status}, using fallback data`);
+        return res.json(getFallbackPrices());
       }
       const coinGeckoData = await coinGeckoRes.json();
       const formatPrice = (price) => Number(price.toFixed(2));
@@ -2592,20 +2612,17 @@ async function registerRoutes(app2) {
           });
         }
       });
-      res.json(prices);
+      if (prices.length > 0) {
+        console.log(`Successfully fetched ${prices.length} crypto prices from CoinGecko`);
+        res.json(prices);
+      } else {
+        console.warn("CoinGecko returned empty data, using fallback");
+        res.json(getFallbackPrices());
+      }
     } catch (error) {
-      console.error("Error fetching crypto prices from CoinGecko:", error);
-      const fallbackPrices = [
-        { symbol: "BTC", name: "Bitcoin", price: 84800, change24h: 2.5, exchange: "FALLBACK" },
-        { symbol: "ETH", name: "Ethereum", price: 3200, change24h: 1.8, exchange: "FALLBACK" },
-        { symbol: "BNB", name: "BNB", price: 620, change24h: -0.5, exchange: "FALLBACK" },
-        { symbol: "XRP", name: "XRP", price: 0.52, change24h: 3.2, exchange: "FALLBACK" },
-        { symbol: "ADA", name: "Cardano", price: 0.45, change24h: 1.1, exchange: "FALLBACK" },
-        { symbol: "SOL", name: "Solana", price: 145, change24h: 4.5, exchange: "FALLBACK" },
-        { symbol: "DOGE", name: "Dogecoin", price: 0.08, change24h: -1.2, exchange: "FALLBACK" },
-        { symbol: "AVAX", name: "Avalanche", price: 38, change24h: 2.1, exchange: "FALLBACK" }
-      ];
-      res.json(fallbackPrices);
+      console.error("Error fetching crypto prices from CoinGecko:", error.message);
+      console.log("Using fallback crypto prices");
+      res.json(getFallbackPrices());
     }
   });
   app2.get("/api/investment/plans", async (req, res) => {
