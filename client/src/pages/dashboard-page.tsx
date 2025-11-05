@@ -490,18 +490,25 @@ const DashboardPage: React.FC = () => {
 
       {/* Invite Friends Banner */}
       <div className="mx-4 mb-6 overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg px-4 py-3 flex items-center justify-between">
-          <div>
-            <h3 className="text-[#121212] font-medium">{t('invite.title')}</h3>
-            <p className="text-[#121212]/80 text-xs">Earn Income now!</p>
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg px-4 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h3 className="text-[#121212] font-medium">{t('invite.title')}</h3>
+              <p className="text-[#121212]/80 text-xs">Every 3 referrals who deposit $12 = $10 bonus!</p>
+            </div>
+            <button
+              className="px-3 py-1.5 rounded-lg text-white text-xs hover:bg-white/10 transition-colors"
+              style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}
+              onClick={handleInviteClick}
+            >
+              {t('nav.invite')}
+            </button>
           </div>
-          <button
-            className="px-3 py-1.5 rounded-lg text-white text-xs hover:bg-white/10 transition-colors"
-            style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}
-            onClick={handleInviteClick}
-          >
-            {t('nav.invite')}
-          </button>
+          <div className="text-xs text-[#121212]/90">
+            <p>✓ Refer friends with your unique code</p>
+            <p>✓ They deposit $12 ($10 to account + $2 fee) and start earning</p>
+            <p>✓ You get $10 for every 3 qualified referrals</p>
+          </div>
         </div>
       </div>
 
@@ -628,22 +635,23 @@ const DashboardPage: React.FC = () => {
       <div className="mx-4 mb-6 p-4 rounded-lg text-sm" style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}>
         <h3 className="text-white font-medium mb-2">Additional Information</h3>
         <div className="text-white/80">
-        The Minimum deposit amount for Hana AI Trading is 5USDT , and the minimum withdrawal amount is 5USDT .
-        The funds will be credited to your account within three minutes.<br></br>
+        Deposit $12 USDT ($10 to your account + $2 admin fee), and the minimum withdrawal amount is $2 USDT.
+        The funds will be credited to your account within three minutes.<br></br>
           <br></br>
           <br></br> ===========<br></br> ✔How to make money: <br></br>
-          1. Deposit Now and Earn 1.5% daily(Withdrawals available each day)<br></br>
-2. To Generate Daily Returns You Must Click on "Trade now" ,then Click on Start Trading" wait for few seconds for Hana AI to generate profits. <br></br>
-3.  Invite others participate and earn in Hana Uni-level referral Program earning in 4 levels; 5%,3%,2% and 1%.<br></br>
+          1. Deposit $12 ($10 credited to account + $2 fee) and Earn 3% daily (Withdrawals available every day)<br></br>
+2. To Generate Daily Returns You Must Click on "Trade now", then Click on "Start Trading" wait for few seconds for Hana AI to generate profits. <br></br>
+3. Refer friends: Every 3 people who deposit $12 using your referral code = $10 bonus for you!<br></br>
+4. Accounts must be funded within 24 hours or they will be automatically deleted.<br></br>
 
 <strong>
 Trade Time : Once Per day
 </strong>
 <br></br>
 
- <strong>Withdrawal days : Every day</strong><br></br>
+ <strong>Withdrawal days : Every day</strong><br></br>
 
- <strong>Trading Days: Monday to Friday(No Weekends)</strong>
+ <strong>Trading Days: Monday to Sunday (7 days a week)</strong>
         </div>
       </div>
 
@@ -672,16 +680,16 @@ Trade Time : Once Per day
           <ScrollArea className="h-[60vh]">
             <div className="space-y-4 pr-4">
               <p>
-                The Minimum deposit amount for Hana AI trading is 5USDT, and the minimum withdrawal amount is 5USDT
+                Deposit exactly $12 USDT ($10 credited to your account + $2 admin fee), and the minimum withdrawal amount is $2 USDT
               </p>
               <p>
-                The Maximum deposit is 500,000USDT.
+                The Deposit Fee is $2 (Fixed fee used for Maintenance of the Hana AI Ecosystem) - included in the $12 total
               </p>
               <p>
-                The Deposit Fee is 2%(Fees used for Maintenance of the Hana AI Ecosystem)
+                The withdrawal fee is $1 (Fixed fee) and the funds will be credited to your account within few minutes.
               </p>
               <p>
-                The withdrawal fee is 5% and the funds will be credited to your account within few minutes.
+                Accounts must be funded within 24 hours or they will be automatically deleted from the system.
               </p>
               <p>
                 Please if you have any enquiries send us an email at: <span style={{color: '#2563eb', fontWeight: 'bold'}}>Support@nebrix.dev</span>
@@ -691,13 +699,13 @@ Trade Time : Once Per day
                 <p className="font-semibold mb-2">✔How to make money:</p>
                 <div className="space-y-2">
                   <p>
-                    Invest now and earn 1.5% per day (weekly cash Withdrawals are available every day)
+                    Deposit $12 ($10 to account + $2 fee) and earn 3% per day (Withdrawals are available every day)
                   </p>
                   <p>
-                    To Generate Daily Returns You Must click on "Trade Now", then click on "Start Trading" wait for few seconds .
+                    To Generate Daily Returns You Must click on "Trade Now", then click on "Start Trading" wait for few seconds.
                   </p>
                   <p>
-                    Invite others to participate and get 10%,5%,3% and 2% in Hana Uni-Level referral commission Program✔
+                    <strong>Referral Bonus:</strong> Every 3 people who join with $12 using your referral link = $10 bonus for you!
                   </p>
                   <p>
                     Trading time: Trading Time is once every 24hrs.
@@ -706,58 +714,20 @@ Trade Time : Once Per day
                     Withdrawal days: Available Every day
                   </p>
                   <p>
-                    For example, if you deposit 100 USDT , the AI profit of a single transaction is 100×1.5%= 1.5USDT
+                    Trading Days: Monday to Sunday (7 days a week)
                   </p>
                   <p>
-                    The bonus can be withdrawn immediately. The more users you recommend, the more commission rewards you will get.
+                    For example, if you deposit $12 USDT ($10 to account), the AI profit of a single transaction is $10 × 3% = $0.30 USDT
                   </p>
                   <p>
-                    The commissions collected from the recommended users will go directly into your member account and you can withdraw them directly!
+                    The profit can be withdrawn immediately.
+                  </p>
+                  <p>
+                    Important: Accounts must be funded within 24 hours or they will be automatically deleted from the system.
                   </p>
                 </div>
               </div>
 
-              <div className="border-b border-gray-600 pb-4 mb-4">
-                <p className="font-semibold mb-2">------Invite Team charging reward--------</p>
-                <div className="space-y-3">
-                  <div>
-                    <p className="font-medium">1: Get 5% of the deposit of level-1 team members</p>
-                    <p className="text-sm text-white600">
-                      The first-level team can receive commission income every day = 100*5%*10 people = 50 USDT
-                    </p>
-                    <p className="text-sm text-white600">
-                      Hana team daily deposit reward Your team can only deposit the value as a reward within 24 hours
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <p className="font-medium">2: Get 3% of the deposit of level-2 team members</p>
-                    <p className="text-sm text-white600">
-                      The second-level team can receive commission income every day = 100*3%*10 people = 30 USDT
-                    </p>
-                    <p className="text-sm text-white600">
-                      Hana team daily deposit reward Your team can only deposit the value as a reward within 24 hours
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <p className="font-medium">3: Get 2% of the deposit of level-3 team members</p>
-                    <p className="text-sm text-white600">
-                      The third-level team can receive commission income every day = 100*2%*10 people = 20 USDT
-                    </p>
-                    <p className="text-sm text-white600">
-                      Hana team daily deposit reward Your team can only deposit the value as a reward within 24 hours
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <p className="font-medium">4: Get 1% of the deposit of level-4 team members</p>
-                    <p className="text-sm text-white600">
-                      The fourth-level team can receive commission income every day = 100*1%*10 people = 10 USDT
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               <p className="text-sm text-white600">
                 Hana works with bloggers on multiple social platforms (such as Twitter, YouTube, TikTok, Facebook, Instagram, etc.)

@@ -17,7 +17,7 @@ interface BSCWallet {
 export const BSCDeposit: React.FC = () => {
   const [wallet, setWallet] = useState<BSCWallet | null>(null);
   const [txHash, setTxHash] = useState('');
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState('12');
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
@@ -150,10 +150,10 @@ export const BSCDeposit: React.FC = () => {
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h4 className="font-medium text-blue-900 mb-2">Important Instructions:</h4>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Send USDT (BEP-20) to the address above</li>
+                  <li>• Send exactly $12 USDT (BEP-20) to the address above</li>
                   <li>• Network: {wallet.network}</li>
-                  <li>• 5% processing fee will be deducted</li>
-                  <li>• Minimum deposit: $5 USDT</li>
+                  <li>• $2 admin fee + $10 credited to your account</li>
+                  <li>• Only $12 deposits are accepted</li>
                   <li>• Copy transaction hash after sending</li>
                 </ul>
               </div>
@@ -184,12 +184,13 @@ export const BSCDeposit: React.FC = () => {
             <Input
               id="amount"
               type="number"
-              placeholder="Enter deposit amount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              min="5"
-              step="0.01"
+              placeholder="12"
+              value="12"
+              readOnly
+              disabled
+              className="bg-gray-100 cursor-not-allowed"
             />
+            <p className="text-xs text-gray-600 mt-1">Fixed amount: $12 USDT only</p>
           </div>
 
           <Button
@@ -202,7 +203,7 @@ export const BSCDeposit: React.FC = () => {
 
           <div className="text-xs text-gray-600">
             <p>• Deposits are processed automatically after verification</p>
-            <p>• Processing fee: 2% of deposit amount</p>
+            <p>• Fixed deposit: $12 USDT ($10 to account + $2 admin fee)</p>
             <p>• Funds will appear in your account within 5-10 minutes</p>
           </div>
         </CardContent>

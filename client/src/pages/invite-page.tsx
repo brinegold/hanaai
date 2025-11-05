@@ -379,49 +379,39 @@ const InvitePage: React.FC = () => {
           <CardContent>
             <div className="space-y-5">
               <p className="text-white text-sm">
-                Your referral code can be used unlimited times. Earn commission
-                from each referral when they make investments!
+                Your referral code can be used unlimited times. Earn $10 bonus
+                for every 3 friends who deposit $12!
               </p>
 
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 rounded-full bg-[#4F9CF9]/10 flex items-center justify-center mr-3">
-                    <span className="text-[#4F9CF9] font-bold">1</span>
-                  </div>
-                  <span className="text-white">Commission Rate</span>
-                </div>
-                <span className="text-[#4F9CF9] font-bold">
-                  10%
-                </span>
-              </div>
-
-              <div className="bg-[#4F9CF9]/10 p-3 rounded-lg border border-[#4F9CF9]/30">
-                <p className="text-[#4F9CF9] font-semibold mb-2">
-                  Uni-Level Referral System
+              <div className="bg-[#4F9CF9]/10 p-4 rounded-lg border border-[#4F9CF9]/30">
+                <p className="text-[#4F9CF9] font-semibold mb-3 text-lg">
+                  💰 Simple Referral Bonus
                 </p>
-                <div className="space-y-1 text-sm text-white">
-                  <div className="flex justify-between">
-                    <span>Level 1 (Direct):</span>
-                    <span className="text-[#4F9CF9] font-medium">10%</span>
+                <div className="space-y-3 text-white">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-[#4F9CF9] text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">
+                      1
+                    </div>
+                    <span>Share your referral link with friends</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Level 2:</span>
-                    <span className="text-[#4F9CF9] font-medium">5%</span>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-[#4F9CF9] text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">
+                      2
+                    </div>
+                    <span>They deposit $12 ($10 to account + $2 fee)</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Level 3:</span>
-                    <span className="text-[#4F9CF9] font-medium">3%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Level 4:</span>
-                    <span className="text-[#4F9CF9] font-medium">2%</span>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-[#4F9CF9] text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">
+                      3
+                    </div>
+                    <span className="font-bold text-yellow-300">Every 3 referrals = $10 bonus for you!</span>
                   </div>
                 </div>
               </div>
               
               <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
                 <p className="text-blue-700 font-semibold mb-1">
-                  💰 Daily Referral Withdrawals Available
+                  ✅ Instant Withdrawals Available
                 </p>
                 <p className="text-sm text-blue-600">
                   Withdraw your referral bonuses anytime! No restrictions - available 24/7.
@@ -473,51 +463,16 @@ const InvitePage: React.FC = () => {
           <CardHeader>
             <CardTitle className="text-black flex items-center gap-2">
               <Users className="h-5 w-5" />
-              My Team
+              My Direct Referrals
             </CardTitle>
+            <p className="text-sm text-white mt-2">
+              Total Referrals: <span className="font-bold text-[#4F9CF9]">{referralSummary.tier1}</span>
+              {" • "}
+              Bonuses Earned: <span className="font-bold text-yellow-300">${Math.floor(referralSummary.tier1 / 3) * 10}</span>
+            </p>
           </CardHeader>
           <CardContent>
-            <Tabs value={selectedLevel} onValueChange={handleLevelChange} className="w-full" >
-              <TabsList className="grid w-full grid-cols-4 mb-4" style={{ backgroundColor: 'rgba(14, 26, 129, 0.9)' }}>
-                <TabsTrigger value="1" className="flex flex-col items-center gap-1 py-3" >
-                  <span className="font-medium">Level 1</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {referralSummary.tier1}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="2" className="flex flex-col items-center gap-1 py-3">
-                  <span className="font-medium">Level 2</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {referralSummary.tier2}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="3" className="flex flex-col items-center gap-1 py-3">
-                  <span className="font-medium">Level 3</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {referralSummary.tier3}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="4" className="flex flex-col items-center gap-1 py-3">
-                  <span className="font-medium">Level 4</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {referralSummary.tier4}
-                  </Badge>
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="1" className="mt-4">
-                <LevelReferralList level="1" referrals={levelReferrals} isLoading={isLoadingLevel} />
-              </TabsContent>
-              <TabsContent value="2" className="mt-4">
-                <LevelReferralList level="2" referrals={levelReferrals} isLoading={isLoadingLevel} />
-              </TabsContent>
-              <TabsContent value="3" className="mt-4">
-                <LevelReferralList level="3" referrals={levelReferrals} isLoading={isLoadingLevel} />
-              </TabsContent>
-              <TabsContent value="4" className="mt-4">
-                <LevelReferralList level="4" referrals={levelReferrals} isLoading={isLoadingLevel} />
-              </TabsContent>
-            </Tabs>
+            <LevelReferralList level="1" referrals={levelReferrals} isLoading={isLoadingLevel} />
           </CardContent>
         </Card>
       </div>
@@ -579,12 +534,12 @@ const LevelReferralList: React.FC<{
     return (
       <div className="text-center py-8 text-black">
         <Users className="h-12 w-12 mx-auto mb-4 text-black" />
-        <p className="text-lg font-medium mb-2">No Level {level} Referrals Yet</p>
+        <p className="text-lg font-medium mb-2">No Direct Referrals Yet</p>
         <p className="text-sm">
-          When users join through your Level {parseInt(level) - 1 || "direct"} referrals, they'll appear here.
+          Share your referral link with friends to start earning!
         </p>
         <p className="text-xs text-white mt-2">
-          Earn {levelPercentages[level]}% commission on their investments!
+          Earn $10 for every 3 friends who deposit $12!
         </p>
       </div>
     );
@@ -595,7 +550,7 @@ const LevelReferralList: React.FC<{
       <div className="space-y-3">
         {currentReferrals.map((referral, index) => {
           const totalDeposits = Number(referral.totalDeposits || 0);
-          const commissionAmount = totalDeposits * (levelPercentages[level] / 100);
+          const hasDeposited = totalDeposits >= 10; // Check if they deposited $12 (which shows as $10 after fee)
           const globalIndex = startIndex + index + 1;
           
           return (
@@ -610,9 +565,15 @@ const LevelReferralList: React.FC<{
                       <p className="font-medium text-white">
                         {referral.displayName || referral.username || `User${referral.referredId}`}
                       </p>
-                      <Badge variant="outline" className="text-xs bg-yellow-500/20 border-yellow-500 text-yellow-400">
-                        Level {level}
-                      </Badge>
+                      {hasDeposited ? (
+                        <Badge variant="outline" className="text-xs bg-green-500/20 border-green-500 text-green-400">
+                          ✓ Qualified
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-xs bg-yellow-500/20 border-yellow-500 text-yellow-400">
+                          Pending Deposit
+                        </Badge>
+                      )}
                     </div>
                     <strong className="text-sm text-yellow-300 mt-1">
                       Joined: {new Date(referral.createdAt).toLocaleDateString()}
@@ -621,15 +582,17 @@ const LevelReferralList: React.FC<{
                 </div>
                 
                 <div className="text-right">
-                  <div className="flex items-center gap-2 mb-1">
-                  
-                    <span className="font-semibold text-[#66ff00]">
-                      ${commissionAmount.toFixed(2)}
-                    </span>
-                  </div>
-                  <p className="text-xs text-yellow-300">
-                    Deposited: ${totalDeposits.toFixed(2)}
-                  </p>
+                  {hasDeposited ? (
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-[#66ff00]">
+                        ✓ $10
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-gray-400">
+                      No deposit yet
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

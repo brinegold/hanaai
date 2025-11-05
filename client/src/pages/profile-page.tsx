@@ -214,25 +214,25 @@ const ProfilePage: React.FC = () => {
         {/* Assets Overview */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <div className="text-black text-sm">{t('profile.totalAssets')}</div>
+            <div className="text-[#FFD700] font-bold text-sm">{t('profile.totalAssets')}</div>
             <div className="text-white font-medium">
               {parseFloat(user.totalAssets.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex justify-between items-center">
-            <div className="text-black text-sm">{t('profile.profitAssets')}</div>
+            <div className="text-[#FFD700] font-bold text-sm">{t('profile.profitAssets')}</div>
             <div className="text-white font-medium">
               {parseFloat(user.profitAssets.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex justify-between items-center">
-            <div className="text-black text-sm">{t('profile.depositAmount')}</div>
+            <div className="text-[#FFD700] font-bold text-sm">{t('profile.depositAmount')}</div>
             <div className="text-white font-medium">
               {parseFloat(user.rechargeAmount.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex justify-between items-center">
-            <div className="text-black text-sm">{t('profile.withdrawable')}</div>
+            <div className="text-[#FFD700] font-bold text-sm">{t('profile.withdrawable')}</div>
             <div className="text-white font-medium">
               {parseFloat(user.withdrawableAmount.toString()).toFixed(2)}
             </div>
@@ -300,19 +300,19 @@ const ProfilePage: React.FC = () => {
                         <h3 className="text-lg font-semibold text-white900 mb-4">Account Information</h3>
                         <div className="space-y-3">
                           <div className="flex justify-between items-center">
-                            <span className="text-white600">Username:</span>
+                            <span className="text-[#FFD700] font-bold">Username:</span>
                             <span className="text-white900 font-medium">{user.username}</span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-white600">Email:</span>
+                            <span className="text-[#FFD700] font-bold">Email:</span>
                             <span className="text-white900 font-medium">{user.email || "-"}</span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-white600">Phone:</span>
+                            <span className="text-[#FFD700] font-bold">Phone:</span>
                             <span className="text-white900 font-medium">{user.phone || "-"}</span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-white600">Telegram:</span>
+                            <span className="text-[#FFD700] font-bold">Telegram:</span>
                             <span className="text-white900 font-medium">{user.telegram || "-"}</span>
                           </div>
                         </div>
@@ -323,11 +323,11 @@ const ProfilePage: React.FC = () => {
                         <h3 className="text-lg font-semibold text-white900 mb-4">Wallet Information</h3>
                         <div className="space-y-3">
                           <div className="flex justify-between items-center">
-                            <span className="text-white600">Network:</span>
+                            <span className="text-[#FFD700] font-bold">Network:</span>
                             <span className="text-white900 font-medium bg-yellow-100 px-2 py-1 rounded text-sm">BSC (Binance Smart Chain)</span>
                           </div>
                           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                            <span className="text-white600">Withdrawal/Deposit Address:</span>
+                            <span className="text-[#FFD700] font-bold">Withdrawal/Deposit Address:</span>
                             <div className="flex items-center gap-2">
                               <span className="text-white900 font-mono text-sm bg-white px-2 py-1 rounded border break-all">
                                 {user.bscWalletAddress || "Not set"}
@@ -361,19 +361,19 @@ const ProfilePage: React.FC = () => {
                         <h3 className="text-lg font-semibold text-white900 mb-4">Asset Summary</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="bg-white p-3 rounded border">
-                            <div className="text-white600 text-sm">Total Assets</div>
+                            <div className="text-[#FFD700] font-bold text-sm">Total Assets</div>
                             <div className="text-xl font-bold text-white900">${parseFloat(user.totalAssets.toString()).toFixed(2)}</div>
                           </div>
                           <div className="bg-white p-3 rounded border">
-                            <div className="text-white600 text-sm">Profit Assets</div>
+                            <div className="text-[#FFD700] font-bold text-sm">Profit Assets</div>
                             <div className="text-xl font-bold text-green-600">${parseFloat(user.profitAssets.toString()).toFixed(2)}</div>
                           </div>
                           <div className="bg-white p-3 rounded border">
-                            <div className="text-white600 text-sm">Deposit Amount</div>
+                            <div className="text-[#FFD700] font-bold text-sm">Deposit Amount</div>
                             <div className="text-xl font-bold text-blue-600">${parseFloat(user.rechargeAmount.toString()).toFixed(2)}</div>
                           </div>
                           <div className="bg-white p-3 rounded border">
-                            <div className="text-white600 text-sm">Withdrawable</div>
+                            <div className="text-[#FFD700] font-bold text-sm">Withdrawable</div>
                             <div className="text-xl font-bold text-purple-600">${parseFloat(user.withdrawableAmount.toString()).toFixed(2)}</div>
                           </div>
                         </div>
@@ -408,7 +408,7 @@ const ProfilePage: React.FC = () => {
                                 </div>
                                 <div className="grid grid-cols-2 gap-2 text-xs">
                                   <div>
-                                    <p className="text-white400">Status</p>
+                                    <p className="text-[#FFD700] font-bold">Status</p>
                                     <p
                                       className={`px-2 py-1 rounded text-xs inline-block mt-1 ${
                                         tx.status === "Completed"
@@ -422,17 +422,17 @@ const ProfilePage: React.FC = () => {
                                     </p>
                                   </div>
                                   <div>
-                                    <p className="text-white400">Network</p>
+                                    <p className="text-[#FFD700] font-bold">Network</p>
                                     <p>{tx.network || "-"}</p>
                                   </div>
                                   <div>
-                                    <p className="text-white400">Address</p>
+                                    <p className="text-[#FFD700] font-bold">Address</p>
                                     <p className="truncate">
                                       {formatAddress(tx.address)}
                                     </p>
                                   </div>
                                   <div>
-                                    <p className="text-white400">Date</p>
+                                    <p className="text-[#FFD700] font-bold">Date</p>
                                     <p>
                                       {new Date(
                                         tx.createdAt,
@@ -526,19 +526,19 @@ const ProfilePage: React.FC = () => {
         <div className="text-white font-medium">Total Revenue</div>
         <div className="grid grid-cols-3 gap-4">
           <div className="flex flex-col items-center">
-            <div className="text-black text-xs mb-1">Commission Today</div>
+            <div className="text-[#FFD700] font-bold text-xs mb-1">Commission Today</div>
             <div className="text-white font-medium">
               {parseFloat(user.commissionToday.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex flex-col items-center">
-            <div className="text-black text-xs mb-1">Today's Earnings</div>
+            <div className="text-[#FFD700] font-bold text-xs mb-1">Today's Earnings</div>
             <div className="text-white font-medium">
               {parseFloat(user.todayEarnings.toString()).toFixed(2)}
             </div>
           </div>
           <div className="flex flex-col items-center">
-            <div className="text-black text-xs mb-1">
+            <div className="text-[#FFD700] font-bold text-xs mb-1">
               Yesterday's Earnings
             </div>
             <div className="text-white font-medium">

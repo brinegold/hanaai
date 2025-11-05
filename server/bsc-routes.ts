@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { transactions, users } from "@shared/schema";
 import { sendDepositNotification, sendWithdrawalNotification } from "./auth";
+import { eq, and } from "drizzle-orm";
 
 const BSC_CONFIG = {
   rpcUrl: process.env.BSC_TESTNET_RPC_URL || "https://data-seed-prebsc-1-s1.binance.org:8545/",
@@ -105,12 +106,17 @@ export function registerBSCRoutes(app: Express) {
       // Use the actual transfer amount from blockchain, not user input
       const depositAmount = parseFloat(txDetails.usdtTransferAmount);
       
-      // Note: Minimum amount validation is now handled in BSC service during transaction verification
-      // This prevents processing transactions below $5 USDT before expensive blockchain operations
+      // Restrict deposits to exactly $12 ($10 for user + $2 admin fee)
+      if (depositAmount !== 12) {
+        return res.status(400).json({ 
+          error: "Deposit amount must be exactly $12 USDT ($10 for your account + $2 admin fee)",
+          receivedAmount: depositAmount 
+        });
+      }
       
-      // Calculate amounts (2% fee, 98% to user)
-      const adminFee = depositAmount * 0.02;
-      const userAmount = depositAmount * 0.98;
+      // Calculate amounts (fixed $2 fee)
+      const adminFee = 2;
+      const userAmount = 10; // User gets exactly $10
 
       console.log("Processing deposit:", {
         originalAmount: depositAmount,
@@ -159,72 +165,95 @@ export function registerBSCRoutes(app: Express) {
         // Continue with deposit processing even if collection fails
       }
 
-      // Handle multi-tier referral commissions for BSC deposits BEFORE creating deposit transaction
-      console.log(`Checking referral commissions for user ${user.id}...`);
-      const referrals = await storage.getReferralsByReferredId(user.id);
-      console.log(`Found ${referrals.length} referral relationships for user ${user.id}:`, referrals);
-      
-      if (referrals.length > 0) {
-        console.log(`Processing referral commissions for user ${user.id} on all deposits...`);
-        // Commission rates for each tier
-        const tierCommissionRates = {
-          "1": 0.10, // 10% for Tier 1
-          "2": 0.05, // 5% for Tier 2
-          "3": 0.03, // 3% for Tier 3
-          "4": 0.02, // 2% for Tier 4
-        };
-
-        // Process commissions for all tiers
-        for (const referral of referrals) {
-          const referrer = await storage.getUser(referral.referrerId);
+      // Simple referral bonus: $10 for every 3 referrals who deposit $12 (receive $10)
+      // User receives exactly $10, so check for that amount
+      if (userAmount === 10) {
+        // Check if this user was referred by someone
+        const referrals = await storage.getReferralsByReferredId(user.id);
+        if (referrals.length > 0 && referrals[0].referrerId) {
+          const referrerId = referrals[0].referrerId;
+          
+          // Get all referrals for this referrer
+          const allReferrals = await storage.getReferralsByReferrerId(referrerId);
+          
+          // Count how many have deposited $10 (received amount in their account)
+          // Start with 1 to include the current deposit
+          let qualifiedReferrals = 1;
+          for (const ref of allReferrals) {
+            // Skip the current user since we already counted them
+            if (ref.referredId === user.id) {
+              continue;
+            }
+            
+            const refUser = await storage.getUser(ref.referredId);
+            if (refUser) {
+              const refDeposits = await db.select().from(transactions)
+                .where(and(
+                  eq(transactions.userId, refUser.id),
+                  eq(transactions.type, "Deposit"),
+                  eq(transactions.status, "Completed")
+                ));
+              
+              // Check if this referral has deposited $10 (stored amount is exactly $10)
+              const hasDepositedTen = refDeposits.some(tx => parseFloat(tx.amount.toString()) === 10);
+              if (hasDepositedTen) {
+                qualifiedReferrals++;
+              }
+            }
+          }
+          
+          console.log(`Referrer ${referrerId} now has ${qualifiedReferrals} qualified referrals (including current deposit)`);
+          
+          // Award $10 bonus for every complete set of 3 qualified referrals
+          const completeSets = Math.floor(qualifiedReferrals / 3);
+          const referrer = await storage.getUser(referrerId);
+          
           if (referrer) {
-            let commissionRate = tierCommissionRates[referral.level] || 0;
-            const commissionAmount = userAmount * commissionRate;
-
-            if (commissionAmount > 0) {
-              // Update referrer's assets with commission
-              await storage.updateUser(referrer.id, {
-                commissionAssets: (
-                  parseFloat(referrer.commissionAssets.toString()) +
-                  commissionAmount
-                ).toString(),
-                commissionToday: (
-                  parseFloat(referrer.commissionToday.toString()) +
-                  commissionAmount
-                ).toString(),
-                withdrawableAmount: (
-                  parseFloat(referrer.withdrawableAmount.toString()) +
-                  commissionAmount
-                ).toString(),
+            // Check how many bonuses have already been paid
+            const bonusTransactions = await db.select().from(transactions)
+              .where(and(
+                eq(transactions.userId, referrerId),
+                eq(transactions.type, "Referral Bonus"),
+                eq(transactions.status, "Completed")
+              ));
+            
+            const bonusesPaid = bonusTransactions.length;
+            const bonusesDue = completeSets - bonusesPaid;
+            
+            // Award any new bonuses
+            if (bonusesDue > 0) {
+              const bonusAmount = bonusesDue * 10;
+              
+              await storage.updateUser(referrerId, {
+                totalAssets: (parseFloat(referrer.totalAssets.toString()) + bonusAmount).toString(),
+                withdrawableAmount: (parseFloat(referrer.withdrawableAmount.toString()) + bonusAmount).toString(),
               });
-
-              // Update referral commission record
-              const currentCommission = parseFloat(
-                referral.commission || "0",
-              );
-              await storage.updateReferral(referral.id, {
-                commission: (currentCommission + commissionAmount).toString(),
-              });
-
-              // Create commission transaction
+              
+              // Create bonus transaction
               await storage.createTransaction({
-                userId: referrer.id,
-                type: "Commission",
-                amount: commissionAmount.toString(),
+                userId: referrerId,
+                type: "Referral Bonus",
+                amount: bonusAmount.toString(),
                 status: "Completed",
-                reason: `Tier ${referral.level} referral commission from BSC deposit by ${user.username || user.email}`,
+                reason: `Referral bonus: ${bonusesDue} x $10 for ${bonusesDue * 3} qualified referrals`,
                 txHash: null,
               });
-
-              console.log(`Paid ${commissionAmount.toFixed(2)} USDT commission to referrer ${referrer.id} (Tier ${referral.level})`);
+              
+              // Send notification
+              await storage.createNotification({
+                userId: referrerId,
+                type: "referral",
+                message: `Congratulations! You earned $${bonusAmount} referral bonus for ${bonusesDue * 3} qualified referrals!`,
+                isRead: false,
+              });
+              
+              console.log(`Awarded $${bonusAmount} referral bonus to user ${referrerId} for ${bonusesDue * 3} qualified referrals`);
             }
           }
         }
-      } else {
-        console.log(`No referral relationships found for user ${user.id} - no commission to pay`);
       }
 
-      // Create deposit transaction record AFTER commission processing
+      // Create deposit transaction record AFTER referral processing
       await storage.createTransaction({
         userId: user.id,
         type: "Deposit",
@@ -338,64 +367,40 @@ export function registerBSCRoutes(app: Express) {
 
       const withdrawAmount = parseFloat(amount);
       const userBalance = parseFloat(user.withdrawableAmount.toString());
+      const withdrawalFee = 1.0; // Fixed $1 withdrawal fee
+      const totalRequired = withdrawAmount + withdrawalFee;
 
-      // Verify user has sufficient balance
-      if (withdrawAmount > userBalance) {
-        return res.status(400).json({ error: "Insufficient balance" });
+      // Verify user has sufficient balance (withdrawal amount + $1 fee)
+      if (totalRequired > userBalance) {
+        return res.status(400).json({ 
+          error: `Insufficient balance. Required: $${totalRequired.toFixed(2)} (withdrawal: $${withdrawAmount.toFixed(2)} + fee: $1.00)` 
+        });
       }
-
-
-      // Calculate amounts: 5% withdrawal fee + $1 gas fee deducted from requested amount
-      const gasFee = 1.0; // Fixed $1 gas fee (deducted from requested amount)
-      const withdrawalFee = withdrawAmount * 0.05;
-      const netAmount = withdrawAmount - withdrawalFee - gasFee; // Deduct both fees from requested amount
 
       console.log("Creating withdrawal request:", {
         requestedAmount: withdrawAmount,
         withdrawalFee,
-        gasFee,
-        netAmount,
+        totalRequired,
         userId: user.id,
         toAddress: walletAddress
       });
 
-      // Create pending withdrawal transaction record
+      // Create pending withdrawal transaction record (user receives full withdrawal amount)
       const withdrawalTransaction = await storage.createTransaction({
         userId: user.id,
         type: "Withdrawal",
-        amount: netAmount.toString(),
+        amount: withdrawAmount.toString(),
         status: "Pending",
         txHash: null,
         address: walletAddress,
-        reason: `BSC withdrawal request to ${walletAddress} - Awaiting admin approval`
+        reason: `BSC withdrawal request to ${walletAddress} - $${withdrawAmount} + $1 fee - Awaiting admin approval`
       });
       
       console.log("Created withdrawal transaction:", {
         id: withdrawalTransaction.id,
         address: withdrawalTransaction.address,
-        amount: withdrawalTransaction.amount
-      });
-
-      // Create withdrawal fee transaction record (also pending)
-      await storage.createTransaction({
-        userId: user.id,
-        type: "Withdrawal Fee",
-        amount: withdrawalFee.toString(),
-        status: "Pending",
-        txHash: null,
-        address: BSC_CONFIG.adminFeeWallet,
-        reason: `5% withdrawal fee - Awaiting admin approval`
-      });
-
-      // Create gas fee transaction record (also pending)
-      await storage.createTransaction({
-        userId: user.id,
-        type: "Gas Fee",
-        amount: gasFee.toString(),
-        status: "Pending",
-        txHash: null,
-        address: "Network",
-        reason: `BSC network gas fee - Awaiting admin approval`
+        amount: withdrawalTransaction.amount,
+        fee: withdrawalFee
       });
 
       console.log("Withdrawal request created successfully - awaiting admin approval");
@@ -404,9 +409,9 @@ export function registerBSCRoutes(app: Express) {
         success: true,
         message: "Withdrawal request submitted successfully. Please wait for admin approval.",
         requestedAmount: withdrawAmount,
-        netAmount,
-        withdrawalFee,
-        gasFee,
+        netAmount: withdrawAmount, // User receives full withdrawal amount
+        withdrawalFee: withdrawalFee,
+        totalDeducted: totalRequired,
         status: "pending"
       });
 

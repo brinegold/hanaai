@@ -101,66 +101,7 @@ async function comparePasswords(supplied: string, stored: string) {
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
-// Function to create multi-tier referral relationships
-async function createMultiTierReferrals(directReferrerId: number, newUserId: number, newUsername: string) {
-  try {
-    // Create direct referral (Tier 1)
-    await storage.createReferral({
-      referrerId: directReferrerId,
-      referredId: newUserId,
-      level: "1",
-      commission: "0",
-    });
-
-    // Send notification to direct referrer
-    await storage.createNotification({
-      userId: directReferrerId,
-      type: "referral",
-      message: `New user ${newUsername} has joined using your referral code!`,
-      isRead: false,
-    });
-
-    // Get the direct referrer to find their upline
-    const directReferrer = await storage.getUser(directReferrerId);
-    if (!directReferrer || !directReferrer.referrerId) return;
-
-    // Create Tier 2 referral
-    await storage.createReferral({
-      referrerId: directReferrer.referrerId,
-      referredId: newUserId,
-      level: "2",
-      commission: "0",
-    });
-
-    // Get Tier 2 referrer to find Tier 3
-    const tier2Referrer = await storage.getUser(directReferrer.referrerId);
-    if (!tier2Referrer || !tier2Referrer.referrerId) return;
-
-    // Create Tier 3 referral
-    await storage.createReferral({
-      referrerId: tier2Referrer.referrerId,
-      referredId: newUserId,
-      level: "3",
-      commission: "0",
-    });
-
-    // Get Tier 3 referrer to find Tier 4
-    const tier3Referrer = await storage.getUser(tier2Referrer.referrerId);
-    if (!tier3Referrer || !tier3Referrer.referrerId) return;
-
-    // Create Tier 4 referral
-    await storage.createReferral({
-      referrerId: tier3Referrer.referrerId,
-      referredId: newUserId,
-      level: "4",
-      commission: "0",
-    });
-
-  } catch (error) {
-    console.error("Error creating multi-tier referrals:", error);
-    // Don't throw - we don't want registration to fail if referral creation fails
-  }
-}
+// Referral system has been removed as per requirements
 
 async function sendDepositNotification(user, amount, txHash) {
   try {
@@ -439,20 +380,25 @@ export function setupAuth(app: Express) {
         createdById: user.id,
       });
 
-      // Only process invite code if one was provided
-      if (inviteCode && userData.inviteCode) {
-        // Validate the invite code is valid
-        await storage.useInviteCode(userData.inviteCode, user.id);
+      // Simple referral system: Track direct referrals only
+      if (inviteCode && userData.inviteCode && inviteCode.createdById && inviteCode.createdById !== null) {
+        // Create a simple direct referral record
+        await storage.createReferral({
+          referrerId: inviteCode.createdById,
+          referredId: user.id,
+          level: "1", // Only direct referrals
+          commission: "0",
+        });
 
-        // Add multi-tier referral relationships if the invite code has a creator
-        if (inviteCode.createdById && inviteCode.createdById !== null) {
-          await createMultiTierReferrals(inviteCode.createdById, user.id, user.username);
-          
-          // Send referral notification to the referrer
-          const referrer = await storage.getUserById(inviteCode.createdById);
-          if (referrer) {
-            await sendReferralNotification(referrer, user);
-          }
+        // Send notification to referrer
+        const referrer = await storage.getUserById(inviteCode.createdById);
+        if (referrer) {
+          await storage.createNotification({
+            userId: referrer.id,
+            type: "referral",
+            message: `New user ${user.username} has joined using your referral code!`,
+            isRead: false,
+          });
         }
       }
 

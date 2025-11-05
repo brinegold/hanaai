@@ -11,8 +11,8 @@ contract PaymentProcessor is Ownable, ReentrancyGuard {
     address public adminFeeWallet;
     address public globalAdminWallet;
     
-    uint256 public depositFeePercent = 2; // 2% fee on deposits
-    uint256 public withdrawalFeePercent = 5; // 5% fee on withdrawals
+    uint256 public depositFeeFixed = 2 * 10**18; // Fixed $2 fee on deposits (in USDT with 18 decimals)
+    uint256 public withdrawalFeeFixed = 1 * 10**18; // Fixed $1 fee on withdrawals (in USDT with 18 decimals)
     
     mapping(address => bool) public authorizedProcessors;
     mapping(string => bool) public processedTransactions;
@@ -58,8 +58,8 @@ contract PaymentProcessor is Ownable, ReentrancyGuard {
         // Mark transaction as processed
         processedTransactions[txHash] = true;
         
-        // Calculate fees
-        uint256 adminFee = (amount * depositFeePercent) / 100;
+        // Calculate fees (fixed $2 fee)
+        uint256 adminFee = depositFeeFixed;
         uint256 userAmount = amount - adminFee;
         
         // Transfer tokens from user wallet to admin wallets
@@ -75,8 +75,8 @@ contract PaymentProcessor is Ownable, ReentrancyGuard {
     ) external onlyAuthorized nonReentrant {
         require(amount > 0, "Amount must be greater than 0");
         
-        // Calculate fees
-        uint256 fee = (amount * withdrawalFeePercent) / 100;
+        // Calculate fees (fixed $1 fee)
+        uint256 fee = withdrawalFeeFixed;
         uint256 netAmount = amount - fee;
         
         // Transfer fee to admin wallet

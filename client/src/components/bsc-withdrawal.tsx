@@ -59,10 +59,10 @@ export const BSCWithdrawal: React.FC = () => {
       return;
     }
 
-    if (withdrawAmount < 1) {
+    if (withdrawAmount < 2) {
       toast({
         title: 'Minimum Withdrawal',
-        description: 'Minimum withdrawal amount is $1 USDT',
+        description: 'Minimum withdrawal amount is $2 USDT',
         variant: 'destructive'
       });
       return;
@@ -108,12 +108,13 @@ export const BSCWithdrawal: React.FC = () => {
   const calculateFee = () => {
     const withdrawAmount = parseFloat(amount || '0');
     return {
-      fee: withdrawAmount * 0.05,
-      netAmount: withdrawAmount * 0.95
+      fee: 1, // Fixed $1 fee
+      netAmount: withdrawAmount, // User receives full amount
+      totalDeducted: withdrawAmount + 1 // Total deducted from balance
     };
   };
 
-  const { fee, netAmount } = calculateFee();
+  const { fee, netAmount, totalDeducted } = calculateFee();
 
   return (
     <Card>
@@ -183,7 +184,7 @@ export const BSCWithdrawal: React.FC = () => {
             placeholder="Enter amount to withdraw"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            min="1"
+            min="2"
             max={user?.withdrawableAmount?.toString() || '0'}
             step="0.01"
             disabled={withdrawalStatus?.hasPendingWithdrawal || isLoadingStatus}
@@ -197,12 +198,16 @@ export const BSCWithdrawal: React.FC = () => {
               <span>${parseFloat(amount).toFixed(2)} USDT</span>
             </div>
             <div className="flex justify-between text-sm text-red-600">
-              <span>Processing Fee (5%):</span>
-              <span>-${fee.toFixed(2)} USDT</span>
+              <span>Withdrawal Fee (Fixed):</span>
+              <span>$1.00 USDT</span>
             </div>
             <div className="border-t pt-2 flex justify-between font-medium">
               <span>You will receive:</span>
               <span className="text-green-600">${netAmount.toFixed(2)} USDT</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span>Total deducted from balance:</span>
+              <span className="font-medium">${totalDeducted.toFixed(2)} USDT</span>
             </div>
           </div>
         )}
@@ -223,8 +228,8 @@ export const BSCWithdrawal: React.FC = () => {
         <div className="bg-yellow-50 p-4 rounded-lg">
           <h4 className="font-medium text-yellow-900 mb-2">Important Notes:</h4>
           <ul className="text-sm text-yellow-800 space-y-1">
-            <li>• 5% processing fee will be deducted</li>
-            <li>• Minimum withdrawal: $1 USDT</li>
+            <li>• Fixed $1 withdrawal fee</li>
+            <li>• Minimum withdrawal: $2 USDT</li>
             <li>• Funds sent to BSC network (BEP-20)</li>
             <li>• Processing time: 24-48 hours (admin approval required)</li>
             <li>• Gas fees paid from processing fee</li>

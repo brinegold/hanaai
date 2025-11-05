@@ -1,6 +1,9 @@
 import type { Express } from "express";
 import { storage } from "./storage";
 import nodemailer from "nodemailer";
+import { db } from "./db";
+import { transactions } from "@shared/schema";
+import { eq, and } from "drizzle-orm";
 
 
 
@@ -491,26 +494,9 @@ export function registerAdminRoutes(app: Express) {
           throw new Error("Withdrawal address not found");
         }
 
-        // Get related fee transactions
-        const allUserTransactions = await storage.getTransactionsByUserId(user.id);
-        const relatedFeeTransactions = allUserTransactions.filter(tx => 
-          tx.status === "Pending" && 
-          (tx.type === "Withdrawal Fee" || tx.type === "Gas Fee") &&
-          tx.createdAt >= transaction.createdAt
-        );
-
-        let withdrawalFee = 0;
-        let gasFee = 0;
-        
-        for (const feeTx of relatedFeeTransactions) {
-          if (feeTx.type === "Withdrawal Fee") {
-            withdrawalFee = parseFloat(feeTx.amount.toString());
-          } else if (feeTx.type === "Gas Fee") {
-            gasFee = parseFloat(feeTx.amount.toString());
-          }
-        }
-
-        const totalRequestedAmount = withdrawalAmount + withdrawalFee + gasFee;
+        // Fixed $1 withdrawal fee
+        const withdrawalFee = 1.0;
+        const totalDeducted = withdrawalAmount + withdrawalFee;
 
         try {
           // Process actual blockchain withdrawal
@@ -525,25 +511,10 @@ export function registerAdminRoutes(app: Express) {
             txHash: transferHashes.withdrawalTxHash,
           });
 
-          // Update related fee transactions
-          for (const feeTx of relatedFeeTransactions) {
-            if (feeTx.type === "Withdrawal Fee") {
-              await storage.updateTransaction(feeTx.id, {
-                status: "Completed",
-                txHash: transferHashes.feeTxHash,
-              });
-            } else if (feeTx.type === "Gas Fee") {
-              await storage.updateTransaction(feeTx.id, {
-                status: "Completed",
-                txHash: transferHashes.withdrawalTxHash,
-              });
-            }
-          }
-
-          // Deduct from user's withdrawable amount only
+          // Deduct total amount (withdrawal + $1 fee) from user's withdrawable amount
           await storage.updateUser(user.id, {
             withdrawableAmount: (
-              parseFloat(user.withdrawableAmount.toString()) - totalRequestedAmount
+              parseFloat(user.withdrawableAmount.toString()) - totalDeducted
             ).toString(),
           });
 
@@ -565,65 +536,93 @@ export function registerAdminRoutes(app: Express) {
         }
       } else if (transaction.type === "Deposit") {
         const depositAmount = parseFloat(transaction.amount.toString());
-        let totalAmount = depositAmount;
-        // Handle multi-tier referral commissions
-        const referrals = await storage.getReferralsByReferredId(user.id);
-
-        if (referrals.length > 0) {
-          // Commission rates for each tier
-          const tierCommissionRates = {
-            "1": 0.10, // 10% for Tier 1
-            "2": 0.05, // 5% for Tier 2
-            "3": 0.03, // 3% for Tier 3
-            "4": 0.02, // 2% for Tier 4
-          };
-
-          // Process commissions for all tiers on every deposit
-          for (const referral of referrals) {
-            const referrer = await storage.getUser(referral.referrerId);
+        
+        // Simple referral bonus: $10 for every 3 referrals who deposit $12 (receive $10)
+        // Check if deposit is exactly $10 (the amount user receives after $2 fee)
+        if (depositAmount === 10) {
+          // Check if this user was referred by someone
+          const referrals = await storage.getReferralsByReferredId(user.id);
+          if (referrals.length > 0 && referrals[0].referrerId) {
+            const referrerId = referrals[0].referrerId;
+            
+            // Get all referrals for this referrer
+            const allReferrals = await storage.getReferralsByReferrerId(referrerId);
+            
+            // Count how many have deposited $10 (received amount)
+            // Start with 1 to include the current deposit
+            let qualifiedReferrals = 1;
+            for (const ref of allReferrals) {
+              // Skip the current user since we already counted them
+              if (ref.referredId === user.id) {
+                continue;
+              }
+              
+              const refUser = await storage.getUser(ref.referredId);
+              if (refUser) {
+                const refDeposits = await db.select().from(transactions)
+                  .where(and(
+                    eq(transactions.userId, refUser.id),
+                    eq(transactions.type, "Deposit"),
+                    eq(transactions.status, "Completed")
+                  ));
+                
+                // Check if this referral has deposited exactly $10 (stored amount)
+                const hasDepositedTen = refDeposits.some(tx => parseFloat(tx.amount.toString()) === 10);
+                if (hasDepositedTen) {
+                  qualifiedReferrals++;
+                }
+              }
+            }
+            
+            console.log(`Referrer ${referrerId} now has ${qualifiedReferrals} qualified referrals (including current deposit)`);
+            
+            // Award $10 bonus for every complete set of 3 qualified referrals
+            const completeSets = Math.floor(qualifiedReferrals / 3);
+            const referrer = await storage.getUser(referrerId);
+            
             if (referrer) {
-              let commissionRate = tierCommissionRates[referral.level] || 0;
-
-              const commissionAmount = depositAmount * commissionRate;
-
-              if (commissionAmount > 0) {
-                // Update referrer's assets with commission
-                await storage.updateUser(referrer.id, {
-                  commissionAssets: (
-                    parseFloat(referrer.commissionAssets.toString()) +
-                    commissionAmount
-                  ).toString(),
-                  commissionToday: (
-                    parseFloat(referrer.commissionToday.toString()) +
-                    commissionAmount
-                  ).toString(),
-                  withdrawableAmount: (
-                    parseFloat(referrer.withdrawableAmount.toString()) +
-                    commissionAmount
-                  ).toString(),
+              // Check how many bonuses have already been paid
+              const bonusTransactions = await db.select().from(transactions)
+                .where(and(
+                  eq(transactions.userId, referrerId),
+                  eq(transactions.type, "Referral Bonus"),
+                  eq(transactions.status, "Completed")
+                ));
+              
+              const bonusesPaid = bonusTransactions.length;
+              const bonusesDue = completeSets - bonusesPaid;
+              
+              // Award any new bonuses
+              if (bonusesDue > 0) {
+                const bonusAmount = bonusesDue * 10;
+                
+                await storage.updateUser(referrerId, {
+                  totalAssets: (parseFloat(referrer.totalAssets.toString()) + bonusAmount).toString(),
+                  withdrawableAmount: (parseFloat(referrer.withdrawableAmount.toString()) + bonusAmount).toString(),
                 });
-
-                // Update referral commission record
-                const currentCommission = parseFloat(
-                  referral.commission || "0",
-                );
-                await storage.updateReferral(referral.id, {
-                  commission: (currentCommission + commissionAmount).toString(),
-                });
-
-                // Create commission transaction
+                
+                // Create bonus transaction
                 await storage.createTransaction({
-                  userId: referrer.id,
-                  type: "Commission",
-                  amount: commissionAmount.toString(),
+                  userId: referrerId,
+                  type: "Referral Bonus",
+                  amount: bonusAmount.toString(),
                   status: "Completed",
-                  reason: `Tier ${referral.level} referral commission from ${user.username || user.email}`,
+                  reason: `Referral bonus: ${bonusesDue} x $10 for ${bonusesDue * 3} qualified referrals`,
                   txHash: null,
+                });
+                
+                // Send notification
+                await storage.createNotification({
+                  userId: referrerId,
+                  type: "referral",
+                  message: `Congratulations! You earned $${bonusAmount} referral bonus for ${bonusesDue * 3} qualified referrals!`,
+                  isRead: false,
                 });
               }
             }
           }
         }
+        
         await storage.updateUser(user.id, {
           totalAssets: (
             parseFloat(user.totalAssets.toString()) + depositAmount

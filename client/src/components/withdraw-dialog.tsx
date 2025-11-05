@@ -34,8 +34,8 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
 
   // Calculate available balance and fees
   const availableBalance = user ? parseFloat(user.withdrawableAmount?.toString() || "0") : 0;
-  const withdrawalFee = 0.05; // 5% fee
-  const maxWithdrawable = Math.max(0, availableBalance * (1 - withdrawalFee));
+  const withdrawalFee = 1; // Fixed $1 fee
+  const maxWithdrawable = Math.max(0, availableBalance - withdrawalFee);
 
   const handleWithdraw = async () => {
     // Check for pending withdrawal first
@@ -60,10 +60,10 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
       return;
     }
 
-    if (amountNum < 1) {
+    if (amountNum < 2) {
       toast({
         title: "Amount too small",
-        description: "Minimum withdrawal amount is 5 USDT",
+        description: "Minimum withdrawal amount is $2 USDT",
         variant: "destructive",
       });
       return;
@@ -135,7 +135,9 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
   };
 
   const handleSetMaxAmount = () => {
-    setAmount(availableBalance.toString());
+    // Set max amount minus the $1 fee
+    const maxAmount = Math.max(0, availableBalance - withdrawalFee);
+    setAmount(maxAmount.toString());
   };
 
   const resetDialog = () => {
@@ -201,7 +203,7 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
               </div>
               <div className="flex justify-between">
                 <span>Withdrawal Fee:</span>
-                <span className="font-medium text-red-600">5%</span>
+                <span className="font-medium text-red-600">$1 (Fixed)</span>
               </div>
               <div className="flex justify-between">
                 <span>Network:</span>
@@ -235,39 +237,39 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
             <Input
               id="amount"
               type="number"
-              min="1"
+              min="2"
               step="0.01"
-              placeholder="Minimum 5 USDT"
+              placeholder="Minimum $2 USDT"
               className="bg-white border-gray-200 text-gray-900"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               disabled={withdrawalStatus?.hasPendingWithdrawal || isLoadingStatus}
             />
-            {amount && (
-              <div className="bg-red-50 p-3 rounded-lg border border-red-200">
-                <div className="text-xs text-red-600 space-y-1">
+            {amount && parseFloat(amount) > 0 && (
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <div className="text-xs text-blue-800 space-y-1">
                   <div className="flex justify-between">
-                    <span>Withdrawal Fee (5%):</span>
-                    <span className="font-medium">{(parseFloat(amount) * 0.05).toFixed(2)} USDT</span>
+                    <span>Withdrawal Amount:</span>
+                    <span className="font-medium">{parseFloat(amount).toFixed(2)} USDT</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Gas Fee:</span>
-                    <span className="font-medium">1.00 USDT</span>
+                    <span>Withdrawal Fee:</span>
+                    <span className="font-medium text-red-600">$1.00 USDT</span>
                   </div>
-                  <div className="flex justify-between border-t border-red-200 pt-1">
+                  <div className="flex justify-between border-t border-blue-200 pt-1">
                     <span className="font-medium text-green-600">You'll receive:</span>
-                    <span className="font-bold">{Math.max(0, parseFloat(amount) - (parseFloat(amount) * 0.05) - 1).toFixed(2)} USDT</span>
+                    <span className="font-bold">{parseFloat(amount).toFixed(2)} USDT</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-medium">Deducted from balance:</span>
-                    <span className="font-bold">{parseFloat(amount).toFixed(2)} USDT</span>
+                    <span className="font-medium">Total deducted:</span>
+                    <span className="font-bold">{(parseFloat(amount) + 1).toFixed(2)} USDT</span>
                   </div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Destination Address */}
+          {/* Address Input */}
           <div className="space-y-3">
             <Label htmlFor="address" className="text-sm font-medium">
               Destination BSC Address
@@ -281,7 +283,6 @@ const AutoWithdrawDialog: React.FC<AutoWithdrawDialogProps> = ({
               disabled={withdrawalStatus?.hasPendingWithdrawal || isLoadingStatus}
             />
           </div>
-
 
           {/* Status Display */}
           {withdrawStatus !== "idle" && (

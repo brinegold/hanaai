@@ -26,7 +26,7 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
   const { toast } = useToast();
   const { user } = useAuth();
   const [userWallet, setUserWallet] = useState("");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState("12");
   const [txHash, setTxHash] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [depositStatus, setDepositStatus] = useState<"idle" | "pending" | "verified" | "failed">("idle");
@@ -70,10 +70,10 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
   }, [open, user, toast]);
 
   const handleVerifyDeposit = async () => {
-    if (!amount || parseFloat(amount) < 5) {
+    if (!amount || parseFloat(amount) !== 12) {
       toast({
         title: "Invalid Amount",
-        description: "Please enter a valid amount (minimum 5 USDT)",
+        description: "Deposit amount must be exactly $12 USDT",
         variant: "destructive",
       });
       return;
@@ -92,10 +92,9 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
     setDepositStatus("pending");
 
     try {
-      // Calculate total amount to send (deposit + fee)
-      const depositAmount = parseFloat(amount);
-      const fee = depositAmount * 0.02;
-      const totalToSend = fee + depositAmount;
+      // Fixed deposit amount: $12 total
+      const depositAmount = 12;
+      const totalToSend = depositAmount;
       
       const response = await apiRequest("POST", "/api/bsc/deposit", {
         txHash: txHash.trim(),
@@ -230,12 +229,12 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
                   <span className="font-medium">USDT</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Min Deposit:</span>
-                  <span className="font-medium">5 USDT</span>
+                  <span>Required Deposit:</span>
+                  <span className="font-medium">$12 USDT</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Platform Fee:</span>
-                  <span className="font-medium">2%</span>
+                  <span>You Receive:</span>
+                  <span className="font-medium">$10 ($2 admin fee)</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Processing:</span>
@@ -252,33 +251,25 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
               <Input
                 id="amount"
                 type="number"
-                min="5"
-                step="0.01"
-                placeholder="Minimum 5 USDT"
-                className="bg-white border-gray-200 text-gray-900"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                value="12"
+                readOnly
+                disabled
+                className="bg-gray-100 border-gray-200 text-gray-900 cursor-not-allowed"
               />
               
-              {/* Fee Calculation Display */}
-              {amount && parseFloat(amount) > 0 && (
-                <div className="bg-red-50 p-3 rounded-lg border border-red-200">
-                  <p className="text-red-600 font-medium text-sm">
-                    Deposit Amount To Send = Fee(2%) + Deposit: <strong className='text-blue-600'>
-                    {
-                      (() => {
-                        const depositAmount = parseFloat(amount);
-                        const fee = depositAmount * 0.02;
-                        const totalToSend = fee + depositAmount;
-                        return `${fee.toFixed(2)} + ${depositAmount.toFixed(2)} = ${totalToSend.toFixed(2)} USDT`;
-                      })()
-                    }</strong> 
-                  </p>
-                </div>
-              )}
+              {/* Fixed Amount Display */}
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <p className="text-blue-800 font-medium text-sm">
+                  Fixed Deposit: <strong className='text-blue-600'>$12 USDT</strong>
+                </p>
+                <p className="text-xs text-blue-700 mt-1">
+                  • $10 credited to your account<br/>
+                  • $2 admin fee
+                </p>
+              </div>
               
               <p className="text-xs text-gray-500">
-                Enter the amount you're depositing to your unique wallet address
+                Send exactly $12 USDT to your unique wallet address
               </p>
             </div>
 
@@ -338,8 +329,8 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
               <p className="text-xs text-amber-800 font-medium mb-2">Important Notes:</p>
               <ul className="list-disc list-inside text-xs text-amber-700 space-y-1">
                 <li>Only send USDT on BSC (BEP20) network to this address</li>
-                <li>Deposits are processed automatically by smart contract</li>
-                <li>5% platform fee is deducted automatically</li>
+                <li>Send exactly $12 USDT - no more, no less</li>
+                <li>$10 will be credited to your account ($2 admin fee)</li>
                 <li>Your balance updates immediately after verification</li>
               </ul>
             </div>

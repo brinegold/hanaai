@@ -22,7 +22,7 @@ class BSCService {
     this.config = config;
     
     // Use BSC testnet RPC URL specifically
-    const rpcUrl = "https://bsc-dataseed1.binance.org/";
+    const rpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/";
     console.log("BSC Service initialized with RPC:", rpcUrl);
     
     this.web3 = new Web3(rpcUrl);
@@ -246,10 +246,10 @@ class BSCService {
           
           console.log(`Transfer event found: ${amount} USDT from ${fromAddress} to ${toAddress}`);
           
-          // Validate minimum amount before returning
-          if (parseFloat(amount) < 5) {
-            console.log(`Transfer amount ${amount} USDT is below minimum requirement of 5 USDT`);
-            throw new Error(`Minimum deposit amount is 5 USDT. Transaction amount: ${amount} USDT`);
+          // Validate exact amount requirement ($12 total: $10 for user + $2 admin fee)
+          if (parseFloat(amount) !== 12) {
+            console.log(`Transfer amount ${amount} USDT does not match required amount of 12 USDT`);
+            throw new Error(`Deposit amount must be exactly 12 USDT ($10 for your account + $2 admin fee). Transaction amount: ${amount} USDT`);
           }
           
           return {

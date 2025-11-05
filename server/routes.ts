@@ -169,38 +169,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(req.user!.id);
       const userDepositAmount = user ? parseFloat(user.rechargeAmount.toString()) : 0;
 
-      // Three investment plans with different tiers
+      // Single investment plan with 3% daily returns
       const plans = [
         {
           id: "basic-trading",
-          name: "Basic AI Trading",
+          name: "Hana AI Trading",
           minAmount: 10,
-          maxAmount: 500,
+          maxAmount: 100000,
           dailyRate: 3.0,
-          description: "Earn 3% daily ($10 - $500)",
-        },
-        {
-          id: "premium-trading",
-          name: "Premium AI Trading",
-          minAmount: 510,
-          maxAmount: 5000,
-          dailyRate: 3.5,
-          description: "Earn 3.5% daily ($510 - $5,000)",
-        },
-        {
-          id: "vip-trading",
-          name: "VIP AI Trading",
-          minAmount: 5001,
-          maxAmount: 50000,
-          dailyRate: 4.0,
-          description: "Earn 4% daily ($5,001 - $50,000)",
+          description: "Earn 3% daily on your deposits",
         },
       ];
-      
-      // Filter out plans where user doesn't have enough deposit amount
-      const availablePlans = plans.filter(plan => userDepositAmount >= plan.minAmount);
 
-      res.json(availablePlans);
+      res.json(plans);
     } catch (err) {
       console.error("Error fetching investment plans:", err);
       res.status(500).json({ error: "Failed to fetch investment plans" });
@@ -229,12 +210,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ error: "Investment amount must be at least $10" });
       }
 
-      if (amount > 50000) {
-        return res
-          .status(400)
-          .json({ error: "Investment amount cannot exceed $50,000" });
-      }
-
       if (typeof plan !== "string" || !plan) {
         return res.status(400).json({ error: "Investment plan is required" });
       }
@@ -245,27 +220,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ error: "Daily rate must be a positive number" });
       }
 
-      // Validate plan tier and amount range
-      const planTiers = {
-        "basic-trading": { min: 10, max: 500, rate: 3.0 },
-        "premium-trading": { min: 510, max: 5000, rate: 3.5 },
-        "vip-trading": { min: 5001, max: 50000, rate: 4.0 }
-      };
-
-      const selectedPlan = planTiers[plan as keyof typeof planTiers];
-      if (!selectedPlan) {
+      // Validate single plan (3% daily rate)
+      if (plan !== "basic-trading") {
         return res.status(400).json({ error: "Invalid investment plan selected" });
       }
 
-      if (amount < selectedPlan.min || amount > selectedPlan.max) {
+      if (dailyRate !== 3.0) {
         return res.status(400).json({
-          error: `Investment amount must be between $${selectedPlan.min} and $${selectedPlan.max} for ${plan.replace('-', ' ')}`
-        });
-      }
-
-      if (dailyRate !== selectedPlan.rate) {
-        return res.status(400).json({
-          error: `Invalid daily rate for selected plan. Expected ${selectedPlan.rate}%`
+          error: `Invalid daily rate. Expected 3%`
         });
       }
 
@@ -954,21 +916,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Salary scheduler removed - all bonuses are now immediately available for withdrawal
 
+  // Delete unfunded accounts after 24 hours - automated cleanup
+  app.post("/api/cleanup-unfunded-accounts", async (req, res) => {
+    try {
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      
+      // Get all users
+      const allUsers = await storage.getAllUsers();
+      let deletedCount = 0;
+      
+      for (const user of allUsers) {
+        // Skip admin accounts
+        if (user.isAdmin) continue;
+        
+        // Check if account was created more than 24 hours ago
+        const createdAt = new Date(user.createdAt);
+        if (createdAt > twentyFourHoursAgo) continue;
+        
+        // Check if user has any deposits
+        const userTransactions = await db.select().from(transactions).where(eq(transactions.userId, user.id));
+        const hasDeposits = userTransactions.some(
+          (tx) => tx.type === "Deposit" && tx.status === "Completed"
+        );
+        
+        // Delete user if no deposits after 24 hours
+        if (!hasDeposits) {
+          // Delete user's transactions first
+          await db.delete(transactions).where(eq(transactions.userId, user.id));
+          // Delete user's investments
+          await db.delete(investments).where(eq(investments.userId, user.id));
+          // Delete user's notifications
+          await db.delete(notifications).where(eq(notifications.userId, user.id));
+          // Delete user
+          await db.delete(users).where(eq(users.id, user.id));
+          deletedCount++;
+          console.log(`Deleted unfunded account: ${user.username} (ID: ${user.id})`);
+        }
+      }
+      
+      res.json({
+        success: true,
+        message: `Deleted ${deletedCount} unfunded accounts`,
+        deletedCount,
+      });
+    } catch (err) {
+      console.error("Error cleaning up unfunded accounts:", err);
+      res.status(500).json({ error: "Failed to cleanup unfunded accounts" });
+    }
+  });
+
   // Simulate daily earnings - protected route
   app.post("/api/simulate-earnings", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
 
     try {
-      const now = new Date();
-      const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-      
-      // Only generate earnings on weekdays (Monday to Friday)
-      if (dayOfWeek === 0 || dayOfWeek === 6) {
-        return res.json({
-          success: true,
-          message: "Skipping daily earnings calculation - weekend",
-        });
-      }
+      // Trading is now available 7 days a week (Monday to Sunday)
       
       const allUsers = await storage.getAllUsers();
       
@@ -1231,15 +1234,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (transactionData.type === "Deposit") {
         // Check for minimum deposit
-        if (transactionData.amount < 5) {
+        if (transactionData.amount < 10) {
           return res.status(400).json({
-            message: "Minimum deposit amount is $5",
+            message: "Minimum deposit amount is $10",
           });
         }
         
-        // Calculate deposit fee (5% platform fee)
+        // Check for maximum deposit
+        if (transactionData.amount > 10) {
+          return res.status(400).json({
+            message: "Maximum deposit amount is $10",
+          });
+        }
+        
+        // Calculate deposit fee (fixed $2 admin fee)
         const depositAmount = transactionData.amount;
-        const platformFee = depositAmount * 0.05; // 5% fee
+        const platformFee = 2; // Fixed $2 fee
         const netDepositAmount = depositAmount - platformFee; // Amount after fee deduction
         
         // Update user's rechargeAmount (deposit amount) with net amount
@@ -1256,45 +1266,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }).where(eq(users.id, req.user!.id));
       } else if (transactionData.type === "Withdrawal") {
         // Withdrawals are available every day
-        // Referral bonuses can be withdrawn freely without restrictions
 
-        // Check for minimum and maximum withdrawal
-        if (transactionData.amount < 5) {
+        // Check for minimum withdrawal
+        if (transactionData.amount < 2) {
           return res.status(400).json({
-            message: "Minimum withdrawal amount is $5",
+            message: "Minimum withdrawal amount is $2",
           });
         }
 
-        if (transactionData.amount > 50000) {
-          return res.status(400).json({
-            message: "Maximum withdrawal amount is $50,000",
-          });
-        }
-
-        // Get all user's deposits and commissions
-        const userTransactions = await db.select().from(transactions).where(eq(transactions.userId, user.id));
-        const deposits = userTransactions.filter(
-          (tx) => tx.type === "Deposit" && tx.status === "Completed",
-        );
-        const totalCommissions = userTransactions
-          .filter((tx) => tx.type === "Commission" && tx.status === "Completed")
-          .reduce((sum, tx) => sum + parseFloat(tx.amount.toString()), 0);
-        const totalReferralBonuses = userTransactions
-          .filter((tx) => tx.type === "Referral Bonus" && tx.status === "Completed")
-          .reduce((sum, tx) => sum + parseFloat(tx.amount.toString()), 0);
-        const totalRankingBonuses = userTransactions
-          .filter((tx) => tx.type === "Ranking Bonus" && tx.status === "Completed")
-          .reduce((sum, tx) => sum + parseFloat(tx.amount.toString()), 0);
-
-        // Calculate 5% withdrawal fee
-        const withdrawalFee = transactionData.amount * 0.05;
+        // Calculate fixed $1 withdrawal fee
+        const withdrawalFee = 1; // Fixed $1 fee
         const totalAmount = transactionData.amount + withdrawalFee;
 
-        // Check sufficient funds for withdrawal (including 5% fee)
+        // Check sufficient funds for withdrawal (including $1 fee)
         if (parseFloat(user.totalAssets.toString()) < totalAmount) {
           return res
             .status(400)
-            .json({ message: "Insufficient funds for withdrawal (including 5% fee)" });
+            .json({ message: "Insufficient funds for withdrawal (including $1 fee)" });
         }
 
         // For withdrawals, we only check the balance but don't deduct it yet
@@ -1308,7 +1296,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "Pending",
         network: transactionData.network,
         address: transactionData.address,
-        fee: transactionData.type === "Withdrawal" ? (transactionData.amount * 0.05).toString() : "0",
+        fee: transactionData.type === "Withdrawal" ? "1" : "0",
         processingTime: null,
         completionTime: null,
         reason: null,

@@ -85,7 +85,7 @@
 }
 
 .gradient-input::placeholder {
-  color: rgba(255, 255, 255, 0.9);
+  color: white;
 }
 
 .gradient-input:focus {
