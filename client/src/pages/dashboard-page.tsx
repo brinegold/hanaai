@@ -452,8 +452,8 @@ const DashboardPage: React.FC = () => {
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg px-4 py-3">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <strong className="text-white font-bold">{t('invite.title')}</strong><br> </br>
-              <strong className="text-white text-xs">Every 3 referrals who deposit $12 = $10 bonus!</strong><br> </br>
+              <strong className="text-white font-bold">{t('invite.title')}</strong><br />
+              <strong className="text-white text-xs">Every 3 referrals who deposit $12 = $10 bonus!</strong><br />
             </div>
             <button
               className="px-3 py-1.5 rounded-lg text-white text-xs hover:bg-white/10 transition-colors"
@@ -464,9 +464,9 @@ const DashboardPage: React.FC = () => {
             </button>
           </div>
           <div className="text-xs text-white">
-            <strong>✓ Refer friends with your unique code</strong><br> </br>
-            <strong>✓ They deposit $12 ($10 to account + $2 fee) and start earning</strong><br> </br>
-            <strong>✓ You get $10 for every 3 qualified referrals</strong><br> </br>
+            <strong>✓ Refer friends with your unique code</strong><br />
+            <strong>✓ They deposit $12 ($10 to account + $2 fee) and start earning</strong><br />
+            <strong>✓ You get $10 for every 3 qualified referrals</strong><br />
           </div>
         </div>
       </div>
@@ -572,20 +572,20 @@ const DashboardPage: React.FC = () => {
         <h3 className="text-white font-medium mb-2">Additional Information</h3>
         <div className="text-white/80">
         Deposit $12 USDT ($10 to your account + $2 admin fee), and the minimum withdrawal amount is $2 USDT.
-        The funds will be credited to your account within three minutes.<br></br>
-          <br></br>
-          <br></br> ===========<br></br> ✔How to make money: <br></br>
-          1. Deposit $12 ($10 credited to account + $2 fee) and Earn 3% daily (Withdrawals available every day)<br></br>
-2. To Generate Daily Returns You Must Click on "Trade now", then Click on "Start Trading" wait for few seconds for Hana AI to generate profits. <br></br>
-3. Refer friends: Every 3 people who deposit $12 using your referral code = $10 bonus for you!<br></br>
-4. Accounts must be funded within 24 hours or they will be automatically deleted.<br></br>
+        The funds will be credited to your account within three minutes.<br />
+          <br />
+          <br /> ===========<br /> ✔How to make money: <br />
+          1. Deposit $12 ($10 credited to account + $2 fee) and Earn 3% daily (Withdrawals available every day)<br />
+2. To Generate Daily Returns You Must Click on "Trade now", then Click on "Start Trading" wait for few seconds for Hana AI to generate profits. <br />
+3. Refer friends: Every 3 people who deposit $12 using your referral code = $10 bonus for you!<br />
+4. Accounts must be funded within 24 hours or they will be automatically deleted.<br />
 
 <strong>
 Trade Time : Once Per day
 </strong>
-<br></br>
+<br />
 
- <strong>Withdrawal days : Every day</strong><br></br>
+ <strong>Withdrawal days : Every day</strong><br />
 
  <strong>Trading Days: Monday to Sunday (7 days a week)</strong>
         </div>
