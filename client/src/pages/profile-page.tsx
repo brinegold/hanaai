@@ -621,18 +621,7 @@ const ProfilePage: React.FC = () => {
           <ArrowLeft className="h-4 w-4 text-white500 transform rotate-180" />
         </button>
 
-        <button
-          onClick={handleAboutClick}
-          className="flex items-center justify-between p-4 border-b border-[#333333] w-full text-left"
-        >
-          <div className="flex items-center">
-            <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mr-3 text-blue-500">
-              <Info className="h-4 w-4" />
-            </div>
-            <span className="text-white">{t('profile.aboutUs')}</span>
-          </div>
-          <ArrowLeft className="h-4 w-4 text-white500 transform rotate-180" />
-        </button>
+      
 
         <button
           onClick={() => handleComingSoonClick("Download APP")}
