@@ -86,28 +86,11 @@ const AuthPage: React.FC = () => {
         {/* Hana Description */}
         <div className="text-center mb-8 px-4">
           <div className="text-white/90 text-sm leading-relaxed space-y-2">
-            <p>Hana is a mobile advanced crypto trading Bot owned by Hana Global LTD.</p>
-            <p>It is the future of Decentralized Finance, powered by Ai driven insights & trading signals utilizing same tools as Hematic.</p>
+            <p>Hana Ai is an advanced crypto earning platform </p>
+            <p>where users earn 3% daily while also making $10 reward on every 3 referrals who invest $10</p>
           </div>
         </div>
-
-        {/* YouTube Video */}
-        {mode === "register" && (
-          <div className="flex justify-center mb-8">
-            <div className="w-full max-w-sm">
-              <iframe
-                width="100%"
-                height="200"
-                src="https://www.youtube.com/embed/ysTVTmrfDnU"
-                title="Hana Introduction"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="rounded-lg shadow-lg"
-              ></iframe>
-            </div>
-          </div>
-        )}
+       
 
         {/* Auth Container */}
         <div className="auth-card rounded-2xl p-6 mb-8">

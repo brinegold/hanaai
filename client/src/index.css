@@ -78,18 +78,18 @@
 }
 
 .gradient-input {
-  background: rgba(45, 27, 105, 0.9);
+  background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(10px);
 }
 
 .gradient-input::placeholder {
-  color: white;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .gradient-input:focus {
-  background: rgba(45, 27, 105, 1);
+  background: rgba(255, 255, 255, 0.2);
   border-color: rgba(102, 126, 234, 0.6);
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
 }
