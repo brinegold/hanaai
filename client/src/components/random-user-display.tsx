@@ -104,7 +104,7 @@ const randomEmails = [
 ]
 // Function to generate random USD amount between 50 and 1000
 const generateRandomAmount = () => {
-  const amount = (Math.random() * (1000 - 50) + 50).toFixed(2);
+  const amount = 10;
   return `$${amount}`;
 };
 

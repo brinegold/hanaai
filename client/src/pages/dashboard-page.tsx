@@ -228,7 +228,10 @@ const DashboardPage: React.FC = () => {
   };
 
   const handleWhitePaperClick = () => {
-    window.open("https://raw.githubusercontent.com/areebasiddiqi/nebrix/refs/heads/main/client/src/about.pdf", "_blank");
+    toast({
+      title: "Coming Soon",
+      description: "White Paper will be available soon!",
+    });
   };
 
   // Country Rep application handler
@@ -434,21 +437,6 @@ const DashboardPage: React.FC = () => {
         <div className="flex-1 bg-black/20 backdrop-blur-md border border-white/10 rounded-lg p-4 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#4CAF50] to-[#4CAF50]/50"></div>
           <div className="flex items-center mb-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-5 w-5 mr-2 text-green-900"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 6v12" />
-              <path d="M8 10h8" />
-            </svg>
-            <span className="text-xs text-black">USDT</span>
           </div>
           <div className="font-mono font-medium text-white text-xl">
             ${parseFloat(user?.totalAssets?.toString() || "0").toLocaleString('en-US', {
@@ -456,45 +444,17 @@ const DashboardPage: React.FC = () => {
               maximumFractionDigits: 2
             })}
           </div>
-          <div className="text-xs flex items-center">
-            <span className="text-black">+1.5%</span>
-            <span className="text-black ml-1">24h</span>
-          </div>
         </div>
 
-        {/* ETH Balance */}
-        <div className="flex-1 bg-black/20 backdrop-blur-md border border-white/10 rounded-lg p-4 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#2196F3] to-[#2196F3]/50"></div>
-          <div className="flex items-center mb-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-5 w-5 mr-2 text-green-900"
-            >
-              <path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97" />
-            </svg>
-            <span className="text-xs text-black">ETH</span>
-          </div>
-          <div className="font-mono font-medium text-white text-xl">$0.00</div>
-          <div className="text-xs flex items-center">
-            <span className="text-black">+1.5%</span>
-            <span className="text-black ml-1">24h</span>
-          </div>
-        </div>
-      </div>
+     
 
       {/* Invite Friends Banner */}
       <div className="mx-4 mb-6 overflow-hidden">
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg px-4 py-3">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h3 className="text-[#121212] font-medium">{t('invite.title')}</h3>
-              <p className="text-[#121212]/80 text-xs">Every 3 referrals who deposit $12 = $10 bonus!</p>
+              <strong className="text-[#121212] font-medium">{t('invite.title')}</strong>
+              <strong className="text-[#121212]/80 text-xs">Every 3 referrals who deposit $12 = $10 bonus!</strong>
             </div>
             <button
               className="px-3 py-1.5 rounded-lg text-white text-xs hover:bg-white/10 transition-colors"
@@ -505,9 +465,9 @@ const DashboardPage: React.FC = () => {
             </button>
           </div>
           <div className="text-xs text-[#121212]/90">
-            <p>✓ Refer friends with your unique code</p>
-            <p>✓ They deposit $12 ($10 to account + $2 fee) and start earning</p>
-            <p>✓ You get $10 for every 3 qualified referrals</p>
+            <strong>✓ Refer friends with your unique code</strong>
+            <strong>✓ They deposit $12 ($10 to account + $2 fee) and start earning</strong>
+            <strong>✓ You get $10 for every 3 qualified referrals</strong>
           </div>
         </div>
       </div>
@@ -582,7 +542,7 @@ const DashboardPage: React.FC = () => {
 
             {/* Email */}
             <a 
-              href="mailto:support@nebrix.dev"
+              href="mailto:hanaaisupport@atomicmail.io"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -601,29 +561,6 @@ const DashboardPage: React.FC = () => {
               className="hover:transform hover:scale-110"
             >
               <Mail size={20} />
-            </a>
-
-            {/* Twitter */}
-            <a 
-              href="https://x.com/HanaCoin"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                backgroundColor: '#1DA1F2',
-                borderRadius: '50%',
-                width: '45px',
-                height: '45px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)',
-                color: 'white',
-                cursor: 'pointer',
-                transition: 'transform 0.2s',
-              }}
-              className="hover:transform hover:scale-110"
-            >
-              <Twitter size={20} />
             </a>
           </div>
         )}

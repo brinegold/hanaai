@@ -258,8 +258,11 @@ const QuantitativePage: React.FC = () => {
       return;
     }
     
-    // Automatically invest the user's total available capital
-    handleStartInvestment(plan, userCapital);
+    // Cap investment amount at the plan's maximum
+    const investmentAmount = Math.min(userCapital, plan.maxAmount);
+    
+    // Automatically invest the capped amount
+    handleStartInvestment(plan, investmentAmount);
   };
 
   if (isLoading) {
@@ -712,7 +715,7 @@ const QuantitativePage: React.FC = () => {
                   variant="default"
                   onClick={() => handlePlanSelect(plan)}
                 >
-                  Invest ${user?.totalAssets ? parseFloat(user.totalAssets.toString()).toFixed(2) : '0.00'} <ArrowRight className="ml-2 h-4 w-4" />
+                  Invest ${user?.totalAssets ? Math.min(parseFloat(user.totalAssets.toString()), plan.maxAmount).toFixed(2) : '0.00'} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>
