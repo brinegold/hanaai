@@ -380,7 +380,7 @@ const InvitePage: React.FC = () => {
             <div className="space-y-5">
               <p className="text-white text-sm">
                 Your referral code can be used unlimited times. Earn $10 bonus
-                for every 3 friends who deposit $12!
+                for every 3 friends who deposit $12 each!
               </p>
 
               <div className="bg-[#4F9CF9]/10 p-4 rounded-lg border border-[#4F9CF9]/30">
