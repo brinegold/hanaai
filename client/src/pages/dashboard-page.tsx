@@ -445,8 +445,7 @@ const DashboardPage: React.FC = () => {
             })}
           </div>
         </div>
-
-     
+      </div>
 
       {/* Invite Friends Banner */}
       <div className="mx-4 mb-6 overflow-hidden">
