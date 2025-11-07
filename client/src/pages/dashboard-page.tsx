@@ -452,8 +452,8 @@ const DashboardPage: React.FC = () => {
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg px-4 py-3">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <strong className="text-[#121212] font-medium">{t('invite.title')}</strong>
-              <strong className="text-[#121212]/80 text-xs">Every 3 referrals who deposit $12 = $10 bonus!</strong>
+              <strong className="text-white font-bold">{t('invite.title')}</strong><br> </br>
+              <strong className="text-white text-xs">Every 3 referrals who deposit $12 = $10 bonus!</strong><br> </br>
             </div>
             <button
               className="px-3 py-1.5 rounded-lg text-white text-xs hover:bg-white/10 transition-colors"
@@ -463,10 +463,10 @@ const DashboardPage: React.FC = () => {
               {t('nav.invite')}
             </button>
           </div>
-          <div className="text-xs text-[#121212]/90">
-            <strong>✓ Refer friends with your unique code</strong>
-            <strong>✓ They deposit $12 ($10 to account + $2 fee) and start earning</strong>
-            <strong>✓ You get $10 for every 3 qualified referrals</strong>
+          <div className="text-xs text-white">
+            <strong>✓ Refer friends with your unique code</strong><br> </br>
+            <strong>✓ They deposit $12 ($10 to account + $2 fee) and start earning</strong><br> </br>
+            <strong>✓ You get $10 for every 3 qualified referrals</strong><br> </br>
           </div>
         </div>
       </div>
