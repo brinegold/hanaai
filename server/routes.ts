@@ -175,7 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: "basic-trading",
           name: "Hana AI Trading",
           minAmount: 10,
-          maxAmount: 100000,
+          maxAmount: 10,
           dailyRate: 3.0,
           description: "Earn 3% daily on your deposits",
         },
