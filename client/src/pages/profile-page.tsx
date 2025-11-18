@@ -122,7 +122,7 @@ const ProfilePage: React.FC = () => {
 
   // Handler for Quantization Tutorial click
   const handleTutorialClick = () => {
-    // Open the Hana AI Trading dialog
+    // Open the Pay TenTen Trading dialog
     setShowTibankInfo(true);
   };
 
@@ -818,25 +818,25 @@ const ProfilePage: React.FC = () => {
         onOpenChange={setWithdrawDialogOpen}
       />
 
-      {/* Hana Info Dialog */}
+      {/* Pay TenTen Info Dialog */}
       <Dialog open={showTibankInfo} onOpenChange={setShowTibankInfo}>
         <DialogContent className="bg-white border-gray-200 text-white900 max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-center text-black mb-4">
-              Welcome To Hana Ai Trading
+              Welcome To Pay TenTen Trading
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 text-sm">
             <p>
-            Hana is an advanced AI-powered quantitative trading ecosystem designed to transform the way investors interact with the digital economy. By integrating Hermetic AI, a proprietary trading engine, Hana delivers consistent and sustainable returns through adaptive strategies that thrive in the fast-paced crypto market.
+            Pay TenTen is an advanced AI-powered quantitative trading ecosystem designed to transform the way investors interact with the digital economy. By integrating Hermetic AI, a proprietary trading engine, Pay TenTen delivers consistent and sustainable returns through adaptive strategies that thrive in the fast-paced crypto market.
             </p>
 
             <h3 className="text-[#4F9CF9] font-medium mt-4">
-              Hana automatic Ai money-making function
+              Pay TenTen automatic Ai money-making function
             </h3>
             <p>
-              Hana can buy Bitcoin at a low price from Exchange A within 1
+              Pay TenTen can buy Bitcoin at a low price from Exchange A within 1
               second, and sell it at a high price on Exchange B to make a
               profit.
             </p>
@@ -869,7 +869,7 @@ const ProfilePage: React.FC = () => {
               <div>
                 <h4 className="font-medium mb-1">1. Speed and Accuracy</h4>
                 <p className="text-white700">
-                  Hana executes trades with unparalleled speed and accuracy,
+                  Pay TenTen executes trades with unparalleled speed and accuracy,
                   operating 24/7 through automated algorithms.
                 </p>
               </div>
@@ -877,7 +877,7 @@ const ProfilePage: React.FC = () => {
               <div>
                 <h4 className="font-medium mb-1">2. Emotion-Free Trading</h4>
                 <p className="text-white700">
-                  Hana uses computer programs and algorithms to ensure
+                  Pay TenTen uses computer programs and algorithms to ensure
                   consistent trading results without emotional bias.
                 </p>
               </div>
@@ -917,7 +917,7 @@ const ProfilePage: React.FC = () => {
 
             <div className="bg-gradient-to-r from-blue-600/20 to-blue-500/20 p-4 rounded-lg mt-6">
               <p className="text-center">
-                Hana has undergone its fourth transformation, expanding
+                Pay TenTen has undergone its fourth transformation, expanding
                 functionality while simplifying investor transactions. Profits
                 can be realized with just one click and waiting for 1-2 minutes.
               </p>

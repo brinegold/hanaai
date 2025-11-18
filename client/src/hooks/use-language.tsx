@@ -18,7 +18,7 @@ const translations: Record<string, Record<string, string>> = {
     'nav.profile': 'Profile',
     
     // Profile Page
-    'profile.welcome': 'Welcome back to Hana Ai',
+    'profile.welcome': 'Welcome back to Pay TenTen',
     'profile.totalAssets': 'Total Assets (USDT)',
     'profile.quantitativeAccount': 'Quantitative Account (USDT)',
     'profile.profitAssets': 'Profit Assets (USDT)',

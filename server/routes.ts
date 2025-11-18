@@ -173,7 +173,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const plans = [
         {
           id: "basic-trading",
-          name: "Hana AI Trading",
+          name: "Pay TenTen Trading",
           minAmount: 10,
           maxAmount: 10,
           dailyRate: 3.0,

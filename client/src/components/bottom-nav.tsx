@@ -27,18 +27,7 @@ export default function BottomNav() {
             <span className="text-xs">{t('nav.home')}</span>
           </div>
         </Link>
-        <Link href="/tradenow">
-          <div
-            className={cn(
-              "flex cursor-pointer flex-col items-center justify-center",
-              isActive("/tradenow") && "text-primary",
-            )}
-          >
-            <BsCreditCard2Back className="h-6 w-6" />
-            <span className="text-xs">{t('nav.tradeNow')}</span>
-          </div>
-        </Link>
-
+        
         <Link href="/invite">
           <div
             className={cn(
@@ -48,6 +37,17 @@ export default function BottomNav() {
           >
             <Users className="h-6 w-6" />
             <span className="text-xs">{t('nav.invite')}</span>
+          </div>
+        </Link>
+        <Link href="/tradenow">
+          <div
+            className={cn(
+              "flex cursor-pointer flex-col items-center justify-center",
+              isActive("/tradenow") && "text-primary",
+            )}
+          >
+            <BsCreditCard2Back className="h-6 w-6" />
+            <span className="text-xs">{t('nav.tradeNow')}</span>
           </div>
         </Link>
 

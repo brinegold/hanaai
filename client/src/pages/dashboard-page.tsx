@@ -304,24 +304,24 @@ const DashboardPage: React.FC = () => {
 
       {/* Feature Quick Access */}
       <div className="grid grid-cols-4 gap-2 mx-4 mb-6">
-        <FeatureButton
-          icon={Wallet}
-          label={t('dashboard.deposit')}
-          onClick={handleRechargeClick}
-        />
-        <FeatureButton
-          icon={RefreshCcw}
-          label={t('dashboard.withdraw')}
-          onClick={handleWithdrawClick}
-        />
-        <FeatureButton icon={Users} label={t('nav.invite')} onClick={handleTeamClick} />
-
-        {/* Second Row */}
+         <FeatureButton icon={Users} label={t('nav.invite')} onClick={handleTeamClick} />
         <FeatureButton
           icon={Download}
           label="Download APP"
           onClick={handleDownloadAppClick}
         />
+        <FeatureButton
+          icon={Wallet}
+          label={t('dashboard.deposit')}
+          onClick={handleRechargeClick}
+        />
+       
+<FeatureButton
+          icon={RefreshCcw}
+          label={t('dashboard.withdraw')}
+          onClick={handleWithdrawClick}
+        />
+        
         <FeatureButton
           icon={Gift}
           label="Activity"
@@ -518,7 +518,7 @@ const DashboardPage: React.FC = () => {
           }}>
             {/* Telegram */}
             <a 
-              href="https://t.me/Hanadex"
+              href="https://t.me/PayTenTen"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -541,7 +541,7 @@ const DashboardPage: React.FC = () => {
 
             {/* Email */}
             <a 
-              href="mailto:hanaaisupport@atomicmail.io"
+              href="mailto:paytentenupport@atomicmail.io"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -576,7 +576,7 @@ const DashboardPage: React.FC = () => {
           <br />
           <br /> ===========<br /> ✔How to make money: <br />
           1. Deposit $12 ($10 credited to account + $2 fee) and Earn 3% daily (Withdrawals available every day)<br />
-2. To Generate Daily Returns You Must Click on "Trade now", then Click on "Start Trading" wait for few seconds for Hana AI to generate profits. <br />
+2. To Generate Daily Returns You Must Click on "Trade now", then Click on "Start Trading" wait for few seconds for Pay TenTen to generate profits. <br />
 3. Refer friends: Every 3 people who deposit $12 using your referral code = $10 bonus for you!<br />
 4. Accounts must be funded within 24 hours or they will be automatically deleted.<br />
 
@@ -610,7 +610,7 @@ Trade Time : Once Per day
         <DialogContent className="bg-black/90 backdrop-blur-md text-white border-white/10">
           <DialogHeader>
             <DialogTitle className="text-white">
-              Hana Trading Info
+              Pay TenTen Trading Info
             </DialogTitle>
           </DialogHeader>
           <ScrollArea className="h-[60vh]">
@@ -619,7 +619,7 @@ Trade Time : Once Per day
                 Deposit exactly $12 USDT ($10 credited to your account + $2 admin fee), and the minimum withdrawal amount is $2 USDT
               </p>
               <p>
-                The Deposit Fee is $2 (Fixed fee used for Maintenance of the Hana AI Ecosystem) - included in the $12 total
+                The Deposit Fee is $2 (Fixed fee used for Maintenance of the Pay TenTen Ecosystem) - included in the $12 total
               </p>
               <p>
                 The withdrawal fee is $1 (Fixed fee) and the funds will be credited to your account within few minutes.
@@ -666,7 +666,7 @@ Trade Time : Once Per day
 
 
               <p className="text-sm text-white600">
-                Hana works with bloggers on multiple social platforms (such as Twitter, YouTube, TikTok, Facebook, Instagram, etc.)
+                Pay TenTen works with bloggers on multiple social platforms (such as Twitter, YouTube, TikTok, Facebook, Instagram, etc.)
                 to promote bloggers' tweets, videos and posts and increase account data (views, clicks, etc.) (Likes, reposts, fans, etc.)
                 Help accounts achieve traffic growth. The final right of interpretation belongs to this platform.
               </p>

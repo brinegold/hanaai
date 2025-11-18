@@ -293,8 +293,8 @@ const InvitePage: React.FC = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Join Hana",
-          text: "Use my referral link to join Hana and earn crypto rewards!",
+          title: "Join Pay TenTen",
+          text: "Use my referral link to join Pay TenTen and earn crypto rewards!",
           url: referralLink,
         });
         toast({
