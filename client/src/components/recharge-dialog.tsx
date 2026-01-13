@@ -26,7 +26,7 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
   const { toast } = useToast();
   const { user } = useAuth();
   const [userWallet, setUserWallet] = useState("");
-  const [amount, setAmount] = useState("12");
+  const [selectedAmount, setSelectedAmount] = useState<'5' | '10'>('10');
   const [txHash, setTxHash] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [depositStatus, setDepositStatus] = useState<"idle" | "pending" | "verified" | "failed">("idle");
@@ -39,7 +39,7 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
         setLoading(false);
         return;
       }
-      
+
       try {
         setLoading(true);
         const response = await apiRequest("GET", "/api/bsc/wallet");
@@ -70,14 +70,7 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
   }, [open, user, toast]);
 
   const handleVerifyDeposit = async () => {
-    if (!amount || parseFloat(amount) !== 12) {
-      toast({
-        title: "Invalid Amount",
-        description: "Deposit amount must be exactly $12 USDT",
-        variant: "destructive",
-      });
-      return;
-    }
+    const totalAmount = selectedAmount === '5' ? 7 : 12;
 
     if (!txHash.trim()) {
       toast({
@@ -92,19 +85,15 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
     setDepositStatus("pending");
 
     try {
-      // Fixed deposit amount: $12 total
-      const depositAmount = 12;
-      const totalToSend = depositAmount;
-      
       const response = await apiRequest("POST", "/api/bsc/deposit", {
         txHash: txHash.trim(),
-        amount: totalToSend.toString(),
+        amount: totalAmount.toString(),
       });
 
       if (response.ok) {
         const data = await response.json();
         setDepositStatus("verified");
-        
+
         toast({
           title: "Deposit Verified!",
           description: `${(Math.round(data.amount * 100) / 100).toFixed(2)} USDT has been added to your account (after 2% fee)`,
@@ -159,13 +148,14 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
   };
 
   const resetDialog = () => {
-    setAmount("");
     setTxHash("");
     setDepositStatus("idle");
     setIsVerifying(false);
     setUserWallet("");
     setLoading(false);
   };
+
+  const totalAmount = selectedAmount === '5' ? 7 : 12;
 
   return (
     <Dialog
@@ -199,7 +189,7 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
                 <Wallet className="h-4 w-4 text-[#4F9CF9]" />
                 <span className="text-sm font-medium text-gray-800">Your Unique Deposit Address</span>
               </div>
-              
+
               <div className="flex items-center bg-white p-3 rounded-lg border">
                 <code className="text-xs text-gray-800 flex-1 font-mono break-all">
                   {userWallet || "Loading..."}
@@ -230,16 +220,37 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
                 </div>
                 <div className="flex justify-between">
                   <span>Required Deposit:</span>
-                  <span className="font-medium">$12 USDT</span>
+                  <span className="font-medium">${totalAmount} USDT</span>
                 </div>
                 <div className="flex justify-between">
                   <span>You Receive:</span>
-                  <span className="font-medium">$10 ($2 admin fee)</span>
+                  <span className="font-medium">${selectedAmount} ($2 admin fee)</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Processing:</span>
                   <span className="font-medium text-green-600">Automatic</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Amount Selection */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Select Deposit Amount</Label>
+              <div className="flex gap-4">
+                <Button
+                  variant={selectedAmount === '5' ? 'default' : 'outline'}
+                  onClick={() => setSelectedAmount('5')}
+                  className="flex-1"
+                >
+                  $5 Plan (Total $7)
+                </Button>
+                <Button
+                  variant={selectedAmount === '10' ? 'default' : 'outline'}
+                  onClick={() => setSelectedAmount('10')}
+                  className="flex-1"
+                >
+                  $10 Plan (Total $12)
+                </Button>
               </div>
             </div>
 
@@ -251,25 +262,25 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
               <Input
                 id="amount"
                 type="number"
-                value="12"
+                value={totalAmount}
                 readOnly
                 disabled
                 className="bg-gray-100 border-gray-200 text-gray-900 cursor-not-allowed"
               />
-              
+
               {/* Fixed Amount Display */}
               <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                 <p className="text-blue-800 font-medium text-sm">
-                  Fixed Deposit: <strong className='text-blue-600'>$12 USDT</strong>
+                  Fixed Deposit: <strong className='text-blue-600'>${totalAmount} USDT</strong>
                 </p>
                 <p className="text-xs text-blue-700 mt-1">
-                  • $10 credited to your account<br/>
+                  • ${selectedAmount} credited to your account<br />
                   • $2 admin fee
                 </p>
               </div>
-              
+
               <p className="text-xs text-gray-500">
-                Send exactly $12 USDT to your unique wallet address
+                Send exactly ${totalAmount} USDT to your unique wallet address
               </p>
             </div>
 
@@ -292,21 +303,19 @@ const AutoDepositDialog: React.FC<AutoDepositDialogProps> = ({
 
             {/* Status Display */}
             {depositStatus !== "idle" && (
-              <div className={`p-3 rounded-lg border ${
-                depositStatus === "verified" 
-                  ? "bg-green-50 border-green-200" 
+              <div className={`p-3 rounded-lg border ${depositStatus === "verified"
+                  ? "bg-green-50 border-green-200"
                   : depositStatus === "failed"
-                  ? "bg-red-50 border-red-200"
-                  : "bg-blue-50 border-blue-200"
-              }`}>
+                    ? "bg-red-50 border-red-200"
+                    : "bg-blue-50 border-blue-200"
+                }`}>
                 <div className="flex items-center gap-2">
                   {depositStatus === "verified" && <CheckCircle className="h-4 w-4 text-green-600" />}
                   {depositStatus === "pending" && <Clock className="h-4 w-4 animate-spin text-blue-600" />}
                   {depositStatus === "failed" && <div className="h-4 w-4 rounded-full bg-red-600" />}
-                  <span className={`text-sm font-medium ${
-                    depositStatus === "verified" ? "text-green-800" :
-                    depositStatus === "failed" ? "text-red-800" : "text-blue-800"
-                  }`}>
+                  <span className={`text-sm font-medium ${depositStatus === "verified" ? "text-green-800" :
+                      depositStatus === "failed" ? "text-red-800" : "text-blue-800"
+                    }`}>
                     {depositStatus === "verified" && "Deposit Verified!"}
                     {depositStatus === "pending" && "Verifying Transaction..."}
                     {depositStatus === "failed" && "Verification Failed"}

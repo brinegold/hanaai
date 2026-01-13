@@ -28,11 +28,11 @@ export function registerBSCRoutes(app: Express) {
 
       // Generate or retrieve user's BSC wallet
       let walletAddress = user.bscWalletAddress;
-      
+
       if (!walletAddress) {
         const wallet = bscService.generateUserWallet(user.id);
         walletAddress = wallet.address;
-        
+
         // Store wallet address (not private key for security)
         await storage.updateUser(req.user!.id, {
           bscWalletAddress: walletAddress
@@ -59,13 +59,13 @@ export function registerBSCRoutes(app: Express) {
     try {
       const { txHash } = req.body; // Remove amount from destructuring - we'll get it from blockchain
       const user = await storage.getUser(req.user!.id);
-      
+
       if (!user) return res.status(404).send("User not found");
       if (!user.bscWalletAddress) return res.status(400).json({ error: "No BSC wallet found" });
 
       // Verify transaction hash and extract actual transfer amount
       const txDetails = await bscService.verifyTransaction(txHash);
-      
+
       // Debug transaction details
       console.log("Transaction details:", {
         txHash,
@@ -80,20 +80,20 @@ export function registerBSCRoutes(app: Express) {
       if (txDetails.to.toLowerCase() === BSC_CONFIG.usdtContractAddress.toLowerCase()) {
         // This is a USDT token transfer - verify the recipient matches user's wallet
         if (!txDetails.actualRecipient || txDetails.actualRecipient.toLowerCase() !== user.bscWalletAddress.toLowerCase()) {
-          return res.status(400).json({ 
-            error: `USDT transfer not sent to your wallet. Expected: ${user.bscWalletAddress}, Got: ${txDetails.actualRecipient || 'unknown'}` 
+          return res.status(400).json({
+            error: `USDT transfer not sent to your wallet. Expected: ${user.bscWalletAddress}, Got: ${txDetails.actualRecipient || 'unknown'}`
           });
         }
-        
+
         // Verify that USDT was actually transferred
         if (!txDetails.usdtTransferAmount || parseFloat(txDetails.usdtTransferAmount) <= 0) {
-          return res.status(400).json({ 
-            error: "No USDT transfer found in this transaction" 
+          return res.status(400).json({
+            error: "No USDT transfer found in this transaction"
           });
         }
       } else if (user.bscWalletAddress && txDetails.to.toLowerCase() !== user.bscWalletAddress.toLowerCase()) {
-        return res.status(400).json({ 
-          error: `Transaction not sent to your wallet. Expected: ${user.bscWalletAddress}, Got: ${txDetails.to}` 
+        return res.status(400).json({
+          error: `Transaction not sent to your wallet. Expected: ${user.bscWalletAddress}, Got: ${txDetails.to}`
         });
       }
 
@@ -105,18 +105,18 @@ export function registerBSCRoutes(app: Express) {
 
       // Use the actual transfer amount from blockchain, not user input
       const depositAmount = parseFloat(txDetails.usdtTransferAmount);
-      
-      // Restrict deposits to exactly $12 ($10 for user + $2 admin fee)
-      if (depositAmount !== 12) {
-        return res.status(400).json({ 
-          error: "Deposit amount must be exactly $12 USDT ($10 for your account + $2 admin fee)",
-          receivedAmount: depositAmount 
+
+      // Restrict deposits to exactly $12 ($10 for user + $2 admin fee) or $7 ($5 for user + $2 admin fee)
+      if (depositAmount !== 12 && depositAmount !== 7) {
+        return res.status(400).json({
+          error: "Deposit amount must be exactly $12 USDT ($10 + $2 fee) or $7 USDT ($5 + $2 fee)",
+          receivedAmount: depositAmount
         });
       }
-      
+
       // Calculate amounts (fixed $2 fee)
       const adminFee = 2;
-      const userAmount = 10; // User gets exactly $10
+      const userAmount = depositAmount - adminFee; // User gets deposit amount minus fee
 
       console.log("Processing deposit:", {
         originalAmount: depositAmount,
@@ -128,7 +128,7 @@ export function registerBSCRoutes(app: Express) {
       // For now, we'll skip the automatic transfer and just record the deposit
       // The admin can manually collect tokens later or we can implement a batch collection system
       console.log("Deposit verified and recorded. Tokens remain in user wallet for now.");
-      
+
       // Optional: Try to collect tokens, but don't fail if it doesn't work
       let transferHashes = null;
       let userWallet = null;
@@ -137,12 +137,12 @@ export function registerBSCRoutes(app: Express) {
         userWallet = bscService.generateUserWallet(user.id);
         const usdtBalance = await bscService.getUSDTBalance(userWallet.address);
         console.log(`User wallet ${userWallet.address} USDT balance: ${usdtBalance}`);
-        
+
         // Optional: Try to collect tokens from user wallet to admin wallets
         try {
           const result = await bscService.collectDepositTokensFromUser(
-            user.id, 
-            depositAmount.toString(), 
+            user.id,
+            depositAmount.toString(),
             adminFee.toString()
           );
           console.log('Token collection successful:', result);
@@ -172,10 +172,10 @@ export function registerBSCRoutes(app: Express) {
         const referrals = await storage.getReferralsByReferredId(user.id);
         if (referrals.length > 0 && referrals[0].referrerId) {
           const referrerId = referrals[0].referrerId;
-          
+
           // Get all referrals for this referrer
           const allReferrals = await storage.getReferralsByReferrerId(referrerId);
-          
+
           // Count how many have deposited $10 (received amount in their account)
           // Start with 1 to include the current deposit
           let qualifiedReferrals = 1;
@@ -184,7 +184,7 @@ export function registerBSCRoutes(app: Express) {
             if (ref.referredId === user.id) {
               continue;
             }
-            
+
             const refUser = await storage.getUser(ref.referredId);
             if (refUser) {
               const refDeposits = await db.select().from(transactions)
@@ -193,7 +193,7 @@ export function registerBSCRoutes(app: Express) {
                   eq(transactions.type, "Deposit"),
                   eq(transactions.status, "Completed")
                 ));
-              
+
               // Check if this referral has deposited $10 (stored amount is exactly $10)
               const hasDepositedTen = refDeposits.some(tx => parseFloat(tx.amount.toString()) === 10);
               if (hasDepositedTen) {
@@ -201,13 +201,13 @@ export function registerBSCRoutes(app: Express) {
               }
             }
           }
-          
+
           console.log(`Referrer ${referrerId} now has ${qualifiedReferrals} qualified referrals (including current deposit)`);
-          
+
           // Award $10 bonus for every complete set of 3 qualified referrals
           const completeSets = Math.floor(qualifiedReferrals / 3);
           const referrer = await storage.getUser(referrerId);
-          
+
           if (referrer) {
             // Check how many bonuses have already been paid
             const bonusTransactions = await db.select().from(transactions)
@@ -216,19 +216,19 @@ export function registerBSCRoutes(app: Express) {
                 eq(transactions.type, "Referral Bonus"),
                 eq(transactions.status, "Completed")
               ));
-            
+
             const bonusesPaid = bonusTransactions.length;
             const bonusesDue = completeSets - bonusesPaid;
-            
+
             // Award any new bonuses
             if (bonusesDue > 0) {
               const bonusAmount = bonusesDue * 10;
-              
+
               await storage.updateUser(referrerId, {
                 totalAssets: (parseFloat(referrer.totalAssets.toString()) + bonusAmount).toString(),
                 withdrawableAmount: (parseFloat(referrer.withdrawableAmount.toString()) + bonusAmount).toString(),
               });
-              
+
               // Create bonus transaction
               await storage.createTransaction({
                 userId: referrerId,
@@ -238,7 +238,7 @@ export function registerBSCRoutes(app: Express) {
                 reason: `Referral bonus: ${bonusesDue} x $10 for ${bonusesDue * 3} qualified referrals`,
                 txHash: null,
               });
-              
+
               // Send notification
               await storage.createNotification({
                 userId: referrerId,
@@ -246,7 +246,7 @@ export function registerBSCRoutes(app: Express) {
                 message: `Congratulations! You earned $${bonusAmount} referral bonus for ${bonusesDue * 3} qualified referrals!`,
                 isRead: false,
               });
-              
+
               console.log(`Awarded $${bonusAmount} referral bonus to user ${referrerId} for ${bonusesDue * 3} qualified referrals`);
             }
           }
@@ -289,11 +289,11 @@ export function registerBSCRoutes(app: Express) {
           console.log(`Checking remaining BNB balance for user ${user.id} wallet ${userWallet.address}...`);
           const remainingBnbBalance = await bscService.getBNBBalance(userWallet.address);
           console.log(`User ${user.id} remaining BNB balance: ${remainingBnbBalance}`);
-          
+
           if (remainingBnbBalance > 0.0001) { // Only transfer if more than 0.0001 BNB (to cover gas)
             console.log(`Returning ${remainingBnbBalance} BNB from user ${user.id} wallet to global admin wallet...`);
             const bnbReturnResult = await bscService.collectAllBNBFromUser(user.id);
-            
+
             if (bnbReturnResult) {
               console.log(`Successfully returned ${bnbReturnResult.amount} BNB to global admin wallet. TX: ${bnbReturnResult.txHash}`);
             } else {
@@ -311,7 +311,7 @@ export function registerBSCRoutes(app: Express) {
       // Update user balance
       const currentTotalAssets = parseFloat(user.totalAssets.toString());
       const currentRechargeAmount = parseFloat(user.rechargeAmount.toString());
-      
+
       await storage.updateUser(user.id, {
         totalAssets: (currentTotalAssets + userAmount).toString(),
         rechargeAmount: (currentRechargeAmount + userAmount).toString()
@@ -350,19 +350,19 @@ export function registerBSCRoutes(app: Express) {
 
     try {
       const { amount, walletAddress } = req.body;
-      
+
       console.log("Withdrawal request received:", {
         amount,
         walletAddress,
         requestBody: req.body
       });
-      
+
       if (!walletAddress) {
         return res.status(400).json({ error: "Wallet address is required" });
       }
-      
+
       const user = await storage.getUser(req.user!.id);
-      
+
       if (!user) return res.status(404).send("User not found");
 
       const withdrawAmount = parseFloat(amount);
@@ -372,8 +372,8 @@ export function registerBSCRoutes(app: Express) {
 
       // Verify user has sufficient balance (withdrawal amount + $1 fee)
       if (totalRequired > userBalance) {
-        return res.status(400).json({ 
-          error: `Insufficient balance. Required: $${totalRequired.toFixed(2)} (withdrawal: $${withdrawAmount.toFixed(2)} + fee: $1.00)` 
+        return res.status(400).json({
+          error: `Insufficient balance. Required: $${totalRequired.toFixed(2)} (withdrawal: $${withdrawAmount.toFixed(2)} + fee: $1.00)`
         });
       }
 
@@ -395,7 +395,7 @@ export function registerBSCRoutes(app: Express) {
         address: walletAddress,
         reason: `BSC withdrawal request to ${walletAddress} - $${withdrawAmount} + $1 fee - Awaiting admin approval`
       });
-      
+
       console.log("Created withdrawal transaction:", {
         id: withdrawalTransaction.id,
         address: withdrawalTransaction.address,
@@ -428,7 +428,7 @@ export function registerBSCRoutes(app: Express) {
     try {
       const { txHash } = req.params;
       const txDetails = await bscService.verifyTransaction(txHash);
-      
+
       res.json({
         hash: txHash,
         confirmed: txDetails.confirmed,
@@ -446,7 +446,7 @@ export function registerBSCRoutes(app: Express) {
   // Monitor deposits endpoint (for admin use)
   app.post("/api/bsc/monitor-deposits", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
-    
+
     // This would be restricted to admin users
     try {
       const users = await storage.getAllUsers();
@@ -469,17 +469,17 @@ export function registerBSCRoutes(app: Express) {
   // Collect USDT from user wallets (Admin only)
   app.post("/api/bsc/collect-usdt", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
-    
+
     try {
       const { userIds } = req.body;
-      
+
       if (userIds && Array.isArray(userIds)) {
         // Collect from specific users
         const results = await bscService.batchCollectUSDT(userIds);
-        res.json({ 
-          success: true, 
+        res.json({
+          success: true,
           message: `Collection completed for ${userIds.length} users`,
-          results 
+          results
         });
       } else {
         // Collect from all users with BSC wallets
@@ -487,12 +487,12 @@ export function registerBSCRoutes(app: Express) {
         const allUserIds = users
           .filter(user => user.bscWalletAddress)
           .map(user => user.id);
-        
+
         const results = await bscService.batchCollectUSDT(allUserIds);
-        res.json({ 
-          success: true, 
+        res.json({
+          success: true,
           message: `Collection completed for ${allUserIds.length} users`,
-          results 
+          results
         });
       }
     } catch (error) {
@@ -504,21 +504,21 @@ export function registerBSCRoutes(app: Express) {
   // Collect USDT from single user wallet
   app.post("/api/bsc/collect-usdt/:userId", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
-    
+
     try {
       const userId = parseInt(req.params.userId);
       const result = await bscService.collectAllUSDTFromUser(userId);
-      
+
       if (result) {
-        res.json({ 
-          success: true, 
+        res.json({
+          success: true,
           message: `Collected ${result.amount} USDT from user ${userId}`,
           txHash: result.txHash,
           amount: result.amount
         });
       } else {
-        res.json({ 
-          success: false, 
+        res.json({
+          success: false,
           message: `No USDT found in user ${userId} wallet`
         });
       }
@@ -531,17 +531,17 @@ export function registerBSCRoutes(app: Express) {
   // Collect BNB from user wallets (Admin only)
   app.post("/api/bsc/collect-bnb", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
-    
+
     try {
       const { userIds } = req.body;
-      
+
       if (userIds && Array.isArray(userIds)) {
         // Collect from specific users
         const results = await bscService.batchCollectBNB(userIds);
-        res.json({ 
-          success: true, 
+        res.json({
+          success: true,
           message: `BNB collection completed for ${userIds.length} users`,
-          results 
+          results
         });
       } else {
         // Collect from all users with BSC wallets
@@ -549,12 +549,12 @@ export function registerBSCRoutes(app: Express) {
         const allUserIds = users
           .filter(user => user.bscWalletAddress)
           .map(user => user.id);
-        
+
         const results = await bscService.batchCollectBNB(allUserIds);
-        res.json({ 
-          success: true, 
+        res.json({
+          success: true,
           message: `BNB collection completed for ${allUserIds.length} users`,
-          results 
+          results
         });
       }
     } catch (error) {
@@ -566,21 +566,21 @@ export function registerBSCRoutes(app: Express) {
   // Collect BNB from single user wallet
   app.post("/api/bsc/collect-bnb/:userId", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
-    
+
     try {
       const userId = parseInt(req.params.userId);
       const result = await bscService.collectAllBNBFromUser(userId);
-      
+
       if (result) {
-        res.json({ 
-          success: true, 
+        res.json({
+          success: true,
           message: `Collected ${result.amount} BNB from user ${userId}`,
           txHash: result.txHash,
           amount: result.amount
         });
       } else {
-        res.json({ 
-          success: false, 
+        res.json({
+          success: false,
           message: `No collectible BNB found in user ${userId} wallet`
         });
       }

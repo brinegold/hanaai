@@ -17,7 +17,8 @@ interface BSCWallet {
 export const BSCDeposit: React.FC = () => {
   const [wallet, setWallet] = useState<BSCWallet | null>(null);
   const [txHash, setTxHash] = useState('');
-  const [amount, setAmount] = useState('12');
+  const [selectedAmount, setSelectedAmount] = useState<'5' | '10'>('10');
+  const [txHash, setTxHash] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
@@ -52,10 +53,10 @@ export const BSCDeposit: React.FC = () => {
   };
 
   const processDeposit = async () => {
-    if (!txHash || !amount) {
+    if (!txHash) {
       toast({
         title: 'Error',
-        description: 'Please enter transaction hash and amount',
+        description: 'Please enter transaction hash',
         variant: 'destructive'
       });
       return;
@@ -63,9 +64,10 @@ export const BSCDeposit: React.FC = () => {
 
     try {
       setIsProcessing(true);
+      const totalAmount = selectedAmount === '5' ? 7 : 12;
       const response = await apiRequest('POST', '/api/bsc/deposit', {
         txHash,
-        amount: parseFloat(amount)
+        amount: totalAmount
       });
 
       if (response.ok) {
@@ -75,7 +77,6 @@ export const BSCDeposit: React.FC = () => {
           description: `$${data.amount} deposited successfully. Fee: $${data.fee}`
         });
         setTxHash('');
-        setAmount('');
       } else {
         const error = await response.json();
         toast({
@@ -104,6 +105,8 @@ export const BSCDeposit: React.FC = () => {
       </Card>
     );
   }
+
+  const totalAmount = selectedAmount === '5' ? 7 : 12;
 
   return (
     <div className="space-y-6">
@@ -150,10 +153,10 @@ export const BSCDeposit: React.FC = () => {
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h4 className="font-medium text-blue-900 mb-2">Important Instructions:</h4>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Send exactly $12 USDT (BEP-20) to the address above</li>
+                  <li>• Send exactly ${totalAmount} USDT (BEP-20) to the address above</li>
                   <li>• Network: {wallet.network}</li>
-                  <li>• $2 admin fee + $10 credited to your account</li>
-                  <li>• Only $12 deposits are accepted</li>
+                  <li>• $2 admin fee + ${selectedAmount} credited to your account</li>
+                  <li>• Only ${totalAmount} deposits are accepted</li>
                   <li>• Copy transaction hash after sending</li>
                 </ul>
               </div>
@@ -169,6 +172,26 @@ export const BSCDeposit: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
+            <Label className="mb-2 block">Select Deposit Amount</Label>
+            <div className="flex gap-4">
+              <Button
+                variant={selectedAmount === '5' ? 'default' : 'outline'}
+                onClick={() => setSelectedAmount('5')}
+                className="flex-1"
+              >
+                $5 Plan (Total $7)
+              </Button>
+              <Button
+                variant={selectedAmount === '10' ? 'default' : 'outline'}
+                onClick={() => setSelectedAmount('10')}
+                className="flex-1"
+              >
+                $10 Plan (Total $12)
+              </Button>
+            </div>
+          </div>
+
+          <div>
             <Label htmlFor="txHash">Transaction Hash</Label>
             <Input
               id="txHash"
@@ -180,22 +203,21 @@ export const BSCDeposit: React.FC = () => {
           </div>
 
           <div>
-            <Label htmlFor="amount">Amount (USDT)</Label>
+            <Label htmlFor="amount">Total Amount to Send (USDT)</Label>
             <Input
               id="amount"
               type="number"
-              placeholder="12"
-              value="12"
+              value={totalAmount}
               readOnly
               disabled
               className="bg-gray-100 cursor-not-allowed"
             />
-            <p className="text-xs text-gray-600 mt-1">Fixed amount: $12 USDT only</p>
+            <p className="text-xs text-gray-600 mt-1">Fixed amount: ${totalAmount} USDT only</p>
           </div>
 
           <Button
             onClick={processDeposit}
-            disabled={isProcessing || !txHash || !amount}
+            disabled={isProcessing || !txHash}
             className="w-full"
           >
             {isProcessing ? 'Processing...' : 'Confirm Deposit'}
@@ -203,7 +225,7 @@ export const BSCDeposit: React.FC = () => {
 
           <div className="text-xs text-gray-600">
             <p>• Deposits are processed automatically after verification</p>
-            <p>• Fixed deposit: $12 USDT ($10 to account + $2 admin fee)</p>
+            <p>• Fixed deposit: ${totalAmount} USDT (${selectedAmount} to account + $2 admin fee)</p>
             <p>• Funds will appear in your account within 5-10 minutes</p>
           </div>
         </CardContent>

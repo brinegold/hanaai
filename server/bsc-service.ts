@@ -20,21 +20,21 @@ class BSCService {
 
   constructor(config: BSCConfig) {
     this.config = config;
-    
+
     // Use BSC testnet RPC URL specifically
     const rpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/";
     console.log("BSC Service initialized with RPC:", rpcUrl);
-    
+
     this.web3 = new Web3(rpcUrl);
-    
+
     // Test connection
     this.testConnection();
-    
+
     // Ensure private key has 0x prefix
     const privateKey = config.privateKey.startsWith('0x') ? config.privateKey : `0x${config.privateKey}`;
     this.account = this.web3.eth.accounts.privateKeyToAccount(privateKey);
     this.web3.eth.accounts.wallet.add(this.account);
-    
+
     // Initialize contracts
     this.initializeContracts();
   }
@@ -44,7 +44,7 @@ class BSCService {
       const chainId = await this.web3.eth.getChainId();
       const blockNumber = await this.web3.eth.getBlockNumber();
       console.log(`Connected to BSC network - Chain ID: ${chainId}, Block: ${blockNumber}`);
-      
+
       if (chainId !== BigInt(97)) { // BSC testnet chain ID
         console.warn(`Warning: Expected BSC testnet (97) but connected to chain ${chainId}`);
       }
@@ -58,9 +58,9 @@ class BSCService {
     const paymentProcessorABI = [
       {
         "inputs": [
-          {"name": "userWallet", "type": "address"},
-          {"name": "txHash", "type": "string"},
-          {"name": "amount", "type": "uint256"}
+          { "name": "userWallet", "type": "address" },
+          { "name": "txHash", "type": "string" },
+          { "name": "amount", "type": "uint256" }
         ],
         "name": "processDeposit",
         "outputs": [],
@@ -68,8 +68,8 @@ class BSCService {
       },
       {
         "inputs": [
-          {"name": "userWallet", "type": "address"},
-          {"name": "amount", "type": "uint256"}
+          { "name": "userWallet", "type": "address" },
+          { "name": "amount", "type": "uint256" }
         ],
         "name": "processWithdrawal",
         "outputs": [],
@@ -80,18 +80,18 @@ class BSCService {
     // USDT Contract ABI (simplified)
     const usdtABI = [
       {
-        "inputs": [{"name": "account", "type": "address"}],
+        "inputs": [{ "name": "account", "type": "address" }],
         "name": "balanceOf",
-        "outputs": [{"name": "", "type": "uint256"}],
+        "outputs": [{ "name": "", "type": "uint256" }],
         "type": "function"
       },
       {
         "inputs": [
-          {"name": "to", "type": "address"},
-          {"name": "amount", "type": "uint256"}
+          { "name": "to", "type": "address" },
+          { "name": "amount", "type": "uint256" }
         ],
         "name": "transfer",
-        "outputs": [{"name": "", "type": "bool"}],
+        "outputs": [{ "name": "", "type": "bool" }],
         "type": "function"
       }
     ];
@@ -105,7 +105,7 @@ class BSCService {
     const seed = `${userId}-${process.env.WALLET_SEED || 'default-seed'}`;
     const hash = crypto.createHash('sha256').update(seed).digest('hex');
     const account = this.web3.eth.accounts.privateKeyToAccount('0x' + hash);
-    
+
     return {
       address: account.address,
       privateKey: account.privateKey
@@ -117,28 +117,28 @@ class BSCService {
     try {
       console.log(`Verifying transaction: ${txHash}`);
       console.log(`Using RPC: ${this.config.rpcUrl}`);
-      
+
       // Validate transaction hash format
       if (!txHash || !txHash.startsWith('0x') || txHash.length !== 66) {
         throw new Error(`Invalid transaction hash format: ${txHash}. Must be 66 characters starting with 0x`);
       }
-      
+
       // Check network connection first
       const chainId = await this.web3.eth.getChainId();
       console.log(`Connected to chain ID: ${chainId}`);
-      
+
       // Add retry logic for pending transactions
       let transaction = null;
       let receipt = null;
       let retries = 0;
       const maxRetries = 10; // Increased retries
-      
+
       while (retries < maxRetries) {
         try {
           console.log(`Attempt ${retries + 1}/${maxRetries} - Looking for transaction ${txHash}`);
-          
+
           transaction = await this.web3.eth.getTransaction(txHash);
-          
+
           if (transaction) {
             console.log(`Transaction found:`, {
               hash: transaction.hash,
@@ -147,10 +147,10 @@ class BSCService {
               value: transaction.value?.toString(),
               blockNumber: transaction.blockNumber?.toString()
             });
-            
+
             // Try to get receipt
             receipt = await this.web3.eth.getTransactionReceipt(txHash);
-            
+
             if (receipt) {
               console.log(`Receipt found: Block ${receipt.blockNumber}, Status: ${receipt.status}`);
               break;
@@ -166,10 +166,10 @@ class BSCService {
             retries++;
             continue;
           }
-          
+
         } catch (error: any) {
           console.error(`Error on attempt ${retries + 1}:`, error.message);
-          
+
           if (retries < maxRetries - 1) {
             await new Promise(resolve => setTimeout(resolve, 2000));
             retries++;
@@ -178,14 +178,14 @@ class BSCService {
           throw error;
         }
       }
-      
+
       if (!transaction) {
         throw new Error(`Transaction ${txHash} not found after ${maxRetries} attempts. Please verify:
 1. Transaction hash is correct
 2. Transaction is on BSC testnet (Chain ID 97)
 3. Transaction has been broadcasted to the network`);
       }
-      
+
       if (!receipt) {
         throw new Error(`Transaction ${txHash} found but no receipt after ${maxRetries} attempts. Transaction may still be pending.`);
       }
@@ -198,7 +198,7 @@ class BSCService {
       // Extract USDT transfer amount from transaction logs if it's a token transfer
       let usdtTransferAmount = '0';
       let actualRecipient = transaction.to;
-      
+
       if (transaction.to?.toLowerCase() === this.config.usdtContractAddress.toLowerCase()) {
         // This is a USDT token transfer - extract the actual amount and recipient from logs
         const transferAmount = this.extractUSDTTransferFromLogs(receipt.logs);
@@ -236,22 +236,22 @@ class BSCService {
     try {
       // USDT Transfer event signature: Transfer(address,address,uint256)
       const transferEventSignature = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
-      
+
       for (const log of logs) {
         if (log.topics && log.topics[0] === transferEventSignature && log.topics.length >= 3) {
           // Decode the transfer event
           const fromAddress = '0x' + log.topics[1].slice(26); // Remove padding
           const toAddress = '0x' + log.topics[2].slice(26); // Remove padding
           const amount = this.web3.utils.fromWei(log.data, 'ether'); // Convert from wei to USDT
-          
+
           console.log(`Transfer event found: ${amount} USDT from ${fromAddress} to ${toAddress}`);
-          
-          // Validate exact amount requirement ($12 total: $10 for user + $2 admin fee)
-          if (parseFloat(amount) !== 12) {
-            console.log(`Transfer amount ${amount} USDT does not match required amount of 12 USDT`);
-            throw new Error(`Deposit amount must be exactly 12 USDT ($10 for your account + $2 admin fee). Transaction amount: ${amount} USDT`);
+
+          // Validate exact amount requirement ($12 total: $10 for user + $2 admin fee) or ($7 total: $5 for user + $2 admin fee)
+          if (parseFloat(amount) !== 12 && parseFloat(amount) !== 7) {
+            console.log(`Transfer amount ${amount} USDT does not match required amount of 12 or 7 USDT`);
+            throw new Error(`Deposit amount must be exactly 12 USDT ($10 + $2 fee) or 7 USDT ($5 + $2 fee). Transaction amount: ${amount} USDT`);
           }
-          
+
           return {
             amount: amount,
             to: toAddress,
@@ -259,7 +259,7 @@ class BSCService {
           };
         }
       }
-      
+
       console.log('No USDT transfer event found in transaction logs');
       return null;
     } catch (error) {
@@ -272,7 +272,7 @@ class BSCService {
   async processDeposit(userWallet: string, txHash: string, amount: string): Promise<string> {
     try {
       const amountWei = this.web3.utils.toWei(amount, 'ether');
-      
+
       const tx = await this.contract.methods.processDeposit(
         userWallet,
         txHash,
@@ -315,21 +315,21 @@ class BSCService {
   async fundUserWalletForGas(userAddress: string, bnbAmount: string = "0.001"): Promise<string> {
     try {
       console.log(`Funding user wallet ${userAddress} with ${bnbAmount} BNB for gas`);
-      
+
       const adminPrivateKey = this.config.privateKey.startsWith('0x') ? this.config.privateKey : `0x${this.config.privateKey}`;
       const adminAccount = this.web3.eth.accounts.privateKeyToAccount(adminPrivateKey);
-      
+
       // Check admin BNB balance
       const adminBalance = await this.getBNBBalance(adminAccount.address);
       console.log(`Admin BNB balance: ${adminBalance}`);
-      
+
       if (parseFloat(adminBalance) < parseFloat(bnbAmount)) {
         throw new Error(`Insufficient BNB in admin wallet. Required: ${bnbAmount}, Available: ${adminBalance}`);
       }
-      
+
       const gasPrice = await this.web3.eth.getGasPrice();
       const nonce = await this.web3.eth.getTransactionCount(adminAccount.address, 'pending');
-      
+
       const txData = {
         from: adminAccount.address,
         to: userAddress,
@@ -338,10 +338,10 @@ class BSCService {
         gasPrice: gasPrice.toString(),
         nonce: Number(nonce)
       };
-      
+
       const signedTx = await adminAccount.signTransaction(txData);
       const receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction as string);
-      
+
       console.log(`BNB transfer successful: ${bnbAmount} BNB to ${userAddress}`);
       return typeof receipt.transactionHash === 'string' ? receipt.transactionHash : this.web3.utils.bytesToHex(receipt.transactionHash);
     } catch (error) {
@@ -355,24 +355,24 @@ class BSCService {
     try {
       // Create account from private key
       const fromAccount = this.web3.eth.accounts.privateKeyToAccount(fromPrivateKey);
-      
+
       // Convert amount to wei (18 decimals for USDT)
       const amountWei = this.web3.utils.toWei(amount, 'ether');
-      
+
       // Create transfer transaction
       const transferTx = this.usdtContract.methods.transfer(toAddress, amountWei);
-      
+
       // Estimate gas
       const gasEstimate = await transferTx.estimateGas({ from: fromAccount.address });
-      
+
       // Get current gas price
       const gasPrice = await this.web3.eth.getGasPrice();
-      
+
       // Get nonce - use provided nonce or fetch current
       const txNonce = nonce !== undefined ? nonce : await this.web3.eth.getTransactionCount(fromAccount.address, 'pending');
-      
+
       console.log(`Using nonce ${txNonce} for transfer to ${toAddress}`);
-      
+
       // Build transaction
       const txData = {
         from: fromAccount.address,
@@ -382,17 +382,17 @@ class BSCService {
         gasPrice: gasPrice.toString(),
         nonce: txNonce
       };
-      
+
       // Sign transaction
       const signedTx = await fromAccount.signTransaction(txData);
-      
+
       // Send transaction
       const receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction as string);
-      
+
       const txHash = typeof receipt.transactionHash === 'string' ? receipt.transactionHash : this.web3.utils.bytesToHex(receipt.transactionHash);
       console.log(`USDT transfer successful: ${amount} USDT from ${fromAccount.address} to ${toAddress}`);
       console.log(`Transaction hash: ${txHash}`);
-      
+
       return txHash;
     } catch (error) {
       console.error('Error transferring USDT:', error);
@@ -404,37 +404,37 @@ class BSCService {
   async collectDepositTokensFromUser(userId: number, depositAmount: string, adminFee: string): Promise<{ adminFeeTxHash: string, globalAdminTxHash: string }> {
     try {
       console.log(`Collecting deposit tokens from user ${userId}: ${depositAmount} total, ${adminFee} fee`);
-      
+
       // Generate user's private key from their userId
       const userWallet = this.generateUserWallet(userId);
       const userPrivateKey = userWallet.privateKey;
-      
+
       // Check user's USDT balance first
       const userBalance = await this.getUSDTBalance(userWallet.address);
       console.log(`User ${userId} USDT balance: ${userBalance}`);
-      
+
       if (parseFloat(userBalance) < parseFloat(depositAmount)) {
         throw new Error(`Insufficient USDT balance in user wallet. Required: ${depositAmount}, Available: ${userBalance}`);
       }
-      
+
       // Check user's BNB balance for gas fees
       const bnbBalance = await this.getBNBBalance(userWallet.address);
       console.log(`User ${userId} BNB balance: ${bnbBalance}`);
-      
+
       // If user has insufficient BNB for gas, fund their wallet
       if (parseFloat(bnbBalance) < 0.001) {
         console.log(`User wallet has insufficient BNB for gas fees. Funding with 0.001 BNB...`);
         await this.fundUserWalletForGas(userWallet.address, "0.001");
         console.log(`User wallet funded with BNB for gas fees`);
       }
-      
+
       // Get starting nonce for user account
       const startingNonce = await this.web3.eth.getTransactionCount(userWallet.address, 'pending');
       console.log(`User ${userId} starting nonce: ${startingNonce}`);
-      
+
       // Convert bigint to number for nonce handling
       const nonceNumber = Number(startingNonce);
-      
+
       // Transfer admin fee to admin fee wallet
       const adminFeeTxHash = await this.transferUSDT(
         userPrivateKey,
@@ -442,7 +442,7 @@ class BSCService {
         adminFee,
         nonceNumber
       );
-      
+
       // Transfer remaining amount to global admin wallet
       const remainingAmount = (parseFloat(depositAmount) - parseFloat(adminFee)).toString();
       const globalAdminTxHash = await this.transferUSDT(
@@ -451,7 +451,7 @@ class BSCService {
         remainingAmount,
         nonceNumber + 1
       );
-      
+
       return {
         adminFeeTxHash,
         globalAdminTxHash
@@ -466,18 +466,18 @@ class BSCService {
   async collectDepositTokens(depositAmount: string, adminFee: string): Promise<{ adminFeeTxHash: string, globalAdminTxHash: string }> {
     try {
       console.log(`Collecting deposit tokens: ${depositAmount} total, ${adminFee} fee`);
-      
+
       // Use the backend's private key to collect tokens from the contract
       const backendPrivateKey = this.config.privateKey.startsWith('0x') ? this.config.privateKey : `0x${this.config.privateKey}`;
       const backendAccount = this.web3.eth.accounts.privateKeyToAccount(backendPrivateKey);
-      
+
       // Get starting nonce for backend account
       const startingNonce = await this.web3.eth.getTransactionCount(backendAccount.address, 'pending');
       console.log(`Backend starting nonce: ${startingNonce}`);
-      
+
       // Convert bigint to number for nonce handling
       const nonceNumber = Number(startingNonce);
-      
+
       // Transfer admin fee to admin fee wallet
       const adminFeeTxHash = await this.transferUSDT(
         backendPrivateKey,
@@ -485,7 +485,7 @@ class BSCService {
         adminFee,
         nonceNumber
       );
-      
+
       // Transfer remaining amount to global admin wallet
       const remainingAmount = (parseFloat(depositAmount) - parseFloat(adminFee)).toString();
       const globalAdminTxHash = await this.transferUSDT(
@@ -494,7 +494,7 @@ class BSCService {
         remainingAmount,
         nonceNumber + 1
       );
-      
+
       return {
         adminFeeTxHash,
         globalAdminTxHash
@@ -518,28 +518,28 @@ class BSCService {
     try {
       console.log(`Processing withdrawal: ${withdrawAmount} total, ${fee} fee to ${userWalletAddress}`);
       console.log(`Global admin wallet: ${this.config.globalAdminWallet}`);
-      
+
       // Use global admin private key to send tokens
       const adminPrivateKey = this.config.privateKey.startsWith('0x') ? this.config.privateKey : `0x${this.config.privateKey}`;
       const adminAccount = this.web3.eth.accounts.privateKeyToAccount(adminPrivateKey);
-      
+
       console.log(`Admin account address: ${adminAccount.address}`);
       console.log(`Expected global admin: ${this.config.globalAdminWallet}`);
-      
+
       // Verify the private key corresponds to the global admin wallet
       if (adminAccount.address.toLowerCase() !== this.config.globalAdminWallet.toLowerCase()) {
         console.warn(`Private key does not match global admin wallet. Key address: ${adminAccount.address}, Expected: ${this.config.globalAdminWallet}`);
         // Temporarily allowing mismatch for testing - update GLOBAL_ADMIN_WALLET in .env to match your private key
         // throw new Error(`Private key does not match global admin wallet. Key address: ${adminAccount.address}, Expected: ${this.config.globalAdminWallet}`);
       }
-      
+
       // Get starting nonce for admin account
       const startingNonce = await this.web3.eth.getTransactionCount(adminAccount.address, 'pending');
       console.log(`Admin starting nonce: ${startingNonce}`);
-      
+
       // Convert bigint to number for nonce handling
       const nonceNumber = Number(startingNonce);
-      
+
       // withdrawAmount is already the net amount after fees calculated in routes
       // Transfer the full withdrawal amount to user wallet
       const withdrawalTxHash = await this.transferUSDT(
@@ -548,7 +548,7 @@ class BSCService {
         withdrawAmount,
         nonceNumber
       );
-      
+
       // Transfer fee to admin fee wallet
       const feeTxHash = await this.transferUSDT(
         adminPrivateKey,
@@ -556,7 +556,7 @@ class BSCService {
         fee,
         nonceNumber + 1
       );
-      
+
       return {
         withdrawalTxHash,
         feeTxHash
@@ -572,28 +572,28 @@ class BSCService {
     try {
       const userWallet = this.generateUserWallet(userId);
       const balance = await this.getUSDTBalance(userWallet.address);
-      
+
       if (parseFloat(balance) <= 0) {
         console.log(`No USDT balance found for user ${userId}`);
         return null;
       }
-      
+
       console.log(`Collecting ${balance} USDT from user ${userId} wallet: ${userWallet.address}`);
-      
+
       // Check BNB balance for gas
       const bnbBalance = await this.getBNBBalance(userWallet.address);
       if (parseFloat(bnbBalance) < 0.001) {
         console.log(`Funding user wallet with BNB for gas...`);
         await this.fundUserWalletForGas(userWallet.address, "0.001");
       }
-      
+
       // Transfer all USDT to global admin wallet
       const txHash = await this.transferUSDT(
         userWallet.privateKey,
         this.config.globalAdminWallet,
         balance
       );
-      
+
       return { txHash, amount: balance };
     } catch (error) {
       console.error(`Error collecting USDT from user ${userId}:`, error);
@@ -604,12 +604,12 @@ class BSCService {
   // Batch collect USDT from multiple user wallets
   async batchCollectUSDT(userIds: number[]): Promise<Array<{ userId: number, result: { txHash: string, amount: string } | null }>> {
     const results = [];
-    
+
     for (const userId of userIds) {
       try {
         const result = await this.collectAllUSDTFromUser(userId);
         results.push({ userId, result });
-        
+
         // Add delay between transactions to avoid nonce issues
         await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (error) {
@@ -617,7 +617,7 @@ class BSCService {
         results.push({ userId, result: null });
       }
     }
-    
+
     return results;
   }
 
@@ -626,18 +626,18 @@ class BSCService {
     try {
       // Create account from private key
       const fromAccount = this.web3.eth.accounts.privateKeyToAccount(fromPrivateKey);
-      
+
       // Convert amount to wei
       const amountWei = this.web3.utils.toWei(amount, 'ether');
-      
+
       // Get current gas price
       const gasPrice = await this.web3.eth.getGasPrice();
-      
+
       // Get nonce - use provided nonce or fetch current
       const txNonce = nonce !== undefined ? nonce : await this.web3.eth.getTransactionCount(fromAccount.address, 'pending');
-      
+
       console.log(`Using nonce ${txNonce} for BNB transfer to ${toAddress}`);
-      
+
       // Build transaction
       const txData = {
         from: fromAccount.address,
@@ -647,16 +647,16 @@ class BSCService {
         gasPrice: gasPrice.toString(),
         nonce: txNonce
       };
-      
+
       // Sign transaction
       const signedTx = await fromAccount.signTransaction(txData);
-      
+
       // Send transaction
       const receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction as string);
-      
+
       console.log(`BNB transfer successful: ${amount} BNB from ${fromAccount.address} to ${toAddress}`);
       console.log(`Transaction hash: ${receipt.transactionHash}`);
-      
+
       return receipt.transactionHash.toString();
     } catch (error) {
       console.error('Error transferring BNB:', error);
@@ -669,29 +669,29 @@ class BSCService {
     try {
       const userWallet = this.generateUserWallet(userId);
       const balance = await this.getBNBBalance(userWallet.address);
-      
+
       if (parseFloat(balance) <= 0.001) { // Keep minimal BNB for future gas fees
         console.log(`Insufficient BNB balance for user ${userId} (${balance} BNB)`);
         return null;
       }
-      
+
       // Calculate amount to collect (leave 0.001 BNB for gas)
       const collectAmount = (parseFloat(balance) - 0.001).toString();
-      
+
       if (parseFloat(collectAmount) <= 0) {
         console.log(`No collectible BNB for user ${userId} after reserving gas`);
         return null;
       }
-      
+
       console.log(`Collecting ${collectAmount} BNB from user ${userId} wallet: ${userWallet.address}`);
-      
+
       // Transfer BNB to global admin wallet
       const txHash = await this.transferBNB(
         userWallet.privateKey,
         this.config.globalAdminWallet,
         collectAmount
       );
-      
+
       return { txHash, amount: collectAmount };
     } catch (error) {
       console.error(`Error collecting BNB from user ${userId}:`, error);
@@ -702,12 +702,12 @@ class BSCService {
   // Batch collect BNB from multiple user wallets
   async batchCollectBNB(userIds: number[]): Promise<Array<{ userId: number, result: { txHash: string, amount: string } | null }>> {
     const results = [];
-    
+
     for (const userId of userIds) {
       try {
         const result = await this.collectAllBNBFromUser(userId);
         results.push({ userId, result });
-        
+
         // Add delay between transactions to avoid nonce issues
         await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (error) {
@@ -715,18 +715,18 @@ class BSCService {
         results.push({ userId, result: null });
       }
     }
-    
+
     return results;
   }
 
   // Monitor blockchain for new transactions to user wallets
   async monitorDeposits(userAddresses: string[], callback: (tx: any) => void) {
     const subscription = await this.web3.eth.subscribe('newBlockHeaders');
-    
+
     subscription.on('data', async (blockHeader) => {
       try {
         const block = await this.web3.eth.getBlock(blockHeader.number, true);
-        
+
         if (block.transactions) {
           for (const tx of block.transactions) {
             if (typeof tx !== 'string' && tx.to && userAddresses.includes(tx.to.toLowerCase())) {
