@@ -63,13 +63,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Generate a random 6-character code
       const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-      
+
       // Create welcome invite code
       const welcomeCode = await db.insert(inviteCodes).values({
         code,
         createdById: 1, // System user
       }).returning();
-      
+
       res.json({ code: welcomeCode[0].code });
     } catch (error) {
       console.error("Error getting welcome code:", error);
@@ -98,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const coinGeckoRes = await fetch(
         "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,ripple,cardano,solana,dogecoin,avalanche-2&vs_currencies=usd&include_24hr_change=true",
-        { 
+        {
           signal: controller.signal,
           headers: {
             'Accept': 'application/json',
@@ -155,7 +155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error fetching crypto prices from CoinGecko:", error.message);
       console.log("Using fallback crypto prices");
-      
+
       // Return fallback data with COINGECKO exchange so it displays
       res.json(getFallbackPrices());
     }
@@ -169,13 +169,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(req.user!.id);
       const userDepositAmount = user ? parseFloat(user.rechargeAmount.toString()) : 0;
 
-      // Single investment plan with 3% daily returns
+      // Investment plans
       const plans = [
         {
           id: "basic-trading",
           name: "Pay TenTen Trading",
           minAmount: 10,
           maxAmount: 10,
+          dailyRate: 3.0,
+          description: "Earn 3% daily on your deposits",
+        },
+        {
+          id: "starter-trading",
+          name: "Pay FiveFive Trading",
+          minAmount: 5,
+          maxAmount: 5,
           dailyRate: 3.0,
           description: "Earn 3% daily on your deposits",
         },
@@ -204,10 +212,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userBalance = parseFloat(user.totalAssets.toString());
 
-      if (typeof amount !== "number" || amount < 10) {
+      if (typeof amount !== "number" || amount < 5) {
         return res
           .status(400)
-          .json({ error: "Investment amount must be at least $10" });
+          .json({ error: "Investment amount must be at least $5" });
       }
 
       if (typeof plan !== "string" || !plan) {
@@ -220,8 +228,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ error: "Daily rate must be a positive number" });
       }
 
-      // Validate single plan (3% daily rate)
-      if (plan !== "basic-trading") {
+      // Validate plans
+      if (plan !== "basic-trading" && plan !== "starter-trading") {
         return res.status(400).json({ error: "Invalid investment plan selected" });
       }
 
@@ -276,7 +284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate immediate profit based on selected plan's daily rate
       const instantProfitPercentage = dailyRate / 100; // Convert percentage to decimal
       const instantProfit = amount * instantProfitPercentage;
-      
+
       // Only update profit-related fields, not total assets
       const currentProfitAssets = parseFloat(user.profitAssets.toString());
       await storage.updateUser(req.user!.id, {
@@ -525,20 +533,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const userTransactions = await storage.getTransactionsByUserId(req.user!.id);
-      
+
       // Find pending withdrawal transactions (including related fees)
-      const pendingWithdrawals = userTransactions.filter(tx => 
-        tx.status === "Pending" && 
+      const pendingWithdrawals = userTransactions.filter(tx =>
+        tx.status === "Pending" &&
         (tx.type === "Withdrawal" || tx.type === "Withdrawal Fee" || tx.type === "Gas Fee")
       );
 
       // Group by main withdrawal transaction
       const mainPendingWithdrawal = pendingWithdrawals.find(tx => tx.type === "Withdrawal");
-      
+
       if (mainPendingWithdrawal) {
         // Find related fee transactions created around the same time
-        const relatedFees = pendingWithdrawals.filter(tx => 
-          tx.type !== "Withdrawal" && 
+        const relatedFees = pendingWithdrawals.filter(tx =>
+          tx.type !== "Withdrawal" &&
           Math.abs(new Date(tx.createdAt).getTime() - new Date(mainPendingWithdrawal.createdAt).getTime()) < 60000 // Within 1 minute
         );
 
@@ -921,25 +929,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const now = new Date();
       const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      
+
       // Get all users
       const allUsers = await storage.getAllUsers();
       let deletedCount = 0;
-      
+
       for (const user of allUsers) {
         // Skip admin accounts
         if (user.isAdmin) continue;
-        
+
         // Check if account was created more than 24 hours ago
         const createdAt = new Date(user.createdAt);
         if (createdAt > twentyFourHoursAgo) continue;
-        
+
         // Check if user has any deposits
         const userTransactions = await db.select().from(transactions).where(eq(transactions.userId, user.id));
         const hasDeposits = userTransactions.some(
           (tx) => tx.type === "Deposit" && tx.status === "Completed"
         );
-        
+
         // Delete user if no deposits after 24 hours
         if (!hasDeposits) {
           // Delete user's transactions first
@@ -954,7 +962,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Deleted unfunded account: ${user.username} (ID: ${user.id})`);
         }
       }
-      
+
       res.json({
         success: true,
         message: `Deleted ${deletedCount} unfunded accounts`,
@@ -972,9 +980,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       // Trading is now available 7 days a week (Monday to Sunday)
-      
+
       const allUsers = await storage.getAllUsers();
-      
+
       for (const user of allUsers) {
         const investments = await storage.getInvestmentsByUserId(user.id);
         const activeInvestments = investments.filter(
@@ -1055,7 +1063,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check team volume requirement ($1M)
       const totalTeamVolume = parseFloat(user.totalVolumeGenerated.toString());
-      
+
       if (totalTeamVolume < 1000000) {
         return res.status(400).json({
           message: `You need to reach $1,000,000 in Team Volume to apply for Country Representative. Current volume: $${totalTeamVolume.toLocaleString()}`,
@@ -1068,7 +1076,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         countryRepStatus: "pending",
       });
 
-      res.json({ 
+      res.json({
         message: "Country Representative application submitted successfully! Your application is under review.",
         teamVolume: totalTeamVolume,
       });
@@ -1239,27 +1247,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
             message: "Minimum deposit amount is $10",
           });
         }
-        
+
         // Check for maximum deposit
         if (transactionData.amount > 10) {
           return res.status(400).json({
             message: "Maximum deposit amount is $10",
           });
         }
-        
+
         // Calculate deposit fee (fixed $2 admin fee)
         const depositAmount = transactionData.amount;
         const platformFee = 2; // Fixed $2 fee
         const netDepositAmount = depositAmount - platformFee; // Amount after fee deduction
-        
+
         // Update user's rechargeAmount (deposit amount) with net amount
         const currentRechargeAmount = parseFloat(user.rechargeAmount.toString());
         const newRechargeAmount = (currentRechargeAmount + netDepositAmount).toString();
-        
+
         // Update user's total assets with net deposit amount
         const currentTotalAssets = parseFloat(user.totalAssets.toString());
         const newTotalAssets = (currentTotalAssets + netDepositAmount).toString();
-        
+
         await db.update(users).set({
           totalAssets: newTotalAssets,
           rechargeAmount: newRechargeAmount,
@@ -1409,12 +1417,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   async function calculateUserVolume(userId: number): Promise<{ totalVolume: number, directVolume: number, indirectVolume: number }> {
     // Get all referrals for this user
     const referrals = await storage.getReferralsByReferrerId(userId);
-    
+
     // Calculate direct volume (Level 1 referrals)
     const directReferralIds = referrals
       .filter(ref => ref.level === "1")
       .map(ref => ref.referredId);
-    
+
     let directVolume = 0;
     for (const referralId of directReferralIds) {
       const referralUser = await storage.getUser(referralId);
@@ -1422,12 +1430,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         directVolume += parseFloat(referralUser.rechargeAmount.toString());
       }
     }
-    
+
     // Calculate indirect volume (Level 2, 3, and 4 referrals)
     const indirectReferralIds = referrals
       .filter(ref => ["2", "3", "4"].includes(ref.level))
       .map(ref => ref.referredId);
-    
+
     let indirectVolume = 0;
     for (const referralId of indirectReferralIds) {
       const referralUser = await storage.getUser(referralId);
@@ -1435,10 +1443,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         indirectVolume += parseFloat(referralUser.rechargeAmount.toString());
       }
     }
-    
+
     // Total volume = Direct volume + Indirect volume
     const totalVolume = directVolume + indirectVolume;
-    
+
     return { totalVolume, directVolume, indirectVolume };
   }
 
@@ -1461,7 +1469,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(transactions)
         .where(
           and(
-            eq(transactions.userId, referral.referredId), 
+            eq(transactions.userId, referral.referredId),
             eq(transactions.type, "Deposit"),
             eq(transactions.status, "Completed")
           )
@@ -1477,7 +1485,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Check and update user rank
   app.get("/api/check-rank/:userId", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
-    
+
     try {
       const userId = parseInt(req.params.userId);
       const volumeData = await calculateUserVolume(userId);
@@ -1537,10 +1545,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Add incentive to user's withdrawable balance
           const incentiveAmount = parseFloat(qualifiedRank.incentiveAmount);
           const currentWithdrawable = parseFloat(user[0]?.withdrawableAmount || "0");
-          
+
           await db
             .update(users)
-            .set({ 
+            .set({
               withdrawableAmount: (currentWithdrawable + incentiveAmount).toFixed(2),
               totalAssets: (parseFloat(user[0]?.totalAssets || "0") + incentiveAmount).toFixed(2)
             })
@@ -1555,20 +1563,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             reason: `Rank achievement: ${newRank}`,
           });
 
-          res.json({ 
-            success: true, 
-            newRank, 
-            incentivePaid: true, 
+          res.json({
+            success: true,
+            newRank,
+            incentivePaid: true,
             incentiveAmount: qualifiedRank.incentiveAmount,
             totalVolume: volumeData.totalVolume,
             directVolume: volumeData.directVolume,
             indirectVolume: volumeData.indirectVolume
           });
         } else {
-          res.json({ 
-            success: true, 
-            newRank, 
-            incentivePaid: false, 
+          res.json({
+            success: true,
+            newRank,
+            incentivePaid: false,
             message: "Rank updated but incentive already claimed",
             totalVolume: volumeData.totalVolume,
             directVolume: volumeData.directVolume,
@@ -1576,10 +1584,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       } else {
-        res.json({ 
-          success: true, 
-          currentRank, 
-          noRankChange: true, 
+        res.json({
+          success: true,
+          currentRank,
+          noRankChange: true,
           totalVolume: volumeData.totalVolume,
           directVolume: volumeData.directVolume,
           indirectVolume: volumeData.indirectVolume

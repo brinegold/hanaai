@@ -1,0 +1,23 @@
+{
+  "transferredAt": "2025-12-01T14:19:35.494Z",
+  "totalTransfers": 2,
+  "successful": 2,
+  "failed": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "userId": 60,
+      "address": "0x61052e6affac6b790a419227fb7668d555059031",
+      "status": "success",
+      "txHash": "0x60eaf2e784893944991d0a98fc8219beb76f20a77d028dfb62271a393c52ef6d",
+      "amount": 0.0009958999999999999
+    },
+    {
+      "userId": 75,
+      "address": "0x85395cd7d5c39b065dc4ad4938b95984716ce7b6",
+      "status": "success",
+      "txHash": "0xe75f33168ec4b929c339e0cb67a8b9dcc6963457e0422daf120f838d585b77ff",
+      "amount": 0.0009950297
+    }
+  ]
+}

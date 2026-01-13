@@ -101,7 +101,7 @@ const translations: Record<string, Record<string, string>> = {
     'nav.profile': 'Perfil',
     
     // Profile Page
-    'profile.welcome': 'Bienvenido de vuelta a Nebrix',
+    'profile.welcome': 'Bienvenido de vuelta a Paytenten'
     'profile.totalAssets': 'Activos Totales (USDT)',
     'profile.quantitativeAccount': 'Cuenta Cuantitativa (USDT)',
     'profile.profitAssets': 'Activos de Ganancia (USDT)',
@@ -167,7 +167,7 @@ const translations: Record<string, Record<string, string>> = {
     'nav.profile': 'Profil',
     
     // Profile Page
-    'profile.welcome': 'Bienvenue sur Nebrix',
+    'profile.welcome': 'Bienvenue sur Paytenten'
     'profile.totalAssets': 'Actifs Totaux (USDT)',
     'profile.quantitativeAccount': 'Compte Quantitatif (USDT)',
     'profile.profitAssets': 'Actifs de Profit (USDT)',
@@ -233,7 +233,7 @@ const translations: Record<string, Record<string, string>> = {
     'nav.profile': '个人资料',
     
     // Profile Page
-    'profile.welcome': '欢迎回到 Nebrix',
+    'profile.welcome': '欢迎回到 Paytenten'
     'profile.totalAssets': '总资产 (USDT)',
     'profile.quantitativeAccount': '量化账户 (USDT)',
     'profile.profitAssets': '盈利资产 (USDT)',

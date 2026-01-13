@@ -10,17 +10,17 @@ import { eq, and } from "drizzle-orm";
 async function sendWithdrawalApprovalEmail(user: any, transaction: any, txHash: string) {
   try {
     const transporter = nodemailer.createTransport({
-              host: process.env.SMTP_HOST,
-              port: Number(process.env.SMTP_PORT),
-              secure: Boolean(true), // true for 465, false for other ports
-              auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASSWORD,
-              },
-              tls: {
-                rejectUnauthorized: false,
-              },
-            });
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: Boolean(true), // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
 
     await transporter.sendMail({
       from: process.env.SMTP_USER,
@@ -90,7 +90,7 @@ export function registerAdminRoutes(app: Express) {
   app.get("/api/admin/users", async (req, res) => {
     try {
       const users = await storage.getAllUsers();
-      
+
       // Calculate direct and indirect volumes for each user
       const enrichedUsers = await Promise.all(
         users.map(async (user) => {
@@ -99,7 +99,7 @@ export function registerAdminRoutes(app: Express) {
           const directReferralIds = directReferrals
             .filter(ref => ref.level === "1")
             .map(ref => ref.referredId);
-          
+
           let directVolume = 0;
           for (const referralId of directReferralIds) {
             const referralUser = await storage.getUser(referralId);
@@ -107,12 +107,12 @@ export function registerAdminRoutes(app: Express) {
               directVolume += parseFloat(referralUser.rechargeAmount.toString());
             }
           }
-          
+
           // Calculate indirect volume (sum of deposits from indirect referrals - levels 2, 3, 4)
           const indirectReferrals = directReferrals
             .filter(ref => ref.level !== "1")
             .map(ref => ref.referredId);
-          
+
           let indirectVolume = 0;
           for (const referralId of indirectReferrals) {
             const referralUser = await storage.getUser(referralId);
@@ -120,14 +120,14 @@ export function registerAdminRoutes(app: Express) {
               indirectVolume += parseFloat(referralUser.rechargeAmount.toString());
             }
           }
-          
+
           // Get upline username if user has a referrer
           let uplineUsername = null;
           if (user.referrerId) {
             const uplineUser = await storage.getUser(user.referrerId);
             uplineUsername = uplineUser?.username || null;
           }
-          
+
           return {
             ...user,
             password: undefined,
@@ -139,7 +139,7 @@ export function registerAdminRoutes(app: Express) {
           };
         })
       );
-      
+
       res.json(enrichedUsers);
     } catch (err) {
       console.error("Error fetching users:", err);
@@ -245,8 +245,8 @@ export function registerAdminRoutes(app: Express) {
       const currentWithdrawable = parseFloat(user.withdrawableAmount.toString());
 
       if (deductAmount > currentWithdrawable) {
-        return res.status(400).json({ 
-          message: `Cannot deduct $${deductAmount}. User only has $${currentWithdrawable} withdrawable.` 
+        return res.status(400).json({
+          message: `Cannot deduct $${deductAmount}. User only has $${currentWithdrawable} withdrawable.`
         });
       }
 
@@ -298,8 +298,8 @@ export function registerAdminRoutes(app: Express) {
       const currentTotalAssets = parseFloat(user.totalAssets.toString());
 
       if (deductAmount > currentRechargeAmount) {
-        return res.status(400).json({ 
-          message: `Cannot deduct $${deductAmount}. User only has $${currentRechargeAmount} in deposits.` 
+        return res.status(400).json({
+          message: `Cannot deduct $${deductAmount}. User only has $${currentRechargeAmount} in deposits.`
         });
       }
 
@@ -483,13 +483,13 @@ export function registerAdminRoutes(app: Express) {
 
         const withdrawalAmount = parseFloat(transaction.amount.toString());
         const walletAddress = transaction.address;
-        
+
         console.log("Extracted withdrawal details:", {
           withdrawalAmount,
           walletAddress,
           addressExists: !!walletAddress
         });
-        
+
         if (!walletAddress) {
           throw new Error("Withdrawal address not found");
         }
@@ -536,19 +536,32 @@ export function registerAdminRoutes(app: Express) {
         }
       } else if (transaction.type === "Deposit") {
         const depositAmount = parseFloat(transaction.amount.toString());
-        
-        // Simple referral bonus: $10 for every 3 referrals who deposit $12 (receive $10)
-        // Check if deposit is exactly $10 (the amount user receives after $2 fee)
+
+        // Referral Bonus Logic
+        // 1. $10 Plan: $10 bonus for every 3 referrals who deposit $10
+        // 2. $5 Plan: $5 bonus for every 3 referrals who deposit $5
+
+        let targetAmount = 0;
+        let bonusAmountPerSet = 0;
+
         if (depositAmount === 10) {
+          targetAmount = 10;
+          bonusAmountPerSet = 10;
+        } else if (depositAmount === 5) {
+          targetAmount = 5;
+          bonusAmountPerSet = 5;
+        }
+
+        if (targetAmount > 0) {
           // Check if this user was referred by someone
           const referrals = await storage.getReferralsByReferredId(user.id);
           if (referrals.length > 0 && referrals[0].referrerId) {
             const referrerId = referrals[0].referrerId;
-            
+
             // Get all referrals for this referrer
             const allReferrals = await storage.getReferralsByReferrerId(referrerId);
-            
-            // Count how many have deposited $10 (received amount)
+
+            // Count how many have deposited the target amount (received amount)
             // Start with 1 to include the current deposit
             let qualifiedReferrals = 1;
             for (const ref of allReferrals) {
@@ -556,7 +569,7 @@ export function registerAdminRoutes(app: Express) {
               if (ref.referredId === user.id) {
                 continue;
               }
-              
+
               const refUser = await storage.getUser(ref.referredId);
               if (refUser) {
                 const refDeposits = await db.select().from(transactions)
@@ -565,64 +578,70 @@ export function registerAdminRoutes(app: Express) {
                     eq(transactions.type, "Deposit"),
                     eq(transactions.status, "Completed")
                   ));
-                
-                // Check if this referral has deposited exactly $10 (stored amount)
-                const hasDepositedTen = refDeposits.some(tx => parseFloat(tx.amount.toString()) === 10);
-                if (hasDepositedTen) {
+
+                // Check if this referral has deposited exactly the target amount
+                const hasDepositedTarget = refDeposits.some(tx => parseFloat(tx.amount.toString()) === targetAmount);
+                if (hasDepositedTarget) {
                   qualifiedReferrals++;
                 }
               }
             }
-            
-            console.log(`Referrer ${referrerId} now has ${qualifiedReferrals} qualified referrals (including current deposit)`);
-            
-            // Award $10 bonus for every complete set of 3 qualified referrals
+
+            console.log(`Referrer ${referrerId} now has ${qualifiedReferrals} qualified referrals for $${targetAmount} plan (including current deposit)`);
+
+            // Award bonus for every complete set of 3 qualified referrals
             const completeSets = Math.floor(qualifiedReferrals / 3);
             const referrer = await storage.getUser(referrerId);
-            
+
             if (referrer) {
-              // Check how many bonuses have already been paid
+              // Check how many bonuses have already been paid for this specific plan amount
+              // We need to distinguish between $5 and $10 bonuses.
+              // We can use the amount of the bonus transaction to distinguish.
+              // $10 bonus -> amount 10
+              // $5 bonus -> amount 5
+
               const bonusTransactions = await db.select().from(transactions)
                 .where(and(
                   eq(transactions.userId, referrerId),
                   eq(transactions.type, "Referral Bonus"),
                   eq(transactions.status, "Completed")
                 ));
-              
-              const bonusesPaid = bonusTransactions.length;
+
+              // Filter bonuses by amount to match the current plan
+              const bonusesPaid = bonusTransactions.filter(tx => parseFloat(tx.amount.toString()) === bonusAmountPerSet).length;
               const bonusesDue = completeSets - bonusesPaid;
-              
+
               // Award any new bonuses
               if (bonusesDue > 0) {
-                const bonusAmount = bonusesDue * 10;
-                
+                const totalBonusAmount = bonusesDue * bonusAmountPerSet;
+
                 await storage.updateUser(referrerId, {
-                  totalAssets: (parseFloat(referrer.totalAssets.toString()) + bonusAmount).toString(),
-                  withdrawableAmount: (parseFloat(referrer.withdrawableAmount.toString()) + bonusAmount).toString(),
+                  totalAssets: (parseFloat(referrer.totalAssets.toString()) + totalBonusAmount).toString(),
+                  withdrawableAmount: (parseFloat(referrer.withdrawableAmount.toString()) + totalBonusAmount).toString(),
                 });
-                
+
                 // Create bonus transaction
                 await storage.createTransaction({
                   userId: referrerId,
                   type: "Referral Bonus",
-                  amount: bonusAmount.toString(),
+                  amount: totalBonusAmount.toString(),
                   status: "Completed",
-                  reason: `Referral bonus: ${bonusesDue} x $10 for ${bonusesDue * 3} qualified referrals`,
+                  reason: `Referral bonus: ${bonusesDue} x $${bonusAmountPerSet} for ${bonusesDue * 3} qualified referrals ($${targetAmount} plan)`,
                   txHash: null,
                 });
-                
+
                 // Send notification
                 await storage.createNotification({
                   userId: referrerId,
                   type: "referral",
-                  message: `Congratulations! You earned $${bonusAmount} referral bonus for ${bonusesDue * 3} qualified referrals!`,
+                  message: `Congratulations! You earned $${totalBonusAmount} referral bonus for ${bonusesDue * 3} qualified referrals ($${targetAmount} plan)!`,
                   isRead: false,
                 });
               }
             }
           }
         }
-        
+
         await storage.updateUser(user.id, {
           totalAssets: (
             parseFloat(user.totalAssets.toString()) + depositAmount
@@ -711,7 +730,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
       const userId = parseInt(id);
-      
+
       // Get user details
       const user = await storage.getUser(userId);
       if (!user) {
