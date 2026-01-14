@@ -52,6 +52,7 @@ interface ReferralSummary {
   tier3: number;
   tier4: number;
   total: number;
+  totalBonus: number;
 }
 
 interface ProfileResponse {
@@ -79,7 +80,7 @@ const InvitePage: React.FC = () => {
   const [isLoadingReferrals, setIsLoadingReferrals] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 40;
-  const [referralSummary, setReferralSummary] = useState<ReferralSummary>({ tier1: 0, tier2: 0, tier3: 0, tier4: 0, total: 0 });
+  const [referralSummary, setReferralSummary] = useState<ReferralSummary>({ tier1: 0, tier2: 0, tier3: 0, tier4: 0, total: 0, totalBonus: 0 });
   const [selectedLevel, setSelectedLevel] = useState<string>('1');
   const [levelReferrals, setLevelReferrals] = useState<ReferralDetail[]>([]);
   const [isLoadingLevel, setIsLoadingLevel] = useState(false);
@@ -132,7 +133,7 @@ const InvitePage: React.FC = () => {
       console.log("No user authenticated, skipping referral summary fetch");
       return;
     }
-    
+
     try {
       const res = await apiRequest("GET", "/api/referrals/summary");
       if (!res.ok) {
@@ -157,7 +158,7 @@ const InvitePage: React.FC = () => {
       setLevelReferrals([]);
       return;
     }
-    
+
     try {
       setIsLoadingLevel(true);
       const res = await apiRequest("GET", `/api/referrals/tier/${level}`);
@@ -186,7 +187,7 @@ const InvitePage: React.FC = () => {
       setUpline(null);
       return;
     }
-    
+
     try {
       setIsLoadingUpline(true);
       const res = await apiRequest("GET", "/api/upline");
@@ -380,7 +381,7 @@ const InvitePage: React.FC = () => {
             <div className="space-y-5">
               <p className="text-white text-sm">
                 Your referral code can be used unlimited times. Earn $10 bonus
-                for every 3 friends who deposit $12 each!
+                for every 3 friends who deposit $12, or $5 bonus for every 3 friends who deposit $7!
               </p>
 
               <div className="bg-[#4F9CF9]/10 p-4 rounded-lg border border-[#4F9CF9]/30">
@@ -404,11 +405,11 @@ const InvitePage: React.FC = () => {
                     <div className="bg-[#4F9CF9] text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">
                       3
                     </div>
-                    <span className="font-bold text-yellow-300">Every 3 referrals = $10 bonus for you!</span>
+                    <span className="font-bold text-yellow-300">Every 3 referrals = $10 ($10 plan) or $5 ($5 plan) bonus!</span>
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
                 <p className="text-blue-700 font-semibold mb-1">
                   ✅ Instant Withdrawals Available
@@ -424,7 +425,7 @@ const InvitePage: React.FC = () => {
         <Card className="border-gray-200" style={{ backgroundColor: 'rgba(45, 27, 105, 0.9)' }}>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-white">Your Referral Link</CardTitle>
-    
+
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -468,7 +469,7 @@ const InvitePage: React.FC = () => {
             <p className="text-sm text-white mt-2">
               Total Referrals: <span className="font-bold text-[#4F9CF9]">{referralSummary.tier1}</span>
               {" • "}
-              Bonuses Earned: <span className="font-bold text-yellow-300">${Math.floor(referralSummary.tier1 / 3) * 10}</span>
+              Bonuses Earned: <span className="font-bold text-yellow-300">${formatCurrency(referralSummary.totalBonus)}</span>
             </p>
           </CardHeader>
           <CardContent>
@@ -491,7 +492,7 @@ const LevelReferralList: React.FC<{
 }> = ({ level, referrals, isLoading }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
-  
+
   const levelPercentages: { [key: string]: number } = {
     "1": 10,
     "2": 5,
@@ -550,9 +551,11 @@ const LevelReferralList: React.FC<{
       <div className="space-y-3">
         {currentReferrals.map((referral, index) => {
           const totalDeposits = Number(referral.totalDeposits || 0);
-          const hasDeposited = totalDeposits >= 10; // Check if they deposited $12 (which shows as $10 after fee)
+          const hasDepositedTen = totalDeposits >= 10; // Deposited $12 (received $10)
+          const hasDepositedFive = totalDeposits >= 5 && totalDeposits < 10; // Deposited $7 (received $5)
+          const hasDeposited = hasDepositedTen || hasDepositedFive;
           const globalIndex = startIndex + index + 1;
-          
+
           return (
             <div key={referral.id} className="bg-black/10 rounded-lg p-4 border border-white/20">
               <div className="flex items-center justify-between">
@@ -580,12 +583,18 @@ const LevelReferralList: React.FC<{
                     </strong>
                   </div>
                 </div>
-                
+
                 <div className="text-right">
-                  {hasDeposited ? (
+                  {hasDepositedTen ? (
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-[#66ff00]">
                         ✓ $10
+                      </span>
+                    </div>
+                  ) : hasDepositedFive ? (
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-[#66ff00]">
+                        ✓ $5
                       </span>
                     </div>
                   ) : (

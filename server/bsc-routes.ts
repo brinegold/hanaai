@@ -166,7 +166,9 @@ export function registerBSCRoutes(app: Express) {
       }
 
       // Simple referral bonus: $10 for every 3 referrals who deposit $12 (receive $10)
-      // User receives exactly $10, so check for that amount
+      // OR $5 for every 3 referrals who deposit $7 (receive $5)
+
+      // Handle $10 Bonus Logic
       if (userAmount === 10) {
         // Check if this user was referred by someone
         const referrals = await storage.getReferralsByReferredId(user.id);
@@ -202,7 +204,7 @@ export function registerBSCRoutes(app: Express) {
             }
           }
 
-          console.log(`Referrer ${referrerId} now has ${qualifiedReferrals} qualified referrals (including current deposit)`);
+          console.log(`Referrer ${referrerId} now has ${qualifiedReferrals} qualified $10 referrals (including current deposit)`);
 
           // Award $10 bonus for every complete set of 3 qualified referrals
           const completeSets = Math.floor(qualifiedReferrals / 3);
@@ -217,7 +219,8 @@ export function registerBSCRoutes(app: Express) {
                 eq(transactions.status, "Completed")
               ));
 
-            const bonusesPaid = bonusTransactions.length;
+            // Filter for $10 bonuses (amount = 10)
+            const bonusesPaid = bonusTransactions.filter(tx => parseFloat(tx.amount.toString()) === 10).length;
             const bonusesDue = completeSets - bonusesPaid;
 
             // Award any new bonuses
@@ -235,7 +238,7 @@ export function registerBSCRoutes(app: Express) {
                 type: "Referral Bonus",
                 amount: bonusAmount.toString(),
                 status: "Completed",
-                reason: `Referral bonus: ${bonusesDue} x $10 for ${bonusesDue * 3} qualified referrals`,
+                reason: `Referral bonus: ${bonusesDue} x $10 for ${bonusesDue * 3} qualified referrals ($10 plan)`,
                 txHash: null,
               });
 
@@ -243,11 +246,98 @@ export function registerBSCRoutes(app: Express) {
               await storage.createNotification({
                 userId: referrerId,
                 type: "referral",
-                message: `Congratulations! You earned $${bonusAmount} referral bonus for ${bonusesDue * 3} qualified referrals!`,
+                message: `Congratulations! You earned $${bonusAmount} referral bonus for ${bonusesDue * 3} qualified referrals ($10 plan)!`,
                 isRead: false,
               });
 
-              console.log(`Awarded $${bonusAmount} referral bonus to user ${referrerId} for ${bonusesDue * 3} qualified referrals`);
+              console.log(`Awarded $${bonusAmount} referral bonus to user ${referrerId} for ${bonusesDue * 3} qualified referrals ($10 plan)`);
+            }
+          }
+        }
+      }
+      // Handle $5 Bonus Logic
+      else if (userAmount === 5) {
+        // Check if this user was referred by someone
+        const referrals = await storage.getReferralsByReferredId(user.id);
+        if (referrals.length > 0 && referrals[0].referrerId) {
+          const referrerId = referrals[0].referrerId;
+
+          // Get all referrals for this referrer
+          const allReferrals = await storage.getReferralsByReferrerId(referrerId);
+
+          // Count how many have deposited $5 (received amount in their account)
+          // Start with 1 to include the current deposit
+          let qualifiedReferrals = 1;
+          for (const ref of allReferrals) {
+            // Skip the current user since we already counted them
+            if (ref.referredId === user.id) {
+              continue;
+            }
+
+            const refUser = await storage.getUser(ref.referredId);
+            if (refUser) {
+              const refDeposits = await db.select().from(transactions)
+                .where(and(
+                  eq(transactions.userId, refUser.id),
+                  eq(transactions.type, "Deposit"),
+                  eq(transactions.status, "Completed")
+                ));
+
+              // Check if this referral has deposited $5 (stored amount is exactly $5)
+              const hasDepositedFive = refDeposits.some(tx => parseFloat(tx.amount.toString()) === 5);
+              if (hasDepositedFive) {
+                qualifiedReferrals++;
+              }
+            }
+          }
+
+          console.log(`Referrer ${referrerId} now has ${qualifiedReferrals} qualified $5 referrals (including current deposit)`);
+
+          // Award $5 bonus for every complete set of 3 qualified referrals
+          const completeSets = Math.floor(qualifiedReferrals / 3);
+          const referrer = await storage.getUser(referrerId);
+
+          if (referrer) {
+            // Check how many bonuses have already been paid
+            const bonusTransactions = await db.select().from(transactions)
+              .where(and(
+                eq(transactions.userId, referrerId),
+                eq(transactions.type, "Referral Bonus"),
+                eq(transactions.status, "Completed")
+              ));
+
+            // Filter for $5 bonuses (amount = 5)
+            const bonusesPaid = bonusTransactions.filter(tx => parseFloat(tx.amount.toString()) === 5).length;
+            const bonusesDue = completeSets - bonusesPaid;
+
+            // Award any new bonuses
+            if (bonusesDue > 0) {
+              const bonusAmount = bonusesDue * 5;
+
+              await storage.updateUser(referrerId, {
+                totalAssets: (parseFloat(referrer.totalAssets.toString()) + bonusAmount).toString(),
+                withdrawableAmount: (parseFloat(referrer.withdrawableAmount.toString()) + bonusAmount).toString(),
+              });
+
+              // Create bonus transaction
+              await storage.createTransaction({
+                userId: referrerId,
+                type: "Referral Bonus",
+                amount: bonusAmount.toString(),
+                status: "Completed",
+                reason: `Referral bonus: ${bonusesDue} x $5 for ${bonusesDue * 3} qualified referrals ($5 plan)`,
+                txHash: null,
+              });
+
+              // Send notification
+              await storage.createNotification({
+                userId: referrerId,
+                type: "referral",
+                message: `Congratulations! You earned $${bonusAmount} referral bonus for ${bonusesDue * 3} qualified referrals ($5 plan)!`,
+                isRead: false,
+              });
+
+              console.log(`Awarded $${bonusAmount} referral bonus to user ${referrerId} for ${bonusesDue * 3} qualified referrals ($5 plan)`);
             }
           }
         }

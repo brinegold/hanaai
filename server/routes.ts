@@ -412,12 +412,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         db.select({ count: sql<number>`COUNT(*)` }).from(referrals).where(and(eq(referrals.referrerId, userId), eq(referrals.level, "4"))),
       ]);
 
+      // Calculate total referral bonuses
+      const bonusResult = await db.select({ total: sql<number>`SUM(CAST(amount AS NUMERIC))` })
+        .from(transactions)
+        .where(and(
+          eq(transactions.userId, userId),
+          eq(transactions.type, "Referral Bonus"),
+          eq(transactions.status, "Completed")
+        ));
+
       const summary = {
         tier1: tierCounts[0][0]?.count || 0,
         tier2: tierCounts[1][0]?.count || 0,
         tier3: tierCounts[2][0]?.count || 0,
         tier4: tierCounts[3][0]?.count || 0,
-        total: (tierCounts[0][0]?.count || 0) + (tierCounts[1][0]?.count || 0) + (tierCounts[2][0]?.count || 0) + (tierCounts[3][0]?.count || 0)
+        total: (tierCounts[0][0]?.count || 0) + (tierCounts[1][0]?.count || 0) + (tierCounts[2][0]?.count || 0) + (tierCounts[3][0]?.count || 0),
+        totalBonus: parseFloat(bonusResult[0]?.total?.toString() || "0")
       };
 
       res.json(summary);
